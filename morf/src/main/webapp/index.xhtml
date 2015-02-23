@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui">
+<h:head>
+	<title>morf</title>
+	<h:outputStylesheet library="css" name="style.css" />
+
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<!-- Prevents caching at the Proxy Server -->
+
+	<meta http-equiv="Expires" content="0" />
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="description"
+		content="morf base description to be set at some point in the future." />
+
+	<meta name="keywords"
+		content="genomics,bioinformatics,genetics,gene,statistics,open source,software,fasta" />
+	<meta name="author" content="morf admin (jacobsonmt@gmail.com)" />
+
+</h:head>
+
+<h:body>
+
+<p:layout fullPage="true">
+
+ 	<p:layoutUnit id="top" position="north" resizable="false" size="50">
+ 	
+ 		Navbar
+ 	
+ 	</p:layoutUnit>
+ 
+    <p:layoutUnit id="center" position="center">
+    	<h3>FASTA Sequence</h3>
+    	<h:form enctype="multipart/form-data">
+		    <p:growl id="messages" showDetail="true" />
+		 
+		    <p:fileUpload value="#{fileUploadView.file}" mode="simple" skinSimple="true"/>
+		 	
+		    <p:commandButton value="Submit" ajax="false" actionListener="#{fileUploadView.upload}"/>
+		</h:form>
+		<br/>
+        <h:form>            
+		    
+		    <p:inputTextarea rows="10" cols="100" autoResize="false" />
+		    <br/>
+		    <div class="button-block">
+		    <p:commandButton type="button" value="Upload" icon="ui-icon-disk" onclick="alert('Prime')"/>
+		    <p:commandButton type="button" value="Upload2" icon="ui-icon-disk" onclick="alert('Prime')"/>
+		    </div>
+		</h:form>
+		<p>Method of viewing job position in queue</p>
+    </p:layoutUnit>
+    
+    <p:layoutUnit id="bottom" position="south" resizable="false" size="50">
+        <div class="footer">
+				<p>
+					&copy; UBC, Centre for High-throughput Biology, 2015
+					<h:link value="Terms and Conditions" outcome="terms.xhtml" />
+				</p>
+		</div>
+    </p:layoutUnit>
+</p:layout>
+
+
+
+
+
+</h:body>
+</html>

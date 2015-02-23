@@ -1,0 +1,38 @@
+html {
+	height: 100%;
+	padding-bottom: 1px; /* force scrollbars */
+}
+
+body {
+	background: #FFF;
+	color: #444;
+	font: normal 75% sans-serif;
+	/* line-height: 1.5; */
+}
+
+div.footer {
+	text-align:center;
+	margin: 10px 0 10px 0;
+}
+
+div.footer p {
+	margin:0;
+}
+
+div.footer a:hover {color: #000;}
+
+a:focus,a:hover {color: #039;}
+a {
+	color: #456;
+	text-decoration: none;
+}
+a:hover {text-decoration: underline;}
+
+div.button-block {
+	margin-top:25px;
+}
+
+#center {
+	padding-left:25px;
+	padding-right:25px;
+}
