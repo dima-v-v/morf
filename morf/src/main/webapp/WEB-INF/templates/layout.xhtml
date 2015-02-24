@@ -3,7 +3,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:h="http://java.sun.com/jsf/html"
 	xmlns:f="http://java.sun.com/jsf/core"
-	xmlns:p="http://primefaces.org/ui">
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
 <h:head>
 	<title>morf</title>
 	<h:outputStylesheet library="css" name="style.css" />
@@ -34,32 +35,21 @@
  	</p:layoutUnit>
  
     <p:layoutUnit id="center" position="center">
-    	<h3>FASTA Sequence</h3>
-    	<h:form enctype="multipart/form-data">
-		    <p:growl id="messages" showDetail="true" />
-		 
-		    <p:fileUpload value="#{fileUploadView.file}" mode="simple" skinSimple="true"/>
-		 	
-		    <p:commandButton value="Submit" ajax="false" actionListener="#{fileUploadView.upload}"/>
-		</h:form>
-		<br/>
-        <h:form>            
-		    
-		    <p:inputTextarea rows="10" cols="100" autoResize="false" />
-		    <br/>
-		    <div class="button-block">
-		    <p:commandButton type="button" value="Upload" icon="ui-icon-disk" onclick="alert('Prime')"/>
-		    <p:commandButton type="button" value="Upload2" icon="ui-icon-disk" onclick="alert('Prime')"/>
-		    </div>
-		</h:form>
-		<p>Method of viewing job position in queue</p>
+					<div class="left" id="logo">
+						<h:graphicImage library="img" width="250"
+							name="error.png" />
+					</div>
+					<p:panel id="content" styleClass="no-border">
+						<h2 id="contentTitle"><ui:insert name="contentTitle">#{page.current.title}</ui:insert></h2>
+						<ui:insert name="content" />
+					</p:panel>
     </p:layoutUnit>
     
     <p:layoutUnit id="bottom" position="south" resizable="false" size="50">
         <div class="footer">
 				<p>
 					&copy; UBC, Centre for High-throughput Biology, 2015
-					<h:link value="Terms and Conditions" outcome="terms.xhtml" />
+					<h:link value="Terms and Conditions" outcome="/terms.xhtml" />
 				</p>
 		</div>
     </p:layoutUnit>

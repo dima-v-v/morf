@@ -6,14 +6,28 @@
 	    <param-value>Development</param-value>
 	</context-param>
 	
-	<welcome-file-list>
-		<welcome-file>index.xhtml</welcome-file>
-	</welcome-file-list>
-	
 	<context-param>
 	    <param-name>javax.faces.DEFAULT_SUFFIX</param-name>
 	    <param-value>.xhtml</param-value>
 	</context-param>
+	
+	<welcome-file-list>
+		<welcome-file>index.xhtml</welcome-file>
+	</welcome-file-list>
+	
+	<!-- Install slf4j bridge handler -->
+	<listener>
+		<listener-class>ubc.pavlab.morf.listeners.Sl4jBridgeListener</listener-class>
+	</listener>
+	
+	<!-- Other listeners -->
+	
+	<listener>
+    	<listener-class>ubc.pavlab.morf.listeners.HttpSessionChecker</listener-class>
+	</listener>
+	
+	<!-- Servlets -->
+
 	<servlet>
 	    <servlet-name>Faces Servlet</servlet-name>
 	    <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
@@ -27,8 +41,34 @@
 		<servlet-name>Faces Servlet</servlet-name>
 		<url-pattern>*.xhtml</url-pattern>
 	</servlet-mapping>
+	
+	<!-- Theme -->
+	
 	<context-param>
 	    <param-name>primefaces.THEME</param-name>
 	    <param-value>redmond</param-value>
 	</context-param> 
+	
+	<!-- Error Pages -->
+	
+	<error-page>
+	    <error-code>500</error-code>
+	    <location>/WEB-INF/errors/500.xhtml</location>
+	</error-page>
+	<error-page>
+	    <error-code>404</error-code>
+	    <location>/WEB-INF/errors/404.xhtml</location>
+	</error-page>
+	<error-page>
+	    <error-code>400</error-code>
+	    <location>/WEB-INF/errors/400.xhtml</location>
+	</error-page>
+	<error-page>
+		<exception-type>javax.faces.application.ViewExpiredException</exception-type>
+    	<location>/WEB-INF/errors/expired.xhtml</location>
+	</error-page>
+	<error-page>
+		<exception-type>java.lang.RuntimeException</exception-type>
+		<location>/WEB-INF/errors/bug.xhtml</location>
+	</error-page>
 </web-app>
