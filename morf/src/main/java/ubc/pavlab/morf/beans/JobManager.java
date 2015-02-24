@@ -19,20 +19,21 @@
 
 package ubc.pavlab.morf.beans;
 
+import java.util.Date;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
 
 import org.apache.log4j.Logger;
 
-import ubc.pavlab.morf.runnables.ProcessJob;
-import ubc.pavlab.morf.runnables.ProduceJob;
+import ubc.pavlab.morf.models.Job;
+import ubc.pavlab.morf.runnables.MyCallable;
 
 /**
  * TODO Document Me
@@ -44,31 +45,59 @@ import ubc.pavlab.morf.runnables.ProduceJob;
 @ApplicationScoped
 public class JobManager {
 
-    private static final Logger log = Logger.getLogger( JobManager.class );
+	private static final Logger log = Logger.getLogger(JobManager.class);
 
-    @ManagedProperty(value = "#{jobQueue}")
-    JobQueue jobQueue;
+	private LinkedBlockingQueue<Job> queue = new LinkedBlockingQueue<Job>();
+	private boolean running;
 
-    private ScheduledExecutorService processJobScheduler;
-    private ScheduledExecutorService produceJobScheduler;
+	private ExecutorService processJob;
 
-    @PostConstruct
-    public void init() {
-        processJobScheduler = Executors.newSingleThreadScheduledExecutor();
-        processJobScheduler.scheduleAtFixedRate( new ProcessJob( jobQueue.getQueue() ), 10, 5, TimeUnit.SECONDS );
+	// private ScheduledExecutorService produceJobScheduler;
 
-        produceJobScheduler = Executors.newSingleThreadScheduledExecutor();
-        produceJobScheduler.scheduleAtFixedRate( new ProduceJob( jobQueue.getQueue() ), 10, 10, TimeUnit.SECONDS );
-    }
+	@PostConstruct
+	public void init() {
+		processJob = Executors.newSingleThreadExecutor();
 
-    @PreDestroy
-    public void destroy() {
-        log.info( "JobManager destroyed" );
-        processJobScheduler.shutdownNow();
-    }
+		// processJobScheduler.scheduleAtFixedRate(new ProcessJob(queue), 10, 5,
+		// TimeUnit.SECONDS);
 
-    public void setJobQueue( JobQueue jobQueue ) {
-        this.jobQueue = jobQueue;
-    }
+		// produceJobScheduler = Executors.newSingleThreadScheduledExecutor();
+		// produceJobScheduler.scheduleAtFixedRate( new ProduceJob(
+		// jobQueue.getQueue() ), 10, 10, TimeUnit.SECONDS );
+	}
+
+	@PreDestroy
+	public void destroy() {
+		log.info("JobManager destroyed");
+		processJob.shutdownNow();
+	}
+
+	public boolean isRunning() {
+		return running;
+	}
+
+	public void putJob(Job job) {
+		try {
+			this.queue.put(job);
+			log.info("Adding Job: " + job.toString());
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public Job submit(String sessionId, String name, String content) {
+		log.info("Submitting Job: " + name);
+		MyCallable callable = new MyCallable(5000, name, content);
+		Future<String> future = processJob.submit(callable);
+		Job job = new Job(sessionId, name, content);
+		job.setSubmitted(new Date());
+		job.setFuture(future);
+		return job;
+	}
+
+	public LinkedBlockingQueue<Job> getQueue() {
+		return queue;
+	}
 
 }

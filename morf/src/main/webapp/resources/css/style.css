@@ -42,3 +42,13 @@ div.button-block {
 .no-border {
 	border-style: none;
 }
+
+table tbody tr.yellow-row {
+	background-color: #f4edb1;
+	background: #f4edb1;
+}
+
+table tbody tr.green-row {
+	background-color: #a5dda5;
+	background: #a5dda5;
+}

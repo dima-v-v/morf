@@ -33,24 +33,25 @@ import ubc.pavlab.morf.models.Job;
  */
 public class ProduceJob implements Runnable {
 
-    private static final Logger log = Logger.getLogger( ProcessJob.class );
+	private static final Logger log = Logger.getLogger(ProcessJob.class);
 
-    private LinkedBlockingQueue<Job> queue;
+	private LinkedBlockingQueue<Job> queue;
 
-    public ProduceJob( LinkedBlockingQueue<Job> queue ) {
-        super();
-        this.queue = queue;
-    }
+	public ProduceJob(LinkedBlockingQueue<Job> queue) {
+		super();
+		this.queue = queue;
+	}
 
-    @Override
-    public void run() {
-        try {
-            int randomNum = 1 + ( int ) ( Math.random() * 100 );
-            Job job = new Job( randomNum, String.valueOf( randomNum ) );
-            this.queue.put( job );
-            log.info( "Adding Job: " + job.toString() );
-        } catch ( InterruptedException e ) {
-            e.printStackTrace();
-        }
-    }
+	@Override
+	public void run() {
+		try {
+			int randomNum = 1 + (int) (Math.random() * 100);
+			Job job = new Job(String.valueOf(randomNum),
+					String.valueOf(randomNum), String.valueOf(randomNum));
+			this.queue.put(job);
+			log.info("Adding Job: " + job.toString());
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
 }

@@ -19,6 +19,12 @@
 
 package ubc.pavlab.morf.models;
 
+import java.util.Date;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 /**
  * TODO Document Me
  * 
@@ -27,26 +33,133 @@ package ubc.pavlab.morf.models;
  */
 public class Job {
 
-    @Override
-    public String toString() {
-        return "Job [uid=" + uid + ", contents=" + contents.substring( 0, Math.min( contents.length(), 20 ) ) + "]";
-    }
+	private String sessionId;
+	private String name;
+	private String content;
+	private Boolean complete = false;
+	private Future<String> future;
+	private String result;
+	private Date submitted;
 
-    private final int uid;
-    private final String contents;
+	public Job() {
 
-    public Job( final int uid, final String contents ) {
-        super();
-        this.uid = uid;
-        this.contents = contents;
-    }
+	}
 
-    public int getUid() {
-        return uid;
-    }
+	/**
+	 * @param sessionId
+	 * @param name
+	 * @param contents
+	 */
+	public Job(String sessionId, String name, String content) {
+		super();
+		this.sessionId = sessionId;
+		this.name = name;
+		this.content = content;
+	}
 
-    public String getContents() {
-        return contents;
-    }
+	public String getSessionId() {
+		return sessionId;
+	}
+
+	public void setSessionId(String sessionId) {
+		this.sessionId = sessionId;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getContent() {
+		return content;
+	}
+
+	public void setContent(String content) {
+		this.content = content;
+	}
+
+	public Future<String> getFuture() {
+		return future;
+	}
+
+	public void setFuture(Future<String> future) {
+		this.future = future;
+	}
+
+	public Boolean getComplete() {
+		return complete ? true : this.future.isDone();
+	}
+
+	public void setComplete(Boolean complete) {
+		this.complete = complete;
+	}
+
+	public String getResult() {
+		if (result != null) {
+			return result;
+		}
+		if (getComplete()) {
+			try {
+				this.result = this.future.get(1, TimeUnit.SECONDS);
+				return result;
+			} catch (InterruptedException | ExecutionException
+					| TimeoutException e) {
+				e.printStackTrace();
+				return null;
+			}
+		} else {
+			return null;
+		}
+
+	}
+
+	@Override
+	public String toString() {
+		return "Job [sessionId=" + sessionId + ", name=" + name + ", complete="
+				+ complete + "]";
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result
+				+ ((sessionId == null) ? 0 : sessionId.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Job other = (Job) obj;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		if (sessionId == null) {
+			if (other.sessionId != null)
+				return false;
+		} else if (!sessionId.equals(other.sessionId))
+			return false;
+		return true;
+	}
+
+	public Date getSubmitted() {
+		return submitted;
+	}
+
+	public void setSubmitted(Date submitted) {
+		this.submitted = submitted;
+	}
 
 }
