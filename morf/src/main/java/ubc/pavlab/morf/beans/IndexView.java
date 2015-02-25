@@ -32,6 +32,7 @@ public class IndexView implements Serializable {
 	private String name;
 	private String content;
 	private Job selectedJob;
+	private Integer exampleCnt = 1;
 
 	public IndexView() {
 		log.info("IndexView created");
@@ -43,32 +44,47 @@ public class IndexView implements Serializable {
 	}
 
 	/*
-	 * public void getResult(ActionEvent actionEvent) { String res =
-	 * userManager.getResultIfReady(currentSelectedName); if (res != null) {
-	 * addMessage(res); } else { addMessage("Something went wrong!"); } }
+	 * public void getResult(ActionEvent actionEvent) { String res = userManager.getResultIfReady(currentSelectedName);
+	 * if (res != null) { addMessage(res); } else { addMessage("Something went wrong!"); } }
 	 */
 
 	public void submitJob(ActionEvent actionEvent) {
-		if (userManager.jobExists(name)) {
+		Job job = new Job(userManager.getSessionId(), name, content);
+		if (userManager.jobExists(job)) {
 			addMessage("Job already exists under name (" + name + ")");
 		} else {
 			addMessage("Job submitted for (" + name + ")");
-			userManager.submitJob(name, content);
+			userManager.submitJob(job);
+			// RequestContext.getCurrentInstance().addCallbackParam("stopPolling", false);
+		}
+
+	}
+
+	public void submitMultipleJob(ActionEvent actionEvent) {
+		for (int i = 0; i < 5; i++) {
+			Job job = new Job(userManager.getSessionId(), exampleCnt.toString(), exampleCnt.toString());
+			if (userManager.jobExists(job)) {
+				addMessage("Job already exists under name (" + exampleCnt.toString() + ")");
+			} else {
+				addMessage("Job submitted for (" + exampleCnt.toString() + ")");
+				userManager.submitJob(job);
+				exampleCnt++;
+			}
+
 		}
 
 	}
 
 	private void addMessage(String summary) {
-		FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO,
-				summary, null);
+		FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, null);
 		FacesContext.getCurrentInstance().addMessage(null, message);
 	}
 
 	/*
 	 * public String getCurrentSelectedName() { return currentSelectedName; }
 	 * 
-	 * public void setCurrentSelectedName(String currentSelectedName) {
-	 * this.currentSelectedName = currentSelectedName; }
+	 * public void setCurrentSelectedName(String currentSelectedName) { this.currentSelectedName = currentSelectedName;
+	 * }
 	 */
 
 	public String getName() {

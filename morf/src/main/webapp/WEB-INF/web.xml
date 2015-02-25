@@ -40,6 +40,7 @@
 	<servlet-mapping>
 		<servlet-name>Faces Servlet</servlet-name>
 		<url-pattern>*.xhtml</url-pattern>
+		<url-pattern>/javax.faces.resource/*</url-pattern>
 	</servlet-mapping>
 	
 	<!-- Theme -->
@@ -71,4 +72,26 @@
 		<exception-type>java.lang.RuntimeException</exception-type>
 		<location>/WEB-INF/errors/bug.xhtml</location>
 	</error-page>
+	
+	<!-- web fonts -->
+	<mime-mapping>
+		<extension>eot</extension>
+		<mime-type>application/vnd.ms-fonobject</mime-type>
+	</mime-mapping>
+		<mime-mapping>
+		<extension>otf</extension>
+		<mime-type>font/opentype</mime-type>
+	</mime-mapping>
+		<mime-mapping>
+		<extension>ttf</extension>
+		<mime-type>application/x-font-ttf</mime-type>
+	</mime-mapping>
+	<mime-mapping>
+		<extension>woff</extension>
+		<mime-type>application/x-font-woff</mime-type>
+	</mime-mapping>
+		<mime-mapping>
+		<extension>svg</extension>
+		<mime-type>image/svg+xml</mime-type>
+	</mime-mapping>
 </web-app>

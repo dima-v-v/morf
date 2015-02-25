@@ -19,11 +19,11 @@
 
 package ubc.pavlab.morf.beans;
 
-import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -33,7 +33,6 @@ import javax.faces.bean.ManagedBean;
 import org.apache.log4j.Logger;
 
 import ubc.pavlab.morf.models.Job;
-import ubc.pavlab.morf.runnables.MyCallable;
 
 /**
  * TODO Document Me
@@ -47,57 +46,63 @@ public class JobManager {
 
 	private static final Logger log = Logger.getLogger(JobManager.class);
 
-	private LinkedBlockingQueue<Job> queue = new LinkedBlockingQueue<Job>();
 	private boolean running;
+	private LinkedList<Job> jobs = new LinkedList<Job>();
 
-	private ExecutorService processJob;
+	// private ExecutorService processJob;
+	// private ThreadPoolExecutor executor;
+	private ExecutorService executor;
 
 	// private ScheduledExecutorService produceJobScheduler;
 
 	@PostConstruct
 	public void init() {
-		processJob = Executors.newSingleThreadExecutor();
-
-		// processJobScheduler.scheduleAtFixedRate(new ProcessJob(queue), 10, 5,
-		// TimeUnit.SECONDS);
-
-		// produceJobScheduler = Executors.newSingleThreadScheduledExecutor();
-		// produceJobScheduler.scheduleAtFixedRate( new ProduceJob(
-		// jobQueue.getQueue() ), 10, 10, TimeUnit.SECONDS );
+		executor = Executors.newSingleThreadExecutor();
+		// executor = (ThreadPoolExecutor) Executors.newSingleThreadExecutor();
 	}
 
 	@PreDestroy
 	public void destroy() {
 		log.info("JobManager destroyed");
-		processJob.shutdownNow();
+		// processJob.shutdownNow();
+		executor.shutdownNow();
 	}
 
 	public boolean isRunning() {
 		return running;
 	}
 
-	public void putJob(Job job) {
-		try {
-			this.queue.put(job);
-			log.info("Adding Job: " + job.toString());
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+	public Job submit(Job job) {
+
+		// Future<String> future = processJob.submit(job);
+		// TODO is synchronized necessary?
+		synchronized (jobs) {
+			log.info("Submitting Job: " + job.getName() + " for session: (" + job.getSessionId() + ")");
+			Future<String> future = executor.submit(job);
+			job.setFuture(future);
+			jobs.add(job);
 		}
-
-	}
-
-	public Job submit(String sessionId, String name, String content) {
-		log.info("Submitting Job: " + name);
-		MyCallable callable = new MyCallable(5000, name, content);
-		Future<String> future = processJob.submit(callable);
-		Job job = new Job(sessionId, name, content);
-		job.setSubmitted(new Date());
-		job.setFuture(future);
 		return job;
 	}
 
-	public LinkedBlockingQueue<Job> getQueue() {
-		return queue;
-	}
+	// This needs to be optimized
+	public Integer queuePosition(Job job) {
+		if (jobs.contains(job)) {
+			int idx = 1;
+			for (Iterator<Job> iterator = jobs.iterator(); iterator.hasNext();) {
+				Job j = (Job) iterator.next();
+				if (j.equals(job)) {
+					// log.info("Position of (" + job.getName() + ") in queue: " + idx);
+					return idx;
+				} else if (!j.getFuture().isDone()) {
+					// loop through queue increment counter for every not done job before the given job
+					idx++;
+				}
 
+			}
+		}
+
+		log.info("Position of (" + job.getName() + ") in queue: NOT_FOUND");
+		return null;
+	}
 }

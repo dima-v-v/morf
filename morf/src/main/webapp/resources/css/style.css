@@ -52,3 +52,16 @@ table tbody tr.green-row {
 	background-color: #a5dda5;
 	background: #a5dda5;
 }
+
+div.ui-datatable-tablewrapper table tbody td {
+	text-align:center;
+}
+
+.ui-icon.fa {
+	text-indent:0px;
+	background-image:none;
+	font-size: initial;
+ }
+ 
+ #top div.ui-layout-unit-content.ui-widget-content {
+ overflow:hidden;}

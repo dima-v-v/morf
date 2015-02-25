@@ -20,6 +20,7 @@
 package ubc.pavlab.morf.models;
 
 import java.util.Date;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +32,7 @@ import java.util.concurrent.TimeoutException;
  * @author mjacobson
  * @version $Id$
  */
-public class Job {
+public class Job implements Callable<String> {
 
 	private String sessionId;
 	private String name;
@@ -39,7 +40,8 @@ public class Job {
 	private Boolean complete = false;
 	private Future<String> future;
 	private String result;
-	private Date submitted;
+	private Date submittedDate;
+	private String position;
 
 	public Job() {
 
@@ -90,7 +92,15 @@ public class Job {
 	}
 
 	public Boolean getComplete() {
-		return complete ? true : this.future.isDone();
+		if (complete) {
+			return true;
+		} else {
+			if (this.future == null) {
+				return false;
+			} else {
+				return this.future.isDone();
+			}
+		}
 	}
 
 	public void setComplete(Boolean complete) {
@@ -105,8 +115,7 @@ public class Job {
 			try {
 				this.result = this.future.get(1, TimeUnit.SECONDS);
 				return result;
-			} catch (InterruptedException | ExecutionException
-					| TimeoutException e) {
+			} catch (InterruptedException | ExecutionException | TimeoutException e) {
 				e.printStackTrace();
 				return null;
 			}
@@ -118,8 +127,7 @@ public class Job {
 
 	@Override
 	public String toString() {
-		return "Job [sessionId=" + sessionId + ", name=" + name + ", complete="
-				+ complete + "]";
+		return "Job [sessionId=" + sessionId + ", name=" + name + ", complete=" + complete + "]";
 	}
 
 	@Override
@@ -127,8 +135,7 @@ public class Job {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		result = prime * result
-				+ ((sessionId == null) ? 0 : sessionId.hashCode());
+		result = prime * result + ((sessionId == null) ? 0 : sessionId.hashCode());
 		return result;
 	}
 
@@ -154,12 +161,27 @@ public class Job {
 		return true;
 	}
 
-	public Date getSubmitted() {
-		return submitted;
+	@Override
+	public String call() throws Exception {
+		Thread.sleep(5000);
+		// return the thread name executing this callable task
+		return Thread.currentThread().getName() + " - " + name + " - " + content;
 	}
 
-	public void setSubmitted(Date submitted) {
-		this.submitted = submitted;
+	public Date getSubmittedDate() {
+		return submittedDate;
+	}
+
+	public void setSubmittedDate(Date submittedDate) {
+		this.submittedDate = submittedDate;
+	}
+
+	public String getPosition() {
+		return position;
+	}
+
+	public void setPosition(String position) {
+		this.position = position;
 	}
 
 }

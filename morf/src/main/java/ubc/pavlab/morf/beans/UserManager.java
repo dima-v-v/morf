@@ -4,11 +4,11 @@
 package ubc.pavlab.morf.beans;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.Future;
 
 import javax.annotation.PostConstruct;
@@ -19,6 +19,7 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpSession;
 
 import org.apache.log4j.Logger;
+import org.primefaces.context.RequestContext;
 
 import ubc.pavlab.morf.models.Job;
 
@@ -35,12 +36,16 @@ public class UserManager implements Serializable {
 	 */
 	private static final long serialVersionUID = -3568877185808646254L;
 	private static final Logger log = Logger.getLogger(UserManager.class);
+	private static final int MAX_JOBS_IN_QUEUE = 2;
+	private Object jobSubmitLock = new Object();
+	private Boolean stopPolling = true;
 
 	@ManagedProperty(value = "#{jobManager}")
 	private JobManager jobManager;
 
-	private Map<String, Job> results = new HashMap<String, Job>();
-	private Set<Job> jobs = new HashSet<Job>();
+	// private Map<String, Job> results = new HashMap<String, Job>();
+	private List<Job> jobs = new ArrayList<Job>();
+	private Queue<Job> jobQueue = new LinkedList<Job>();
 
 	public UserManager() {
 		log.info("UserManager created");
@@ -51,50 +56,92 @@ public class UserManager implements Serializable {
 		log.info("UserManager init");
 	}
 
-	private String getSessionId() {
+	String getSessionId() {
 		FacesContext fCtx = FacesContext.getCurrentInstance();
-		HttpSession session = (HttpSession) fCtx.getExternalContext()
-				.getSession(false);
+		HttpSession session = (HttpSession) fCtx.getExternalContext().getSession(false);
 		return session.getId();
 	}
 
-	public void createJob(String name, String contents) {
-		Job job = new Job(getSessionId(), name, contents);
-		jobManager.putJob(job);
+	void submitJob(Job job) {
+		// log.info("Starting polling");
+		// stopPolling = false;
+		if (!jobs.contains(job)) {
+			jobs.add(job);
+			jobQueue.add(job);
+		}
+		submitJobFromQueue();
+
+		// results.put(job.getName(), job);
 	}
 
-	void submitJob(String name, String content) {
-		Job job = jobManager.submit(getSessionId(), name, content);
-		jobs.add(job);
-		results.put(name, job);
-	}
-
-	String getResultIfReady(String name) {
-		Future<String> res = results.get(name).getFuture();
-		if (res == null) {
-			return "Cannot find job queued under name (" + name + ")";
-		} else if (res.isDone()) {
-			try {
-				return res.get();
-			} catch (InterruptedException | ExecutionException e) {
-				e.printStackTrace();
-				return null;
+	private void submitJobFromQueue() {
+		synchronized (jobSubmitLock) {
+			if (runningJobs() < MAX_JOBS_IN_QUEUE) {
+				Job job = jobQueue.poll();
+				if (job != null) {
+					job.setSubmittedDate(new Date());
+					jobManager.submit(job);
+				}
 			}
-		} else {
-			return "Result isn't ready for (" + name + ")";
 		}
 	}
 
-	public Set<Job> getJobs() {
+	private int runningJobs() {
+		int cnt = 0;
+		for (Job job : jobs) {
+			if (job.getSubmittedDate() != null && job.getFuture() != null && !job.getFuture().isDone())
+				cnt++;
+		}
+		return cnt;
+	}
+
+	/*
+	 * String getResultIfReady(String name) { Future<String> res = results.get(name).getFuture(); if (res == null) {
+	 * return "Cannot find job queued under name (" + name + ")"; } else if (res.isDone()) { try { return res.get(); }
+	 * catch (InterruptedException | ExecutionException e) { e.printStackTrace(); return null; } } else { return
+	 * "Result isn't ready for (" + name + ")"; } }
+	 */
+
+	public synchronized void updateQueuePositions() {
+
+		for (int i = 0; i < MAX_JOBS_IN_QUEUE; i++) {
+			submitJobFromQueue();
+		}
+		boolean somethingIsRunning = false;
+		for (Job job : jobs) {
+			Future<String> future = job.getFuture();
+			if (future == null) {
+				somethingIsRunning = true;
+				job.setPosition("Pending...");
+			} else if (future.isDone()) {
+				job.setPosition("Done");
+			} else {
+				somethingIsRunning = true;
+				job.setPosition(jobManager.queuePosition(job).toString());
+			}
+
+		}
+		if (!somethingIsRunning) {
+			// log.info("Stopping polling");
+			// stopPolling = true;
+			RequestContext.getCurrentInstance().addCallbackParam("stopPolling", true);
+		}
+	}
+
+	public List<Job> getJobs() {
 		return jobs;
 	}
 
-	boolean jobExists(String name) {
-		return this.results.containsKey(name);
+	boolean jobExists(Job job) {
+		return this.jobs.contains(job);
 	}
 
 	public void setJobManager(JobManager jobManager) {
 		this.jobManager = jobManager;
+	}
+
+	public Boolean getStopPolling() {
+		return stopPolling;
 	}
 
 }
