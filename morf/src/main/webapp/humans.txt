@@ -1,0 +1,7 @@
+/* Web Application & UI */
+	Matthew Jacobson
+	Contact: JacobsonMT [at] gmail [dot] com
+	Github: https://github.com/JacobsonMT
+
+/* Cluster API */
+	Nawar Malhis

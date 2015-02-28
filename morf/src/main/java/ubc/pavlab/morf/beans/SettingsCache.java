@@ -67,10 +67,9 @@ public class SettingsCache implements Serializable {
             // load a properties file from class path, inside static method
             prop.load( input );
 
-            // get the property value and print it out
-            log.info( prop.getProperty( "morf.script" ) );
-            log.info( prop.getProperty( "morf.input" ) );
-            log.info( prop.getProperty( "morf.output" ) );
+            for ( String property : prop.stringPropertyNames() ) {
+                log.debug( property + ": " + prop.getProperty( property ) );
+            }
 
         } catch ( IOException ex ) {
             ex.printStackTrace();

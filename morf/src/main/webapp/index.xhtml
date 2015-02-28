@@ -41,7 +41,7 @@
  	</p:layoutUnit>
  
     <p:layoutUnit id="center" position="center">
-    	<h3>FASTA Sequence Processor</h3>
+    	<h3>#{settingsCache.getProperty('morf.name')}</h3>
         <h:form>            
 		    <p:growl id="growl" life="2000" />
 		    <h:panelGrid columns="2" style="margin-bottom:10px" cellpadding="5">
@@ -52,7 +52,7 @@
 			    <p:inputTextarea id="inputContent" value="#{indexView.content}" rows="10" cols="100" autoResize="false" />
 		    </h:panelGrid>
 		    <p:commandButton value="Submit Job" icon="ui-icon-disk" update="growl,:formJobs:tableJobs" actionListener="#{indexView.submitJob}" styleClass="ui-priority-primary" onclick="startPoller()"/>
-			<p:commandButton value="Submit MultipleJob" icon="ui-icon-disk" update="growl,:formJobs:tableJobs" actionListener="#{indexView.submitMultipleJob}" styleClass="ui-priority-primary" onclick="startPoller()"/>
+			<p:commandButton value="Submit Multiple Example Jobs" icon="ui-icon-disk" update="growl,:formJobs:tableJobs" actionListener="#{indexView.submitMultipleJob}" styleClass="ui-priority-primary" onclick="startPoller()"/>
 		</h:form>
 		<br/>
 		<p:separator/>
@@ -102,13 +102,14 @@
 		                <h:outputText value="#{indexView.selectedJob.complete}" />
 		                
 		                <h:outputText value="Result" />
-		                <h:outputText value="#{indexView.selectedJob.result}" />
+	                    <p:commandButton value="Download" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon-arrowthick-1-s">
+        					<p:fileDownload value="#{indexView.selectedJob.file}" />
+    					</p:commandButton>
 		            </p:panelGrid>
 		        </p:outputPanel>
 		    </p:dialog>
-			<p:poll widgetVar="poller" interval="3" listener="#{userManager.updateQueuePositions}" autoStart="true" update="tableJobs" oncomplete="handlePollComplete(xhr, status, args)"/>
+			<p:poll widgetVar="poller" interval="#{settingsCache.getProperty('morf.pollInterval')}" listener="#{userManager.updateQueuePositions}" autoStart="true" update="tableJobs" oncomplete="handlePollComplete(xhr, status, args)"/>
 		</h:form>
-		<p>Method of viewing job position in queue</p>
     </p:layoutUnit>
     
     <p:layoutUnit id="bottom" position="south" resizable="false" size="50">
@@ -121,7 +122,9 @@
     </p:layoutUnit>
 </p:layout>
 
-
+<p:dialog modal="true" widgetVar="statusDialog" header="Status" draggable="false" closable="false" resizable="false">
+    <p:graphicImage library="img" name="loader.gif" />
+</p:dialog>
 
 
 
