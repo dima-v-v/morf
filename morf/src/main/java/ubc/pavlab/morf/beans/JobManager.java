@@ -68,6 +68,19 @@ public class JobManager {
         executor.shutdownNow();
     }
 
+    public boolean cancelJob( Job job ) {
+        boolean canceled = false;
+        synchronized ( jobs ) {
+            Future<String> future = job.getFuture();
+            canceled = future.cancel( true );
+
+            if ( canceled ) {
+                jobs.remove( job );
+            }
+        }
+        return canceled;
+    }
+
     public Job submit( Job job ) {
         // TODO is synchronized necessary?
         synchronized ( jobs ) {

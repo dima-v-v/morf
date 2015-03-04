@@ -32,6 +32,7 @@ public class IndexView implements Serializable {
     private String name;
     private String content;
     private Job selectedJob;
+    private Job jobToRemove;
     private Integer exampleCnt = 1;
 
     public IndexView() {
@@ -47,6 +48,24 @@ public class IndexView implements Serializable {
      * public void getResult(ActionEvent actionEvent) { String res = userManager.getResultIfReady(currentSelectedName);
      * if (res != null) { addMessage(res); } else { addMessage("Something went wrong!"); } }
      */
+
+    public void cancelJob() {
+
+        if ( jobToRemove.getComplete() ) {
+            addMessage( "Job (" + jobToRemove.getName() + ") is already complete, cannot cancel.",
+                    FacesMessage.SEVERITY_INFO );
+        } else if ( userManager.jobExists( jobToRemove ) ) {
+            boolean canceled = userManager.cancelJob( jobToRemove );
+            if ( canceled ) {
+                addMessage( "Job (" + jobToRemove.getName() + ") successfully cancelled.", FacesMessage.SEVERITY_INFO );
+            } else {
+                addMessage( "Job (" + jobToRemove.getName() + ") failed to cancel.", FacesMessage.SEVERITY_WARN );
+            }
+        } else {
+            addMessage( "Cannot find job (" + jobToRemove.getName() + ")", FacesMessage.SEVERITY_ERROR );
+
+        }
+    }
 
     public void submitJob( ActionEvent actionEvent ) {
 
@@ -115,6 +134,14 @@ public class IndexView implements Serializable {
 
     public void setSelectedJob( Job selectedJob ) {
         this.selectedJob = selectedJob;
+    }
+
+    public Job getJobToRemove() {
+        return jobToRemove;
+    }
+
+    public void setJobToRemove( Job jobToRemove ) {
+        this.jobToRemove = jobToRemove;
     }
 
 }

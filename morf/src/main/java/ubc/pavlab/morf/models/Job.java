@@ -191,6 +191,7 @@ public class Job implements Callable<String> {
 
     @Override
     public String call() throws Exception {
+        log.info( "Starting job " + name + " for session: " + sessionId );
         // Write content to input
         File file = new File( pathToInput );
 
@@ -220,7 +221,7 @@ public class Job implements Callable<String> {
 
         StringWriter writer = new StringWriter();
         IOUtils.copy( resultFile, writer, "UTF-8" );
-
+        log.info( "Finished job " + name + " for session: " + sessionId );
         return writer.toString();
     }
 

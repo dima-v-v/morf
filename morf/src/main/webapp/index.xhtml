@@ -51,16 +51,16 @@
 		    	<p:outputLabel for="inputName" value="Job Name: " />
 			    <p:inputText id="inputName" value="#{indexView.name}"/>
 			    
-			    <p:outputLabel for="inputContent" value="Content: " />
+			    <p:outputLabel for="inputContent" value="FASTA: " />
 			    <p:inputTextarea id="inputContent" value="#{indexView.content}" rows="10" cols="100" autoResize="false" />
 		    </h:panelGrid>
 		    <p:commandButton value="Submit Job" icon="ui-icon-disk" update="growl,:formJobs:tableJobs" actionListener="#{indexView.submitJob}" styleClass="ui-priority-primary" onclick="startPoller()"/>
-			<p:commandButton value="Submit Multiple Example Jobs" icon="ui-icon-disk" update="growl,:formJobs:tableJobs" actionListener="#{indexView.submitMultipleJob}" styleClass="ui-priority-primary" onclick="startPoller()"/>
 		</h:form>
 		<br/>
 		<p:separator/>
 		<br/>
-		<h:form id="formJobs">			
+		<h:form id="formJobs">	
+			<p:growl id="tableGrowl" life="2000" />		
 		    <p:dataTable id="tableJobs" var="job" value="#{userManager.jobs}" rowStyleClass="#{job.complete eq true ? 'green-row' : 'yellow-row'}" sortBy="#{job.submittedDate}">
 		        <f:facet name="header">
 		            Jobs
@@ -79,9 +79,12 @@
 		        <p:column headerText="Complete">
 					<h:outputText value="#{job.complete}" />
 		        </p:column>
-		        <p:column style="width:32px;text-align: center">
+		        <p:column style="width:64px;text-align: center">
 		             <p:commandButton update=":formJobs:jobDetail" oncomplete="PF('jobDialog').show()" icon="ui-icon-search" title="View">
 		                <f:setPropertyActionListener value="#{job}" target="#{indexView.selectedJob}" />
+		            </p:commandButton>
+		             <p:commandButton update=":formJobs:tableGrowl, :formJobs:tableJobs" icon="fa fa-remove" title="Cancel" action="#{indexView.cancelJob}">
+		                <f:setPropertyActionListener value="#{job}" target="#{indexView.jobToRemove}" />
 		            </p:commandButton>
 		        </p:column>
 		    </p:dataTable>
@@ -104,8 +107,8 @@
 		                <h:outputText value="Complete" />
 		                <h:outputText value="#{indexView.selectedJob.complete}" />
 		                
-		                <h:outputText value="Result" />
-	                    <p:commandButton value="Download" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon-arrowthick-1-s">
+		                <h:outputText value="Result" rendered="#{indexView.selectedJob.complete}"/>
+	                    <p:commandButton value="Download" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon-arrowthick-1-s" rendered="#{indexView.selectedJob.complete}">
         					<p:fileDownload value="#{indexView.selectedJob.file}" />
     					</p:commandButton>
 		            </p:panelGrid>
@@ -119,7 +122,7 @@
         <h:form>            
 		    <p:growl id="authenticateGrowl" life="2000" />
 		    <h:panelGrid columns="2" style="margin-bottom:10px" cellpadding="5">
-		    	<p:outputLabel for="password" value="Password: " />
+		    	<p:outputLabel for="password" value="Passphrase: " />
 			    <p:password id="password" binding="#{pass}"/>
 		    </h:panelGrid>
 		    <p:commandButton value="Authenticate" icon="ui-icon-arrowthickstop-1-e" update="authenticateGrowl :centerPanel" action="#{userManager.authenticate(pass.value)}" styleClass="ui-priority-primary"/>

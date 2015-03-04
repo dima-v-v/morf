@@ -82,16 +82,23 @@ public class UserManager implements Serializable {
         // results.put(job.getName(), job);
     }
 
-    public void cancelJob( Job job ) {
+    public boolean cancelJob( Job job ) {
+        boolean canceled = false;
         synchronized ( jobSubmitLock ) {
             if ( jobQueue.contains( job ) ) {
                 // Not yet submitted, just remove it from queue and job list
                 jobQueue.remove( job );
                 jobs.remove( job );
+                canceled = true;
             } else if ( jobs.contains( job ) ) {
+                canceled = jobManager.cancelJob( job );
+                if ( canceled ) {
+                    jobs.remove( job );
+                }
                 // already submitted must send cancel request
             }
         }
+        return canceled;
     }
 
     private void submitJobFromQueue() {
