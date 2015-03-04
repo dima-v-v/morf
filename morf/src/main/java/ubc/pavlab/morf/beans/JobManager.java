@@ -86,7 +86,6 @@ public class JobManager {
         }
 
         synchronized ( jobs ) {
-            log.info( jobs.size() );
             if ( !jobs.contains( job ) ) {
                 log.warn( "(" + job.getName() + ") not complete and not in job queue!" );
                 return null;
@@ -113,6 +112,10 @@ public class JobManager {
                     + ") not complete, passed synchronized check for contained in job queue and was not found!" );
             return null;
         }
+    }
+
+    public int jobsInQueue() {
+        return jobs.size();
     }
 
 }

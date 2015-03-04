@@ -12,6 +12,7 @@ import java.util.Queue;
 import java.util.concurrent.Future;
 
 import javax.annotation.PostConstruct;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
@@ -38,6 +39,7 @@ public class UserManager implements Serializable {
     private int MAX_JOBS_IN_QUEUE = 2;
     private Object jobSubmitLock = new Object();
     private Boolean stopPolling = true;
+    private Boolean authenticated = false;
 
     @ManagedProperty(value = "#{jobManager}")
     private JobManager jobManager;
@@ -45,9 +47,12 @@ public class UserManager implements Serializable {
     @ManagedProperty(value = "#{settingsCache}")
     private SettingsCache settingsCache;
 
+    @ManagedProperty(value = "#{security}")
+    private Security security;
+
     // private Map<String, Job> results = new HashMap<String, Job>();
-    private List<Job> jobs = new ArrayList<Job>();
-    private Queue<Job> jobQueue = new LinkedList<Job>();
+    private List<Job> jobs = new ArrayList<Job>(); // All jobs
+    private Queue<Job> jobQueue = new LinkedList<Job>(); // All jobs yet to be submitted
 
     public UserManager() {
         log.info( "UserManager created" );
@@ -75,6 +80,18 @@ public class UserManager implements Serializable {
         submitJobFromQueue();
 
         // results.put(job.getName(), job);
+    }
+
+    public void cancelJob( Job job ) {
+        synchronized ( jobSubmitLock ) {
+            if ( jobQueue.contains( job ) ) {
+                // Not yet submitted, just remove it from queue and job list
+                jobQueue.remove( job );
+                jobs.remove( job );
+            } else if ( jobs.contains( job ) ) {
+                // already submitted must send cancel request
+            }
+        }
     }
 
     private void submitJobFromQueue() {
@@ -128,6 +145,16 @@ public class UserManager implements Serializable {
             // stopPolling = true;
             RequestContext.getCurrentInstance().addCallbackParam( "stopPolling", true );
         }
+        log.info( String.format( "Jobs in queue: %d", jobManager.jobsInQueue() ) );
+    }
+
+    public void authenticate( String password ) {
+        authenticated = security.checkPassword( password );
+        log.info( "authenticated: " + authenticated );
+        if ( !authenticated ) {
+            FacesMessage message = new FacesMessage( FacesMessage.SEVERITY_WARN, "Incorrect Password!", null );
+            FacesContext.getCurrentInstance().addMessage( null, message );
+        }
     }
 
     public List<Job> getJobs() {
@@ -146,8 +173,16 @@ public class UserManager implements Serializable {
         this.settingsCache = settingsCache;
     }
 
+    public void setSecurity( Security security ) {
+        this.security = security;
+    }
+
     public Boolean getStopPolling() {
         return stopPolling;
+    }
+
+    public Boolean getAuthenticated() {
+        return authenticated;
     }
 
 }

@@ -117,6 +117,14 @@
 			<artifactId>font-awesome</artifactId>
 			<version>4.2.0</version>
 		</dependency>
+		
+		<!-- BCrypt -->
+		<dependency>
+			<groupId>org.mindrot</groupId>
+			<artifactId>jbcrypt</artifactId>
+			<version>0.3m</version>
+		</dependency>
+		
 
 	</dependencies>
 	

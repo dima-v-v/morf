@@ -22,6 +22,7 @@ package ubc.pavlab.morf.models;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -47,6 +48,10 @@ import org.primefaces.model.StreamedContent;
 public class Job implements Callable<String> {
 
     private static final Logger log = Logger.getLogger( Job.class );
+    private static String scriptName;
+    private static String scriptBasePath;
+    private static String pathToInput;
+    private static String pathToOutput;
 
     private String sessionId;
     private String name;
@@ -141,9 +146,6 @@ public class Job implements Callable<String> {
     // }
 
     public StreamedContent getFile() {
-        if ( resultFile != null ) {
-            return resultFile;
-        }
         if ( getComplete() ) {
             try {
                 InputStream in = IOUtils.toInputStream( this.future.get( 1, TimeUnit.SECONDS ), "UTF-8" );
@@ -189,26 +191,37 @@ public class Job implements Callable<String> {
 
     @Override
     public String call() throws Exception {
-        // File file = new File( "/home/mjacobson/morf/output.txt" );
-        // SimpleDateFormat sdf = new SimpleDateFormat( "MM/dd/yyyy HH:mm:ss" );
-        // log.info( "Before Format : " + sdf.format( file.lastModified() ) );
+        // Write content to input
+        File file = new File( pathToInput );
 
-        executeCommand( "./script.sh", "/home/mjacobson/morf/" );
-        // this.complete = true;
-        // log.info( output );
+        try (FileOutputStream fop = new FileOutputStream( file )) {
 
-        InputStream resultFile = new FileInputStream( "/home/mjacobson/morf/output.txt" );
+            // if file doesn't exists, then create it
+            if ( !file.exists() ) {
+                file.createNewFile();
+            }
+
+            // get the content in bytes
+            byte[] contentInBytes = content.getBytes();
+
+            fop.write( contentInBytes );
+            fop.flush();
+            fop.close();
+
+        } catch ( IOException e ) {
+            e.printStackTrace();
+        }
+
+        // Execute script
+        executeCommand( "./" + scriptName, scriptBasePath );
+
+        // Get output
+        InputStream resultFile = new FileInputStream( pathToOutput );
 
         StringWriter writer = new StringWriter();
         IOUtils.copy( resultFile, writer, "UTF-8" );
 
         return writer.toString();
-
-        // file = new File( "/home/mjacobson/morf/output.txt" );
-        // log.info( "Before Format : " + sdf.format( file.lastModified() ) );
-
-        // return the thread name executing this callable task
-        // return resultFile;
     }
 
     private String executeCommand( String command, String path ) {
@@ -247,6 +260,13 @@ public class Job implements Callable<String> {
 
     public void setPosition( String position ) {
         this.position = position;
+    }
+
+    public static void setPaths( String scriptName, String scriptBasePath, String pathToInput, String pathToOutput ) {
+        Job.scriptName = scriptName;
+        Job.scriptBasePath = scriptBasePath;
+        Job.pathToInput = pathToInput;
+        Job.pathToOutput = pathToOutput;
     }
 
 }

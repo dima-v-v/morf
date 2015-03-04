@@ -23,6 +23,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 
 import javax.annotation.PostConstruct;
@@ -30,6 +32,8 @@ import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 
 import org.apache.log4j.Logger;
+
+import ubc.pavlab.morf.models.Job;
 
 /**
  * TODO Document Me
@@ -48,6 +52,8 @@ public class SettingsCache implements Serializable {
 
     private static final Logger log = Logger.getLogger( SettingsCache.class );
 
+    private static final String PATH_TO_PROPERTIES = "/home/mjacobson/morf.properties";
+
     private Properties prop = new Properties();
 
     public SettingsCache() {
@@ -61,8 +67,7 @@ public class SettingsCache implements Serializable {
         InputStream input = null;
 
         try {
-            String filename = "/home/mjacobson/morf.properties";
-            input = new FileInputStream( filename );
+            input = new FileInputStream( PATH_TO_PROPERTIES );
 
             // load a properties file from class path, inside static method
             prop.load( input );
@@ -70,6 +75,12 @@ public class SettingsCache implements Serializable {
             for ( String property : prop.stringPropertyNames() ) {
                 log.debug( property + ": " + prop.getProperty( property ) );
             }
+
+            String scriptPath = prop.getProperty( "morf.script" );
+            Path p = Paths.get( scriptPath );
+
+            Job.setPaths( p.getFileName().toString(), p.getParent().toString(), prop.getProperty( "morf.input" ),
+                    prop.getProperty( "morf.output" ) );
 
         } catch ( IOException ex ) {
             ex.printStackTrace();
