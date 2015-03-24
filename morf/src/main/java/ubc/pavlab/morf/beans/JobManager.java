@@ -44,91 +44,92 @@ import ubc.pavlab.morf.models.Job;
 @ApplicationScoped
 public class JobManager {
 
-    private static final Logger log = Logger.getLogger( JobManager.class );
+	private static final Logger log = Logger.getLogger(JobManager.class);
 
-    // Contains a representation of the internal queue of jobs
-    private LinkedList<Job> jobs = new LinkedList<Job>();
+	// Contains a representation of the internal queue of jobs
+	private LinkedList<Job> jobs = new LinkedList<Job>();
 
-    // private ExecutorService processJob;
-    // private ThreadPoolExecutor executor;
-    private ExecutorService executor;
+	// private ExecutorService processJob;
+	// private ThreadPoolExecutor executor;
+	private ExecutorService executor;
 
-    // private ScheduledExecutorService produceJobScheduler;
+	// private ScheduledExecutorService produceJobScheduler;
 
-    @PostConstruct
-    public void init() {
-        executor = Executors.newSingleThreadExecutor();
-        // executor = (ThreadPoolExecutor) Executors.newSingleThreadExecutor();
-    }
+	@PostConstruct
+	public void init() {
+		executor = Executors.newSingleThreadExecutor();
+		// executor = (ThreadPoolExecutor) Executors.newSingleThreadExecutor();
+	}
 
-    @PreDestroy
-    public void destroy() {
-        log.info( "JobManager destroyed" );
-        // processJob.shutdownNow();
-        executor.shutdownNow();
-    }
+	@PreDestroy
+	public void destroy() {
+		log.info("JobManager destroyed");
+		// processJob.shutdownNow();
+		executor.shutdownNow();
+	}
 
-    public boolean cancelJob( Job job ) {
-        boolean canceled = false;
-        synchronized ( jobs ) {
-            Future<String> future = job.getFuture();
-            canceled = future.cancel( true );
+	public boolean cancelJob(Job job) {
+		boolean canceled = false;
+		synchronized (jobs) {
+			Future<String> future = job.getFuture();
+			canceled = future.cancel(true);
 
-            if ( canceled ) {
-                jobs.remove( job );
-            }
-        }
-        return canceled;
-    }
+			if (canceled) {
+				jobs.remove(job);
+			}
+		}
+		return canceled;
+	}
 
-    public Job submit( Job job ) {
-        // TODO is synchronized necessary?
-        synchronized ( jobs ) {
-            log.info( "Submitting Job: " + job.getName() + " for session: (" + job.getSessionId() + ")" );
-            Future<String> future = executor.submit( job );
-            job.setFuture( future );
-            jobs.add( job );
-        }
-        return job;
-    }
+	public Job submit(Job job) {
+		// TODO is synchronized necessary?
+		synchronized (jobs) {
+			log.info("Submitting job (" + job.getName() + ") for session: (" + job.getSessionId() + ") and IP: ("
+					+ job.getIpAddress() + ")");
+			Future<String> future = executor.submit(job);
+			job.setFuture(future);
+			jobs.add(job);
+		}
+		return job;
+	}
 
-    // TODO This could be optimized
-    public Integer queuePosition( Job job ) {
-        if ( job.getFuture().isDone() ) {
-            return 0;
-        }
+	// TODO This could be optimized
+	public Integer queuePosition(Job job) {
+		if (job.getFuture().isDone()) {
+			return 0;
+		}
 
-        synchronized ( jobs ) {
-            if ( !jobs.contains( job ) ) {
-                log.warn( "(" + job.getName() + ") not complete and not in job queue!" );
-                return null;
-            }
+		synchronized (jobs) {
+			if (!jobs.contains(job)) {
+				log.warn("(" + job.getName() + ") not complete and not in job queue!");
+				return null;
+			}
 
-            int idx = 1;
+			int idx = 1;
 
-            for ( Iterator<Job> iterator = jobs.iterator(); iterator.hasNext(); ) {
-                Job j = ( Job ) iterator.next();
-                if ( j.equals( job ) ) {
-                    // log.info("Position of (" + job.getName() + ") in queue: " + idx);
-                    return idx;
-                } else if ( j.getFuture().isDone() ) {
-                    // job is done and still in job queue, remove
-                    iterator.remove();
-                } else {
-                    // loop through queue increment counter for every not done job before the given job
-                    idx++;
-                }
+			for (Iterator<Job> iterator = jobs.iterator(); iterator.hasNext();) {
+				Job j = (Job) iterator.next();
+				if (j.equals(job)) {
+					// log.info("Position of (" + job.getName() + ") in queue: " + idx);
+					return idx;
+				} else if (j.getFuture().isDone()) {
+					// job is done and still in job queue, remove
+					iterator.remove();
+				} else {
+					// loop through queue increment counter for every not done job before the given job
+					idx++;
+				}
 
-            }
+			}
 
-            log.warn( "(" + job.getName()
-                    + ") not complete, passed synchronized check for contained in job queue and was not found!" );
-            return null;
-        }
-    }
+			log.warn("(" + job.getName()
+					+ ") not complete, passed synchronized check for contained in job queue and was not found!");
+			return null;
+		}
+	}
 
-    public int jobsInQueue() {
-        return jobs.size();
-    }
+	public int jobsInQueue() {
+		return jobs.size();
+	}
 
 }

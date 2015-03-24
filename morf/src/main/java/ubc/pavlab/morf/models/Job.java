@@ -56,6 +56,7 @@ public class Job implements Callable<String> {
 	private static String pathToOutput;
 
 	private String sessionId;
+	private String ipAddress;
 	private String name;
 	private String content;
 	private Boolean complete = false;
@@ -65,20 +66,17 @@ public class Job implements Callable<String> {
 	private Date submittedDate;
 	private String position;
 
-	public Job() {
-
-	}
-
 	/**
 	 * @param sessionId
 	 * @param name
 	 * @param contents
 	 */
-	public Job(String sessionId, String name, String content) {
+	public Job(String sessionId, String name, String content, String ipAddress) {
 		super();
 		this.sessionId = sessionId;
 		this.name = name;
 		this.content = content;
+		this.ipAddress = ipAddress;
 	}
 
 	public String getSessionId() {
@@ -164,7 +162,8 @@ public class Job implements Callable<String> {
 
 	@Override
 	public String toString() {
-		return "Job [sessionId=" + sessionId + ", name=" + name + ", complete=" + complete + "]";
+		return "Job [sessionId=" + sessionId + ", ipAddress=" + ipAddress + ", name=" + name + ", complete=" + complete
+				+ "]";
 	}
 
 	@Override
@@ -200,7 +199,7 @@ public class Job implements Callable<String> {
 
 	@Override
 	public String call() throws Exception {
-		log.info("Starting job " + name + " for session: " + sessionId);
+		log.info("Starting job (" + name + ") for session: (" + sessionId + ") and IP: (" + ipAddress + ")");
 		// Write content to input
 		File file = new File(pathToInput);
 
@@ -227,7 +226,7 @@ public class Job implements Callable<String> {
 
 		StringWriter writer = new StringWriter();
 		IOUtils.copy(resultFile, writer, "UTF-8");
-		log.info("Finished job " + name + " for session: " + sessionId);
+		log.info("Finished job (" + name + ") for session: (" + sessionId + ") and IP: (" + ipAddress + ")");
 		return writer.toString();
 	}
 
@@ -267,6 +266,14 @@ public class Job implements Callable<String> {
 
 	public void setPosition(String position) {
 		this.position = position;
+	}
+
+	public String getIpAddress() {
+		return ipAddress;
+	}
+
+	public void setIpAddress(String ipAddress) {
+		this.ipAddress = ipAddress;
 	}
 
 	public static void setPaths(String scriptName, String scriptBasePath, String pathToInput, String pathToOutput) {

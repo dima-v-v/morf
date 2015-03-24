@@ -9,6 +9,7 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.log4j.Logger;
 
@@ -68,8 +69,15 @@ public class IndexView implements Serializable {
 	}
 
 	public void submitJob(ActionEvent actionEvent) {
+		HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext()
+				.getRequest();
+		String ipAddress = request.getHeader("X-FORWARDED-FOR");
+		if (ipAddress == null) {
+			ipAddress = request.getRemoteAddr();
+		}
+		// System.out.println("ipAddress:" + ipAddress);
 
-		Job job = new Job(userManager.getSessionId(), name, content);
+		Job job = new Job(userManager.getSessionId(), name, content, ipAddress);
 		if (userManager.jobExists(job)) {
 			addMessage("Job already exists under name (" + name + ")", FacesMessage.SEVERITY_WARN);
 		} else {
@@ -81,8 +89,15 @@ public class IndexView implements Serializable {
 	}
 
 	public void submitMultipleJob(ActionEvent actionEvent) {
+		HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext()
+				.getRequest();
+		String ipAddress = request.getHeader("X-FORWARDED-FOR");
+		if (ipAddress == null) {
+			ipAddress = request.getRemoteAddr();
+		}
+		// System.out.println("ipAddress:" + ipAddress);
 		for (int i = 0; i < 5; i++) {
-			Job job = new Job(userManager.getSessionId(), exampleCnt.toString(), exampleCnt.toString());
+			Job job = new Job(userManager.getSessionId(), exampleCnt.toString(), exampleCnt.toString(), ipAddress);
 			if (userManager.jobExists(job)) {
 				addMessage("Job already exists under name (" + exampleCnt.toString() + ")", FacesMessage.SEVERITY_WARN);
 				exampleCnt++;
