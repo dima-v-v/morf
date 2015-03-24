@@ -1,5 +1,10 @@
 package ubc.pavlab.morf.beans;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.Serializable;
 
 import javax.annotation.PostConstruct;
@@ -28,6 +33,9 @@ public class IndexView implements Serializable {
 
 	@ManagedProperty(value = "#{userManager}")
 	private UserManager userManager;
+
+	@ManagedProperty(value = "#{settingsCache}")
+	private SettingsCache settingsCache;
 
 	// private String currentSelectedName;
 	private String name;
@@ -68,22 +76,87 @@ public class IndexView implements Serializable {
 		}
 	}
 
-	public void submitJob(ActionEvent actionEvent) {
-		HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext()
-				.getRequest();
-		String ipAddress = request.getHeader("X-FORWARDED-FOR");
-		if (ipAddress == null) {
-			ipAddress = request.getRemoteAddr();
-		}
-		// System.out.println("ipAddress:" + ipAddress);
+	private boolean validate(String content) {
+		log.debug("Validating: " + content);
+		ProcessBuilder pb = new ProcessBuilder(settingsCache.getProperty("morf.validate"), "/dev/stdin", "/dev/stdout");
+		pb.redirectErrorStream(true);
 
-		Job job = new Job(userManager.getSessionId(), name, content, ipAddress);
-		if (userManager.jobExists(job)) {
-			addMessage("Job already exists under name (" + name + ")", FacesMessage.SEVERITY_WARN);
+		Process process = null;
+		try {
+			process = pb.start();
+		} catch (IOException e) {
+			log.error("Couldn't start the validation process.", e);
+			return false;
+		}
+
+		try {
+			if (process != null) {
+				BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+
+				// BufferedReader inputFile = new BufferedReader(new InputStreamReader(new FileInputStream(
+				// "/home/mjacobson/morf/input.txt")));
+				//
+				// String currInputLine = null;
+				// while ((currInputLine = inputFile.readLine()) != null) {
+				// bw.write(currInputLine);
+				// bw.newLine();
+				// }
+				// bw.close();
+				// inputFile.close();
+				bw.write(content);
+				bw.close();
+			}
+		} catch (IOException e) {
+			log.error("Either couldn't read from the input file or couldn't write to the OutputStream.", e);
+			return false;
+		}
+
+		BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+		// String currLine = null;
+		boolean res = false;
+		try {
+			if (br.readLine().startsWith(">")) {
+				res = true;
+			} else {
+				res = false;
+			}
+			// while ((currLine = br.readLine()) != null) {
+			// System.out.println(currLine);
+			// }
+			br.close();
+		} catch (IOException e) {
+			log.error("Couldn't read the output.", e);
+			return false;
+		}
+
+		return res;
+	}
+
+	public void submitJob(ActionEvent actionEvent) {
+		boolean res = validate(content);
+
+		if (res) {
+
+			HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext()
+					.getRequest();
+			String ipAddress = request.getHeader("X-FORWARDED-FOR");
+			if (ipAddress == null) {
+				ipAddress = request.getRemoteAddr();
+			}
+			// System.out.println("ipAddress:" + ipAddress);
+
+			Job job = new Job(userManager.getSessionId(), name, content, ipAddress);
+
+			if (userManager.jobExists(job)) {
+				addMessage("Job already exists under name (" + name + ")", FacesMessage.SEVERITY_WARN);
+			} else {
+				addMessage("Job submitted for (" + name + ")", FacesMessage.SEVERITY_INFO);
+				userManager.submitJob(job);
+				// RequestContext.getCurrentInstance().addCallbackParam("stopPolling", false);
+			}
 		} else {
-			addMessage("Job submitted for (" + name + ")", FacesMessage.SEVERITY_INFO);
-			userManager.submitJob(job);
-			// RequestContext.getCurrentInstance().addCallbackParam("stopPolling", false);
+			addMessage("Job (" + name + "): Malformed FASTA Format!", FacesMessage.SEVERITY_ERROR);
 		}
 
 	}
@@ -97,15 +170,10 @@ public class IndexView implements Serializable {
 		}
 		// System.out.println("ipAddress:" + ipAddress);
 		for (int i = 0; i < 5; i++) {
-			Job job = new Job(userManager.getSessionId(), exampleCnt.toString(), exampleCnt.toString(), ipAddress);
-			if (userManager.jobExists(job)) {
-				addMessage("Job already exists under name (" + exampleCnt.toString() + ")", FacesMessage.SEVERITY_WARN);
-				exampleCnt++;
-			} else {
-				addMessage("Job submitted for (" + exampleCnt.toString() + ")", FacesMessage.SEVERITY_INFO);
-				userManager.submitJob(job);
-				exampleCnt++;
-			}
+			content = exampleCnt.toString();
+			name = exampleCnt.toString();
+			submitJob(null);
+			exampleCnt++;
 
 		}
 
@@ -141,6 +209,10 @@ public class IndexView implements Serializable {
 
 	public void setUserManager(UserManager userManager) {
 		this.userManager = userManager;
+	}
+
+	public void setSettingsCache(SettingsCache settingsCache) {
+		this.settingsCache = settingsCache;
 	}
 
 	public Job getSelectedJob() {
