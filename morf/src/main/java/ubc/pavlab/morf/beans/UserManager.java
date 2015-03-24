@@ -31,165 +31,174 @@ import ubc.pavlab.morf.models.Job;
 @SessionScoped
 public class UserManager implements Serializable {
 
-    /**
+	/**
 	 * 
 	 */
-    private static final long serialVersionUID = -3568877185808646254L;
-    private static final Logger log = Logger.getLogger( UserManager.class );
-    private int MAX_JOBS_IN_QUEUE = 2;
-    private Object jobSubmitLock = new Object();
-    private Boolean stopPolling = true;
-    private Boolean authenticated = false;
+	private static final long serialVersionUID = -3568877185808646254L;
+	private static final Logger log = Logger.getLogger(UserManager.class);
+	private int MAX_JOBS_IN_QUEUE = 2;
+	private Object jobSubmitLock = new Object();
+	private Boolean stopPolling = true;
+	private Boolean authenticated = false;
 
-    @ManagedProperty(value = "#{jobManager}")
-    private JobManager jobManager;
+	@ManagedProperty(value = "#{jobManager}")
+	private JobManager jobManager;
 
-    @ManagedProperty(value = "#{settingsCache}")
-    private SettingsCache settingsCache;
+	@ManagedProperty(value = "#{settingsCache}")
+	private SettingsCache settingsCache;
 
-    @ManagedProperty(value = "#{security}")
-    private Security security;
+	@ManagedProperty(value = "#{security}")
+	private Security security;
 
-    // private Map<String, Job> results = new HashMap<String, Job>();
-    private List<Job> jobs = new ArrayList<Job>(); // All jobs
-    private Queue<Job> jobQueue = new LinkedList<Job>(); // All jobs yet to be submitted
+	// private Map<String, Job> results = new HashMap<String, Job>();
+	private List<Job> jobs = new ArrayList<Job>(); // All jobs
+	private Queue<Job> jobQueue = new LinkedList<Job>(); // All jobs yet to be submitted
 
-    public UserManager() {
-        log.info( "UserManager created" );
-    }
+	public UserManager() {
+		log.info("UserManager created");
+	}
 
-    @PostConstruct
-    public void init() {
-        log.info( "UserManager init" );
-        MAX_JOBS_IN_QUEUE = Integer.parseInt( settingsCache.getProperty( "morf.maxJobsInQueue" ) );
-    }
+	@PostConstruct
+	public void init() {
+		log.info("UserManager init");
+		MAX_JOBS_IN_QUEUE = Integer.parseInt(settingsCache.getProperty("morf.maxJobsInQueue"));
+	}
 
-    String getSessionId() {
-        FacesContext fCtx = FacesContext.getCurrentInstance();
-        HttpSession session = ( HttpSession ) fCtx.getExternalContext().getSession( false );
-        return session.getId();
-    }
+	String getSessionId() {
+		FacesContext fCtx = FacesContext.getCurrentInstance();
+		HttpSession session = (HttpSession) fCtx.getExternalContext().getSession(false);
+		return session.getId();
+	}
 
-    void submitJob( Job job ) {
-        // log.info("Starting polling");
-        // stopPolling = false;
-        if ( !jobs.contains( job ) ) {
-            jobs.add( job );
-            jobQueue.add( job );
-        }
-        submitJobFromQueue();
+	void submitJob(Job job) {
+		// log.info("Starting polling");
+		// stopPolling = false;
+		if (!jobs.contains(job)) {
+			jobs.add(job);
+			jobQueue.add(job);
+		}
+		submitJobFromQueue();
 
-        // results.put(job.getName(), job);
-    }
+		// results.put(job.getName(), job);
+	}
 
-    public boolean cancelJob( Job job ) {
-        boolean canceled = false;
-        synchronized ( jobSubmitLock ) {
-            if ( jobQueue.contains( job ) ) {
-                // Not yet submitted, just remove it from queue and job list
-                jobQueue.remove( job );
-                jobs.remove( job );
-                canceled = true;
-            } else if ( jobs.contains( job ) ) {
-                canceled = jobManager.cancelJob( job );
-                if ( canceled ) {
-                    jobs.remove( job );
-                }
-                // already submitted must send cancel request
-            }
-        }
-        return canceled;
-    }
+	public boolean cancelJob(Job job) {
+		boolean canceled = false;
+		synchronized (jobSubmitLock) {
+			if (jobQueue.contains(job)) {
+				// Not yet submitted, just remove it from queue and job list
+				jobQueue.remove(job);
+				jobs.remove(job);
+				canceled = true;
+			} else if (jobs.contains(job)) {
+				canceled = jobManager.cancelJob(job);
+				if (canceled) {
+					jobs.remove(job);
+				}
+				// already submitted must send cancel request
+			}
+		}
+		return canceled;
+	}
 
-    private void submitJobFromQueue() {
-        synchronized ( jobSubmitLock ) {
-            if ( runningJobs() < MAX_JOBS_IN_QUEUE ) {
-                Job job = jobQueue.poll();
-                if ( job != null ) {
-                    job.setSubmittedDate( new Date() );
-                    jobManager.submit( job );
-                }
-            }
-        }
-    }
+	private void submitJobFromQueue() {
+		synchronized (jobSubmitLock) {
+			if (runningJobs() < MAX_JOBS_IN_QUEUE) {
+				Job job = jobQueue.poll();
+				if (job != null) {
+					job.setSubmittedDate(new Date());
+					jobManager.submit(job);
+				}
+			}
+		}
+	}
 
-    private int runningJobs() {
-        int cnt = 0;
-        for ( Job job : jobs ) {
-            if ( job.getSubmittedDate() != null && job.getFuture() != null && !job.getFuture().isDone() ) cnt++;
-        }
-        return cnt;
-    }
+	private int runningJobs() {
+		int cnt = 0;
+		for (Job job : jobs) {
+			if (job.getSubmittedDate() != null && job.getFuture() != null && !job.getFuture().isDone())
+				cnt++;
+		}
+		return cnt;
+	}
 
-    /*
-     * String getResultIfReady(String name) { Future<String> res = results.get(name).getFuture(); if (res == null) {
-     * return "Cannot find job queued under name (" + name + ")"; } else if (res.isDone()) { try { return res.get(); }
-     * catch (InterruptedException | ExecutionException e) { e.printStackTrace(); return null; } } else { return
-     * "Result isn't ready for (" + name + ")"; } }
-     */
+	/*
+	 * String getResultIfReady(String name) { Future<String> res = results.get(name).getFuture(); if (res == null) {
+	 * return "Cannot find job queued under name (" + name + ")"; } else if (res.isDone()) { try { return res.get(); }
+	 * catch (InterruptedException | ExecutionException e) { e.printStackTrace(); return null; } } else { return
+	 * "Result isn't ready for (" + name + ")"; } }
+	 */
 
-    public synchronized void updateQueuePositions() {
+	public synchronized void updateQueuePositions() {
 
-        for ( int i = 0; i < MAX_JOBS_IN_QUEUE; i++ ) {
-            submitJobFromQueue();
-        }
-        boolean somethingIsRunning = false;
-        for ( Job job : jobs ) {
-            Future<String> future = job.getFuture();
-            if ( future == null ) {
-                somethingIsRunning = true;
-                job.setPosition( "Pending..." );
-            } else if ( future.isDone() ) {
-                job.setPosition( "Done" );
-            } else {
-                somethingIsRunning = true;
-                job.setPosition( jobManager.queuePosition( job ).toString() );
-            }
+		for (int i = 0; i < MAX_JOBS_IN_QUEUE; i++) {
+			submitJobFromQueue();
+		}
+		boolean somethingIsRunning = false;
+		for (Job job : jobs) {
+			Future<String> future = job.getFuture();
+			if (future == null) {
+				somethingIsRunning = true;
+				job.setPosition("Pending...");
+			} else if (future.isDone()) {
+				job.setPosition("Done");
+			} else {
+				somethingIsRunning = true;
+				job.setPosition(jobManager.queuePosition(job).toString());
+			}
 
-        }
-        if ( !somethingIsRunning ) {
-            // log.info("Stopping polling");
-            // stopPolling = true;
-            RequestContext.getCurrentInstance().addCallbackParam( "stopPolling", true );
-        }
-        log.info( String.format( "Jobs in queue: %d", jobManager.jobsInQueue() ) );
-    }
+		}
+		if (!somethingIsRunning) {
+			// log.info("Stopping polling");
+			// stopPolling = true;
+			RequestContext.getCurrentInstance().addCallbackParam("stopPolling", true);
+		}
+		log.info(String.format("Jobs in queue: %d", jobManager.jobsInQueue()));
+	}
 
-    public void authenticate( String password ) {
-        authenticated = security.checkPassword( password );
-        log.info( "authenticated: " + authenticated );
-        if ( !authenticated ) {
-            FacesMessage message = new FacesMessage( FacesMessage.SEVERITY_WARN, "Incorrect Password!", null );
-            FacesContext.getCurrentInstance().addMessage( null, message );
-        }
-    }
+	public void authenticate(String password) {
+		synchronized (authenticated) {
+			authenticated = security.checkPassword(password);
+			log.info("authenticated: " + authenticated);
+			if (!authenticated) {
+				FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_WARN, "Incorrect Password!", null);
+				FacesContext.getCurrentInstance().addMessage(null, message);
+				// Brute force authentication delay
+				try {
+					Thread.sleep(3000);
+				} catch (InterruptedException e) {
+					log.error("Authentication Delay Interrupted", e);
+				}
+			}
+		}
+	}
 
-    public List<Job> getJobs() {
-        return jobs;
-    }
+	public List<Job> getJobs() {
+		return jobs;
+	}
 
-    boolean jobExists( Job job ) {
-        return this.jobs.contains( job );
-    }
+	boolean jobExists(Job job) {
+		return this.jobs.contains(job);
+	}
 
-    public void setJobManager( JobManager jobManager ) {
-        this.jobManager = jobManager;
-    }
+	public void setJobManager(JobManager jobManager) {
+		this.jobManager = jobManager;
+	}
 
-    public void setSettingsCache( SettingsCache settingsCache ) {
-        this.settingsCache = settingsCache;
-    }
+	public void setSettingsCache(SettingsCache settingsCache) {
+		this.settingsCache = settingsCache;
+	}
 
-    public void setSecurity( Security security ) {
-        this.security = security;
-    }
+	public void setSecurity(Security security) {
+		this.security = security;
+	}
 
-    public Boolean getStopPolling() {
-        return stopPolling;
-    }
+	public Boolean getStopPolling() {
+		return stopPolling;
+	}
 
-    public Boolean getAuthenticated() {
-        return authenticated;
-    }
+	public Boolean getAuthenticated() {
+		return authenticated;
+	}
 
 }
