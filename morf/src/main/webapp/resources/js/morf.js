@@ -17,3 +17,10 @@ function start() {
 function stop() {
    PF('statusDialog').hide();
 }
+
+$(document).ready(function() {
+   console.log("spellcheck off")
+   $('#j_idt15\\:inputContent').attr('spellcheck',false);
+   $('#j_idt15\\:inputName').attr('spellcheck',false);
+
+   });
