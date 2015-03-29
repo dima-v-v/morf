@@ -18,9 +18,12 @@ function stop() {
    PF('statusDialog').hide();
 }
 
+function clearFastaInput() {
+	$('#inputForm\\:inputContent').val('');
+}
+
 $(document).ready(function() {
    console.log("spellcheck off")
-   $('#j_idt15\\:inputContent').attr('spellcheck',false);
-   $('#j_idt15\\:inputName').attr('spellcheck',false);
+   $('#inputForm\\:inputContent').attr('spellcheck',false);
 
    });

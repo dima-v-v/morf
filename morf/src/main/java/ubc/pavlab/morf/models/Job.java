@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.log4j.Logger;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
@@ -49,238 +50,284 @@ import org.primefaces.model.StreamedContent;
  */
 public class Job implements Callable<String> {
 
-	private static final Logger log = Logger.getLogger(Job.class);
-	private static String scriptName;
-	private static String scriptBasePath;
-	private static String pathToInput;
-	private static String pathToOutput;
+    private static final Logger log = Logger.getLogger( Job.class );
+    private static String scriptName;
+    private static String scriptBasePath;
+    private static String pathToInput;
+    private static String pathToOutput;
 
-	private String sessionId;
-	private String ipAddress;
-	private String name;
-	private String content;
-	private Boolean complete = false;
-	private Future<String> future;
-	// private String result;
-	private StreamedContent resultFile;
-	private Date submittedDate;
-	private String position;
+    private String sessionId;
+    private String ipAddress;
+    private String name;
+    private int id;
+    private String content;
+    private int sequenceSize;
 
-	/**
-	 * @param sessionId
-	 * @param name
-	 * @param contents
-	 */
-	public Job(String sessionId, String name, String content, String ipAddress) {
-		super();
-		this.sessionId = sessionId;
-		this.name = name;
-		this.content = content;
-		this.ipAddress = ipAddress;
-	}
+    private Boolean failed = false;
+    private String failedMessage;
 
-	public String getSessionId() {
-		return sessionId;
-	}
+    private Boolean complete = false;
+    private Future<String> future;
+    // private String result;
+    private StreamedContent resultFile;
+    private Date submittedDate;
+    private String position;
+    private long executionTime;
 
-	public void setSessionId(String sessionId) {
-		this.sessionId = sessionId;
-	}
+    /**
+     * @param sessionId
+     * @param name
+     * @param contents
+     */
+    public Job( String sessionId, String name, int id, String content, String ipAddress ) {
+        super();
+        this.sessionId = sessionId;
+        this.name = name;
+        this.content = content;
+        this.ipAddress = ipAddress;
+        this.id = id;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getSessionId() {
+        return sessionId;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setSessionId( String sessionId ) {
+        this.sessionId = sessionId;
+    }
 
-	public String getContent() {
-		return content;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setContent(String content) {
-		this.content = content;
-	}
+    public void setName( String name ) {
+        this.name = name;
+    }
 
-	public Future<String> getFuture() {
-		return future;
-	}
+    public int getId() {
+        return id;
+    }
 
-	public void setFuture(Future<String> future) {
-		this.future = future;
-	}
+    public void setId( int id ) {
+        this.id = id;
+    }
 
-	public Boolean getComplete() {
-		if (complete) {
-			return true;
-		} else {
-			if (this.future == null) {
-				return false;
-			} else {
-				return this.future.isDone();
-			}
-		}
-	}
+    public String getContent() {
+        return content;
+    }
 
-	public void setComplete(Boolean complete) {
-		this.complete = complete;
-	}
+    public void setContent( String content ) {
+        this.content = content;
+    }
 
-	// public String getResult() {
-	// if ( result != null ) {
-	// return result;
-	// }
-	// if ( getComplete() ) {
-	// try {
-	// this.result = this.future.get( 1, TimeUnit.SECONDS );
-	// return result;
-	// } catch ( InterruptedException | ExecutionException | TimeoutException e ) {
-	// e.printStackTrace();
-	// return null;
-	// }
-	// } else {
-	// return null;
-	// }
-	//
-	// }
+    public Future<String> getFuture() {
+        return future;
+    }
 
-	public StreamedContent getFile() {
-		if (getComplete()) {
-			try {
-				InputStream in = IOUtils.toInputStream(this.future.get(1, TimeUnit.SECONDS), "UTF-8");
-				this.resultFile = new DefaultStreamedContent(in, "text/plain", this.name + ".txt");
-				return resultFile;
-			} catch (InterruptedException | ExecutionException | TimeoutException | IOException e) {
-				e.printStackTrace();
-				return null;
-			}
-		} else {
-			return null;
-		}
-	}
+    public void setFuture( Future<String> future ) {
+        this.future = future;
+    }
 
-	@Override
-	public String toString() {
-		return "Job [sessionId=" + sessionId + ", ipAddress=" + ipAddress + ", name=" + name + ", complete=" + complete
-				+ "]";
-	}
+    public Boolean getComplete() {
+        if ( complete ) {
+            return true;
+        } else {
+            if ( this.future == null ) {
+                return false;
+            } else {
+                return this.future.isDone();
+            }
+        }
+    }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		result = prime * result + ((sessionId == null) ? 0 : sessionId.hashCode());
-		return result;
-	}
+    public void setComplete( Boolean complete ) {
+        this.complete = complete;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Job other = (Job) obj;
-		if (name == null) {
-			if (other.name != null)
-				return false;
-		} else if (!name.equals(other.name))
-			return false;
-		if (sessionId == null) {
-			if (other.sessionId != null)
-				return false;
-		} else if (!sessionId.equals(other.sessionId))
-			return false;
-		return true;
-	}
+    // public String getResult() {
+    // if ( result != null ) {
+    // return result;
+    // }
+    // if ( getComplete() ) {
+    // try {
+    // this.result = this.future.get( 1, TimeUnit.SECONDS );
+    // return result;
+    // } catch ( InterruptedException | ExecutionException | TimeoutException e ) {
+    // e.printStackTrace();
+    // return null;
+    // }
+    // } else {
+    // return null;
+    // }
+    //
+    // }
 
-	@Override
-	public String call() throws Exception {
-		log.info("Starting job (" + name + ") for session: (" + sessionId + ") and IP: (" + ipAddress + ")");
-		// Write content to input
-		File file = new File(pathToInput);
+    public StreamedContent getFile() {
+        if ( getComplete() ) {
+            try {
+                String res;
+                if ( !this.failed ) {
+                    res = this.future.get( 1, TimeUnit.SECONDS );
+                } else {
+                    res = this.failedMessage;
+                }
 
-		try (FileOutputStream fop = new FileOutputStream(file)) {
+                InputStream in = IOUtils.toInputStream( res, "UTF-8" );
+                this.resultFile = new DefaultStreamedContent( in, "text/plain", this.name + ".txt" );
+                return resultFile;
+            } catch ( InterruptedException | ExecutionException | TimeoutException | IOException e ) {
+                e.printStackTrace();
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
 
-			// if file doesn't exists, then create it
-			if (!file.exists()) {
-				file.createNewFile();
-			}
+    @Override
+    public String toString() {
+        return "Job [sessionId=" + sessionId + ", ipAddress=" + ipAddress + ", name=" + name + ", id=" + id
+                + ", complete=" + complete + "]";
+    }
 
-			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fop));
-			writer.write(content);
-			writer.close();
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + id;
+        result = prime * result + ( ( sessionId == null ) ? 0 : sessionId.hashCode() );
+        return result;
+    }
 
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        Job other = ( Job ) obj;
+        if ( id != other.id ) return false;
+        if ( sessionId == null ) {
+            if ( other.sessionId != null ) return false;
+        } else if ( !sessionId.equals( other.sessionId ) ) return false;
+        return true;
+    }
 
-		// Execute script
-		executeCommand("./" + scriptName, scriptBasePath);
+    @Override
+    public String call() throws Exception {
+        log.info( "Starting job (" + name + ") for session: (" + sessionId + ") and IP: (" + ipAddress + ")" );
+        // Write content to input
+        File file = new File( pathToInput );
 
-		// Get output
-		InputStream resultFile = new FileInputStream(pathToOutput);
+        try (FileOutputStream fop = new FileOutputStream( file )) {
 
-		StringWriter writer = new StringWriter();
-		IOUtils.copy(resultFile, writer, "UTF-8");
-		log.info("Finished job (" + name + ") for session: (" + sessionId + ") and IP: (" + ipAddress + ")");
-		return writer.toString();
-	}
+            // if file doesn't exists, then create it
+            if ( !file.exists() ) {
+                file.createNewFile();
+            }
 
-	private String executeCommand(String command, String path) {
+            BufferedWriter writer = new BufferedWriter( new OutputStreamWriter( fop ) );
+            writer.write( content );
+            writer.close();
 
-		StringBuffer output = new StringBuffer();
+        } catch ( IOException e ) {
+            e.printStackTrace();
+        }
 
-		Process p;
-		try {
-			p = Runtime.getRuntime().exec(command, null, new File(path));
-			p.waitFor();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        // Execute script
+        StopWatch sw = new StopWatch();
+        sw.start();
+        executeCommand( "./" + scriptName, scriptBasePath );
+        sw.stop();
+        this.executionTime = sw.getTime() / 1000L;
 
-			String line = "";
-			while ((line = reader.readLine()) != null) {
-				output.append(line + "\n");
-			}
+        // Get output
+        InputStream resultFile = new FileInputStream( pathToOutput );
 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+        StringWriter writer = new StringWriter();
+        IOUtils.copy( resultFile, writer, "UTF-8" );
+        log.info( "Finished job (" + name + ") for session: (" + sessionId + ") and IP: (" + ipAddress + ")" );
+        return writer.toString();
+    }
 
-		return output.toString();
-	}
+    private String executeCommand( String command, String path ) {
 
-	public Date getSubmittedDate() {
-		return submittedDate;
-	}
+        StringBuffer output = new StringBuffer();
 
-	public void setSubmittedDate(Date submittedDate) {
-		this.submittedDate = submittedDate;
-	}
+        Process p;
+        try {
+            p = Runtime.getRuntime().exec( command, null, new File( path ) );
+            p.waitFor();
+            BufferedReader reader = new BufferedReader( new InputStreamReader( p.getInputStream() ) );
 
-	public String getPosition() {
-		return position;
-	}
+            String line = "";
+            while ( ( line = reader.readLine() ) != null ) {
+                output.append( line + "\n" );
+            }
 
-	public void setPosition(String position) {
-		this.position = position;
-	}
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
 
-	public String getIpAddress() {
-		return ipAddress;
-	}
+        return output.toString();
+    }
 
-	public void setIpAddress(String ipAddress) {
-		this.ipAddress = ipAddress;
-	}
+    public Date getSubmittedDate() {
+        return submittedDate;
+    }
 
-	public static void setPaths(String scriptName, String scriptBasePath, String pathToInput, String pathToOutput) {
-		Job.scriptName = scriptName;
-		Job.scriptBasePath = scriptBasePath;
-		Job.pathToInput = pathToInput;
-		Job.pathToOutput = pathToOutput;
-	}
+    public void setSubmittedDate( Date submittedDate ) {
+        this.submittedDate = submittedDate;
+    }
+
+    public String getPosition() {
+        return position;
+    }
+
+    public void setPosition( String position ) {
+        this.position = position;
+    }
+
+    public String getIpAddress() {
+        return ipAddress;
+    }
+
+    public void setIpAddress( String ipAddress ) {
+        this.ipAddress = ipAddress;
+    }
+
+    public int getSequenceSize() {
+        return sequenceSize;
+    }
+
+    public void setSequenceSize( int sequenceSize ) {
+        this.sequenceSize = sequenceSize;
+    }
+
+    public long getExecutionTime() {
+        return executionTime;
+    }
+
+    public Boolean getFailed() {
+        return failed;
+    }
+
+    public void setFailed( Boolean failed ) {
+        this.failed = failed;
+    }
+
+    public String getFailedMessage() {
+        return failedMessage;
+    }
+
+    public void setFailedMessage( String failedMessage ) {
+        this.failedMessage = failedMessage;
+    }
+
+    public static void setPaths( String scriptName, String scriptBasePath, String pathToInput, String pathToOutput ) {
+        Job.scriptName = scriptName;
+        Job.scriptBasePath = scriptBasePath;
+        Job.pathToInput = pathToInput;
+        Job.pathToOutput = pathToOutput;
+    }
 
 }

@@ -1,151 +1,159 @@
-<?xml version='1.0' encoding='UTF-8' ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:h="http://java.sun.com/jsf/html"
 	xmlns:f="http://java.sun.com/jsf/core"
 	xmlns:p="http://primefaces.org/ui"
-	xmlns:of="http://omnifaces.org/functions">
-<h:head>
-	<title>morf</title>
-	<h:outputStylesheet name="webjars/font-awesome/4.2.0/css/font-awesome.css" />
-	<h:outputStylesheet library="css" name="style.css" />
-	<h:outputStylesheet library="css" name="showcase.css" />
-	<h:outputScript library="js" name="morf.js" />
-
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<!-- Prevents caching at the Proxy Server -->
-
-	<meta http-equiv="Expires" content="0" />
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<meta name="description"
-		content="morf base description to be set at some point in the future." />
-
-	<meta name="keywords"
-		content="genomics,bioinformatics,genetics,gene,statistics,open source,software,fasta" />
-	<meta name="author" content="morf admin (jacobsonmt@gmail.com)" />
-
-</h:head>
-
-<h:body>
-
-<p:layout fullPage="true">
-
- 	<p:layoutUnit id="top" position="north" resizable="false" size="50">
- 	
-				<h:form>
-					<p:menubar toggleEvent="click">
-						<p:menuitem value="Home" url="index.xhtml" icon="fa fa-home"
-							styleClass="right-border" />
-					</p:menubar>
-				</h:form>
- 	
- 	</p:layoutUnit>
+	xmlns:of="http://omnifaces.org/functions"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+    <h:body>
  
-    <p:layoutUnit id="center" position="center">
-    	<p:outputPanel id="centerPanel" layout="block">
-    	<p:outputPanel id="jobsPanel" layout="block" rendered="#{userManager.authenticated}">
-    	<h3>#{settingsCache.getProperty('morf.name')}</h3>
-        <h:form>            
-		    <p:growl id="growl" life="2000" />
-		    <h:panelGrid columns="2" style="margin-bottom:10px" cellpadding="5">
-		    	<p:outputLabel for="inputName" value="Job Name: " />
-			    <p:inputText id="inputName" value="#{indexView.name}"/>
-			    
-			    <p:outputLabel for="inputContent" value="FASTA: " />
-			    <p:inputTextarea id="inputContent" value="#{indexView.content}" rows="10" cols="100" autoResize="false" />
-		    </h:panelGrid>
-		    <p:commandButton value="Submit Job" icon="ui-icon-disk" update="growl,:formJobs:tableJobs" actionListener="#{indexView.submitJob}" styleClass="ui-priority-primary" onclick="startPoller()"/>
-		</h:form>
-		<br/>
-		<p:separator/>
-		<br/>
-		<h:form id="formJobs">	
-			<p:growl id="tableGrowl" life="2000" />		
-		    <p:dataTable id="tableJobs" var="job" value="#{userManager.jobs}" rowStyleClass="#{job.complete eq true ? 'green-row' : 'yellow-row'}" sortBy="#{job.submittedDate}">
-		        <f:facet name="header">
-		            Jobs
-		        </f:facet>
-		        <p:column headerText="Name">
-		            <h:outputText value="#{job.name}" />
-		        </p:column>
-		        <p:column headerText="Submitted">
-					<h:outputText value="#{job.submittedDate}" />
-		        </p:column>
-		        
-		        <p:column headerText="Position">
-					<h:outputText value="#{job.position}" />
-		        </p:column>
-		        
-		        <p:column headerText="Complete">
-					<h:outputText value="#{job.complete}" />
-		        </p:column>
-		        <p:column style="width:64px;text-align: center">
-		             <p:commandButton update=":formJobs:jobDetail" oncomplete="PF('jobDialog').show()" icon="ui-icon-search" title="View">
-		                <f:setPropertyActionListener value="#{job}" target="#{indexView.selectedJob}" />
-		            </p:commandButton>
-		             <p:commandButton update=":formJobs:tableGrowl, :formJobs:tableJobs" icon="fa fa-remove" title="Cancel" action="#{indexView.cancelJob}">
-		                <f:setPropertyActionListener value="#{job}" target="#{indexView.jobToRemove}" />
-		            </p:commandButton>
-		        </p:column>
-		    </p:dataTable>
-			
-		    <p:dialog header="Job Info" widgetVar="jobDialog" modal="false" showEffect="fade" hideEffect="fade" resizable="false">
-		        <p:outputPanel id="jobDetail" style="text-align:center;">
-		            <p:panelGrid  columns="2">	 
-		                <h:outputText value="Name:" />
-		                <h:outputText value="#{indexView.selectedJob.name}" />
-		 
-		                <h:outputText value="Content" />
-		                <h:outputText value="#{of:abbreviate(indexView.selectedJob.content, 15)}" />
-		                
-		                <h:outputText value="Submitted" />
-		                <h:outputText value="#{indexView.selectedJob.submittedDate}" />
-		                
-		                <h:outputText value="Position" />
-		                <h:outputText value="#{indexView.selectedJob.position}" />
-		                
-		                <h:outputText value="Complete" />
-		                <h:outputText value="#{indexView.selectedJob.complete}" />
-		                
-		                <h:outputText value="Result" rendered="#{indexView.selectedJob.complete}"/>
-	                    <p:commandButton value="Download" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon-arrowthick-1-s" rendered="#{indexView.selectedJob.complete}">
-        					<p:fileDownload value="#{indexView.selectedJob.file}" />
-    					</p:commandButton>
-		            </p:panelGrid>
-		        </p:outputPanel>
-		    </p:dialog>
-			<p:poll widgetVar="poller" interval="#{settingsCache.getProperty('morf.pollInterval')}" listener="#{userManager.updateQueuePositions}" autoStart="true" update="tableJobs" oncomplete="handlePollComplete(xhr, status, args)"/>
-		</h:form>
-		</p:outputPanel>
-		<p:outputPanel id="authenticatePanel" layout="block" rendered="#{!(userManager.authenticated)}">
-		<h3>Please authenticate your session</h3>
-        <h:form>            
-		    <p:growl id="authenticateGrowl" life="2000" />
-		    <h:panelGrid columns="2" style="margin-bottom:10px" cellpadding="5">
-		    	<p:outputLabel for="password" value="Passphrase: " />
-			    <p:password id="password" binding="#{pass}"/>
-		    </h:panelGrid>
-		    <p:commandButton value="Authenticate" icon="ui-icon-arrowthickstop-1-e" update="authenticateGrowl :centerPanel" action="#{userManager.authenticate(pass.value)}" styleClass="ui-priority-primary"/>
-		</h:form>
-		</p:outputPanel>
-		</p:outputPanel>
-    </p:layoutUnit>
-    
-    <p:layoutUnit id="bottom" position="south" resizable="false" size="50">
-        <div class="footer">
-				<p>
-					&copy; UBC, Centre for High-throughput Biology, 2015
-					<h:link value="Terms and Conditions" outcome="terms.xhtml" />
-				</p>
-		</div>
-    </p:layoutUnit>
-</p:layout>
+    	<ui:composition template="template.xhtml">
+     		<ui:define name="content">
+			<p:outputPanel id="centerPanel" layout="block">
+				<p:outputPanel id="jobsPanel" layout="block"
+					rendered="#{userManager.authenticated}">
+					<div class="title">
+					<h1>Computational Identification of Binding Regions in Disordered Proteins</h1>
+					<h2>MoRF<sub>CHiBi_<i>Web</i></sub></h2>
+					</div>
+					<h:form id="inputForm">
+						<p:growl id="growl" life="2000" />
+						
+						<h:panelGrid columns="2" style="margin-bottom:10px"
+							cellpadding="5">
+							<h:outputText value="" />
+							<h:outputText value="Enter one protein sequence in fasta format then press 'Submit Job'" />
 
-<p:dialog modal="true" widgetVar="statusDialog" header="Status" draggable="false" closable="false" resizable="false">
-    <p:graphicImage library="img" name="loader.gif" />
-</p:dialog>
+							<p:outputLabel for="inputContent" value="FASTA: " />
+							<p:inputTextarea id="inputContent" value="#{indexView.content}"
+								rows="10" cols="100" autoResize="false" />
+						</h:panelGrid>
+						<p:commandButton value="Submit Job" icon="ui-icon-disk"
+							update="growl,:formJobs:tableJobs"
+							actionListener="#{indexView.submitJob}"
+							styleClass="ui-priority-primary" onclick="startPoller()" />
+						<p:commandButton value="Clear" type="button" icon="ui-icon-trash" styleClass="ui-priority-primary" onclick="clearFastaInput()"/>
+					</h:form>
+					<br />
+					<p:separator />
+					<br />
+					<h:form id="formJobs">
+						<p:growl id="tableGrowl" life="2000" />
+						<p:dataTable id="tableJobs" var="job" value="#{userManager.jobs}"
+							rowStyleClass="#{job.complete eq true ? (job.failed eq true ? 'red-row': 'green-row') : 'yellow-row'}"
+							sortBy="#{job.submittedDate}">
+							<f:facet name="header">
+					            Jobs
+					        </f:facet>
+							<p:column headerText="Id">
+								<h:outputText value="#{job.id}" />
+							</p:column>
+							<p:column headerText="Label">
+								<h:outputText value="#{job.name}" />
+							</p:column>
+							<p:column headerText="Size">
+								<h:outputText value="#{job.sequenceSize}" />
+							</p:column>
+							<p:column headerText="Submitted">
+								<h:outputText value="#{job.submittedDate}" />
+							</p:column>
 
+							<p:column headerText="Position">
+								<h:outputText value="#{job.position}" />
+							</p:column>
 
+							<p:column headerText="Complete">
+								<h:outputText value="failed" rendered="#{job.failed}"/>
+								<h:outputText value="#{job.complete}" rendered="#{!(job.failed)}"/>
+							</p:column>
+							<p:column style="width:64px;text-align: center">
+								<p:commandButton update=":formJobs:jobDetail"
+									oncomplete="PF('jobDialog').show()" icon="ui-icon-search"
+									title="View">
+									<f:setPropertyActionListener value="#{job}"
+										target="#{indexView.selectedJob}" />
+								</p:commandButton>
+								<p:commandButton
+									update=":formJobs:tableGrowl, :formJobs:tableJobs"
+									icon="fa fa-remove" title="Cancel"
+									action="#{indexView.cancelJob}">
+									<f:setPropertyActionListener value="#{job}"
+										target="#{indexView.jobToRemove}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
 
-</h:body>
+						<p:dialog header="Job Info" widgetVar="jobDialog" modal="false"
+							showEffect="fade" hideEffect="fade" resizable="false">
+							<p:outputPanel id="jobDetail" style="text-align:center;">
+								<p:panelGrid columns="2">
+									<h:outputText value="Id:" />
+									<h:outputText value="#{indexView.selectedJob.id}" />
+								
+									<h:outputText value="Label:" />
+									<h:outputText value="#{indexView.selectedJob.name}" />
+									
+									<h:outputText value="Size:" />
+									<h:outputText value="#{indexView.selectedJob.sequenceSize}" />
+
+									<h:outputText value="Content:" />
+									<h:outputText
+										value="#{of:abbreviate(indexView.selectedJob.content, 15)}" />
+
+									<h:outputText value="Submitted:" />
+									<h:outputText value="#{indexView.selectedJob.submittedDate}" />
+
+									<h:outputText value="Position:" />
+									<h:outputText value="#{indexView.selectedJob.position}" />
+
+									<h:outputText value="Complete:"/>
+									<h:outputText value="failed" rendered="#{indexView.selectedJob.failed}"/>
+									<h:outputText value="#{indexView.selectedJob.complete}" rendered="#{!(indexView.selectedJob.failed)}"/>
+									
+									<h:outputText value="Execution Time:" />
+									<h:outputText value="#{indexView.selectedJob.executionTime} seconds" />
+
+									<h:outputText value="Result:"
+										rendered="#{indexView.selectedJob.complete}" />
+									<p:commandButton value="Download" ajax="false"
+										onclick="PrimeFaces.monitorDownload(start, stop);"
+										icon="ui-icon-arrowthick-1-s"
+										rendered="#{indexView.selectedJob.complete}">
+										<p:fileDownload value="#{indexView.selectedJob.file}" />
+									</p:commandButton>
+								</p:panelGrid>
+							</p:outputPanel>
+						</p:dialog>
+						<p:poll widgetVar="poller"
+							interval="#{settingsCache.getProperty('morf.pollInterval')}"
+							listener="#{userManager.updateQueuePositions}" autoStart="true"
+							update="tableJobs"
+							oncomplete="handlePollComplete(xhr, status, args)" />
+					</h:form>
+				</p:outputPanel>
+				<p:outputPanel id="authenticatePanel" layout="block"
+					rendered="#{!(userManager.authenticated)}">
+					<h3>Please authenticate your session</h3>
+					<h:form>
+						<p:growl id="authenticateGrowl" life="2000" />
+						<h:panelGrid columns="2" style="margin-bottom:10px"
+							cellpadding="5">
+							<p:outputLabel for="password" value="Passphrase: " />
+							<p:password id="password" binding="#{pass}" />
+						</h:panelGrid>
+						<p:commandButton value="Authenticate"
+							icon="ui-icon-arrowthickstop-1-e"
+							update="authenticateGrowl :centerPanel"
+							action="#{userManager.authenticate(pass.value)}"
+							styleClass="ui-priority-primary" />
+					</h:form>
+				</p:outputPanel>
+			</p:outputPanel>
+    		</ui:define>
+    	</ui:composition>
+ 
+    </h:body>
+ 
 </html>

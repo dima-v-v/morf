@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.log4j.Logger;
 
 import ubc.pavlab.morf.models.Job;
+import ubc.pavlab.morf.models.ValidationResult;
 
 @ManagedBean
 @ViewScoped
@@ -38,11 +39,9 @@ public class IndexView implements Serializable {
     private SettingsCache settingsCache;
 
     // private String currentSelectedName;
-    private String name;
     private String content;
     private Job selectedJob;
     private Job jobToRemove;
-    private Integer exampleCnt = 1;
 
     public IndexView() {
         log.info( "IndexView created" );
@@ -63,17 +62,17 @@ public class IndexView implements Serializable {
         if ( userManager.jobExists( jobToRemove ) ) {
             boolean canceled = userManager.cancelJob( jobToRemove );
             if ( canceled ) {
-                addMessage( "Job (" + jobToRemove.getName() + ") successfully cancelled.", FacesMessage.SEVERITY_INFO );
+                addMessage( "Job (" + jobToRemove.getId() + ") successfully cancelled.", FacesMessage.SEVERITY_INFO );
             } else {
-                addMessage( "Job (" + jobToRemove.getName() + ") failed to cancel.", FacesMessage.SEVERITY_WARN );
+                addMessage( "Job (" + jobToRemove.getId() + ") failed to cancel.", FacesMessage.SEVERITY_WARN );
             }
         } else {
-            addMessage( "Cannot find job (" + jobToRemove.getName() + ")", FacesMessage.SEVERITY_ERROR );
+            addMessage( "Cannot find job (" + jobToRemove.getId() + ")", FacesMessage.SEVERITY_ERROR );
 
         }
     }
 
-    private boolean validate( String content ) {
+    private ValidationResult validate( String content ) {
         log.debug( "Validating: " + content );
         ProcessBuilder pb = new ProcessBuilder( settingsCache.getProperty( "morf.validate" ), "/dev/stdin",
                 "/dev/stdout" );
@@ -84,7 +83,7 @@ public class IndexView implements Serializable {
             process = pb.start();
         } catch ( IOException e ) {
             log.error( "Couldn't start the validation process.", e );
-            return false;
+            return new ValidationResult( false, "ERROR: Something went wrong!" );
         }
 
         try {
@@ -106,72 +105,86 @@ public class IndexView implements Serializable {
             }
         } catch ( IOException e ) {
             log.error( "Either couldn't read from the input file or couldn't write to the OutputStream.", e );
-            return false;
+            return new ValidationResult( false, "ERROR: Something went wrong!" );
         }
 
         BufferedReader br = new BufferedReader( new InputStreamReader( process.getInputStream() ) );
 
-        // String currLine = null;
+        String currLine = null;
         boolean res = false;
+        StringBuilder resultContent = new StringBuilder();
         try {
-            if ( br.readLine().startsWith( ">" ) ) {
-                res = true;
-            } else {
-                res = false;
+            currLine = br.readLine();
+            if ( currLine != null ) {
+                if ( currLine.startsWith( ">" ) ) {
+                    res = true;
+                } else {
+                    res = false;
+                }
+
+                resultContent.append( currLine );
+                resultContent.append( System.lineSeparator() );
+
+                while ( ( currLine = br.readLine() ) != null ) {
+                    resultContent.append( currLine );
+                    resultContent.append( System.lineSeparator() );
+                }
+
             }
-            // while ((currLine = br.readLine()) != null) {
-            // System.out.println(currLine);
-            // }
+
             br.close();
         } catch ( IOException e ) {
             log.error( "Couldn't read the output.", e );
-            return false;
+            return new ValidationResult( false, "ERROR: Something went wrong!" );
         }
 
-        return res;
+        return new ValidationResult( res, resultContent.toString() );
     }
 
     public void submitJob( ActionEvent actionEvent ) {
-        boolean res = validate( content );
+        ValidationResult vr = validate( content );
 
-        if ( res ) {
-
-            HttpServletRequest request = ( HttpServletRequest ) FacesContext.getCurrentInstance().getExternalContext()
-                    .getRequest();
-            String ipAddress = request.getHeader( "X-FORWARDED-FOR" );
-            if ( ipAddress == null ) {
-                ipAddress = request.getRemoteAddr();
-            }
-            // System.out.println("ipAddress:" + ipAddress);
-
-            Job job = new Job( userManager.getSessionId(), name, content, ipAddress );
-
-            if ( userManager.jobExists( job ) ) {
-                addMessage( "Job already exists under name (" + name + ")", FacesMessage.SEVERITY_WARN );
-            } else {
-                addMessage( "Job submitted for (" + name + ")", FacesMessage.SEVERITY_INFO );
-                userManager.submitJob( job );
-                // RequestContext.getCurrentInstance().addCallbackParam("stopPolling", false);
-            }
-        } else {
-            addMessage( "Job (" + name + "): Malformed FASTA Format!", FacesMessage.SEVERITY_ERROR );
-        }
-
-    }
-
-    public void submitMultipleJob( ActionEvent actionEvent ) {
         HttpServletRequest request = ( HttpServletRequest ) FacesContext.getCurrentInstance().getExternalContext()
                 .getRequest();
         String ipAddress = request.getHeader( "X-FORWARDED-FOR" );
         if ( ipAddress == null ) {
             ipAddress = request.getRemoteAddr();
         }
-        // System.out.println("ipAddress:" + ipAddress);
-        for ( int i = 0; i < 5; i++ ) {
-            content = exampleCnt.toString();
-            name = exampleCnt.toString();
-            submitJob( null );
-            exampleCnt++;
+        String label = "unknown";
+        int sequenceSize = 0;
+
+        int id = userManager.getNewJobId();
+
+        if ( vr.isSuccess() ) {
+            // TODO
+            String textStr[] = content.split( "\\r?\\n" );
+
+            if ( textStr.length > 1 ) {
+                label = textStr[0];
+                if ( label.startsWith( ">" ) ) {
+                    label = label.substring( 1 );
+                }
+
+                for ( int i = 1; i < textStr.length; i++ ) {
+                    sequenceSize += textStr[i].length();
+                }
+
+            }
+
+            Job job = new Job( userManager.getSessionId(), label, id, content, ipAddress );
+            job.setSequenceSize( sequenceSize );
+
+            if ( userManager.jobExists( job ) ) {
+                addMessage( "Job already exists under id (" + id + ")", FacesMessage.SEVERITY_WARN );
+            } else {
+                addMessage( "Job (" + id + ") submitted for (" + label + ")", FacesMessage.SEVERITY_INFO );
+                userManager.submitJob( job );
+                // RequestContext.getCurrentInstance().addCallbackParam("stopPolling", false);
+            }
+        } else {
+            Job job = new Job( userManager.getSessionId(), label, id, content, ipAddress );
+            userManager.addFailedJob( job, vr.getContent() );
+            addMessage( "Malformed FASTA Format!", FacesMessage.SEVERITY_ERROR );
 
         }
 
@@ -188,14 +201,6 @@ public class IndexView implements Serializable {
      * public void setCurrentSelectedName(String currentSelectedName) { this.currentSelectedName = currentSelectedName;
      * }
      */
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
 
     public String getContent() {
         return content;

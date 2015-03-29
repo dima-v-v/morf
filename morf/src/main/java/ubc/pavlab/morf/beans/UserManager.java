@@ -9,7 +9,6 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.Future;
 
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
@@ -40,6 +39,7 @@ public class UserManager implements Serializable {
     private Object jobSubmitLock = new Object();
     private Boolean stopPolling = true;
     private Boolean authenticated = false;
+    private Integer jobIdIncrementer = 0;
 
     @ManagedProperty(value = "#{jobManager}")
     private JobManager jobManager;
@@ -64,10 +64,25 @@ public class UserManager implements Serializable {
         MAX_JOBS_IN_QUEUE = Integer.parseInt( settingsCache.getProperty( "morf.maxJobsInQueue" ) );
     }
 
+    public int getNewJobId() {
+        synchronized ( jobIdIncrementer ) {
+            return jobIdIncrementer++;
+        }
+    }
+
     String getSessionId() {
         FacesContext fCtx = FacesContext.getCurrentInstance();
         HttpSession session = ( HttpSession ) fCtx.getExternalContext().getSession( false );
         return session.getId();
+    }
+
+    void addFailedJob( Job job, String failedMessage ) {
+        if ( !jobs.contains( job ) ) {
+            job.setComplete( true );
+            job.setFailed( true );
+            job.setFailedMessage( failedMessage );
+            jobs.add( job );
+        }
     }
 
     void submitJob( Job job ) {
@@ -120,9 +135,13 @@ public class UserManager implements Serializable {
     private int runningJobs() {
         int cnt = 0;
         for ( Job job : jobs ) {
-            if ( job.getSubmittedDate() != null && job.getFuture() != null && !job.getFuture().isDone() ) cnt++;
+            if ( isRunning( job ) ) cnt++;
         }
         return cnt;
+    }
+
+    private boolean isRunning( Job job ) {
+        return job.getSubmittedDate() != null && !job.getComplete();
     }
 
     /*
@@ -139,11 +158,10 @@ public class UserManager implements Serializable {
         }
         boolean somethingIsRunning = false;
         for ( Job job : jobs ) {
-            Future<String> future = job.getFuture();
-            if ( future == null ) {
+            if ( job.getSubmittedDate() == null && !job.getComplete() ) {
                 somethingIsRunning = true;
                 job.setPosition( "Pending..." );
-            } else if ( future.isDone() ) {
+            } else if ( job.getComplete() ) {
                 job.setPosition( "Done" );
             } else {
                 somethingIsRunning = true;

@@ -6,7 +6,7 @@ html {
 body {
 	background: #FFF;
 	color: #444;
-	font: normal 75% sans-serif;
+	font: normal 85% sans-serif;
 	/* line-height: 1.5; */
 }
 
@@ -53,6 +53,11 @@ table tbody tr.green-row {
 	background: #a5dda5;
 }
 
+table tbody tr.red-row {
+	background-color: #ce8987;
+	background: #ce8987;
+}
+
 div.ui-datatable-tablewrapper table tbody td {
 	text-align:center;
 }
@@ -65,3 +70,22 @@ div.ui-datatable-tablewrapper table tbody td {
  
  #top div.ui-layout-unit-content.ui-widget-content {
  overflow:hidden;}
+ 
+ div.title {
+ text-align:center;
+ }
+ 
+ sub {
+ font: normal 55% sans-serif;
+ }
+ i {
+ font-style: italic;
+ }
+ 
+ #inputForm\:inputContent {
+font-family: "Courier New", Courier, monospace
+ }
+ 
+ #inputForm table tr,  #inputForm table td {
+ border:none;
+ }

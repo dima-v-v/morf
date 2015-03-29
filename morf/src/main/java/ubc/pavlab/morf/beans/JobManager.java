@@ -101,7 +101,7 @@ public class JobManager {
     public Job submit( Job job ) {
         // TODO is synchronized necessary?
         synchronized ( jobs ) {
-            log.info( "Submitting job (" + job.getName() + ") for session: (" + job.getSessionId() + ") and IP: ("
+            log.info( "Submitting job (" + job.getId() + ") for session: (" + job.getSessionId() + ") and IP: ("
                     + job.getIpAddress() + ")" );
             Future<String> future = executor.submit( job );
             job.setFuture( future );
@@ -112,24 +112,25 @@ public class JobManager {
 
     // TODO This could be optimized
     public Integer queuePosition( Job job ) {
-        if ( job.getFuture().isDone() ) {
+        if ( job.getComplete() ) {
             return 0;
         }
 
         synchronized ( jobs ) {
             if ( !jobs.contains( job ) ) {
-                log.warn( "(" + job.getName() + ") not complete and not in job queue!" );
+                log.warn( "Job: (" + job.getId() + ") for session: (" + job.getSessionId() + ") and IP: ("
+                        + job.getIpAddress() + ") not complete and not in job queue!" );
                 return null;
             }
 
             int idx = 1;
 
             for ( Iterator<Job> iterator = jobs.iterator(); iterator.hasNext(); ) {
-                Job j = ( Job ) iterator.next();
+                Job j = iterator.next();
                 if ( j.equals( job ) ) {
                     // log.info("Position of (" + job.getName() + ") in queue: " + idx);
                     return idx;
-                } else if ( j.getFuture().isDone() ) {
+                } else if ( j.getComplete() ) {
                     // job is done and still in job queue, remove
                     iterator.remove();
                 } else {
@@ -139,8 +140,10 @@ public class JobManager {
 
             }
 
-            log.warn( "(" + job.getName()
+            log.warn( "Job: (" + job.getId() + ") for session: (" + job.getSessionId() + ") and IP: ("
+                    + job.getIpAddress()
                     + ") not complete, passed synchronized check for contained in job queue and was not found!" );
+
             return null;
         }
     }
