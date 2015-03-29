@@ -20,6 +20,7 @@
 package ubc.pavlab.morf.beans;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -52,7 +53,7 @@ public class SettingsCache implements Serializable {
 
     private static final Logger log = Logger.getLogger( SettingsCache.class );
 
-    private static final String PATH_TO_PROPERTIES = "/home/mjacobson/morf.properties";
+    private static final String PROPERTIES_FILE = "/home/nmalhis/MCW/morf.properties";
 
     private Properties prop = new Properties();
 
@@ -67,7 +68,15 @@ public class SettingsCache implements Serializable {
         InputStream input = null;
 
         try {
-            input = new FileInputStream( PATH_TO_PROPERTIES );
+
+            try {
+                // TODO possibly look at classpath first?
+                input = new FileInputStream( PROPERTIES_FILE );
+            } catch ( FileNotFoundException e ) {
+                log.warn( "Could not find PROPERTIES_FILE : (" + PROPERTIES_FILE + ") looking in: ("
+                        + System.getProperty( "user.dir" ) + ")" );
+                input = new FileInputStream( "morf.properties" );
+            }
 
             // load a properties file from class path, inside static method
             prop.load( input );

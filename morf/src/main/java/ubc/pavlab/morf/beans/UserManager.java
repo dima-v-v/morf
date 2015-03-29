@@ -91,6 +91,7 @@ public class UserManager implements Serializable {
         if ( !jobs.contains( job ) ) {
             jobs.add( job );
             jobQueue.add( job );
+            job.setPosition( "Pending..." );
         }
         submitJobFromQueue();
 
@@ -122,7 +123,7 @@ public class UserManager implements Serializable {
 
     private void submitJobFromQueue() {
         synchronized ( jobSubmitLock ) {
-            if ( runningJobs() < MAX_JOBS_IN_QUEUE ) {
+            if ( submittedAndIncompleteJobs() < MAX_JOBS_IN_QUEUE ) {
                 Job job = jobQueue.poll();
                 if ( job != null ) {
                     job.setSubmittedDate( new Date() );
@@ -132,15 +133,15 @@ public class UserManager implements Serializable {
         }
     }
 
-    private int runningJobs() {
+    private int submittedAndIncompleteJobs() {
         int cnt = 0;
         for ( Job job : jobs ) {
-            if ( isRunning( job ) ) cnt++;
+            if ( isSubmittedAndIncomplete( job ) ) cnt++;
         }
         return cnt;
     }
 
-    private boolean isRunning( Job job ) {
+    private boolean isSubmittedAndIncomplete( Job job ) {
         return job.getSubmittedDate() != null && !job.getComplete();
     }
 
@@ -158,23 +159,15 @@ public class UserManager implements Serializable {
         }
         boolean somethingIsRunning = false;
         for ( Job job : jobs ) {
-            if ( job.getSubmittedDate() == null && !job.getComplete() ) {
+            if ( !job.getComplete() ) {
                 somethingIsRunning = true;
-                job.setPosition( "Pending..." );
-            } else if ( job.getComplete() ) {
-                job.setPosition( "Done" );
-            } else {
-                somethingIsRunning = true;
-                job.setPosition( jobManager.queuePosition( job ).toString() );
             }
-
         }
         if ( !somethingIsRunning ) {
             // log.info("Stopping polling");
             // stopPolling = true;
             RequestContext.getCurrentInstance().addCallbackParam( "stopPolling", true );
         }
-        log.info( String.format( "Jobs in queue: %d", jobManager.jobsInQueue() ) );
     }
 
     public void authenticate( String password ) {

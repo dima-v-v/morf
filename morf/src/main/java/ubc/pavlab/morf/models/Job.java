@@ -42,6 +42,8 @@ import org.apache.log4j.Logger;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 
+import ubc.pavlab.morf.beans.JobManager;
+
 /**
  * TODO Document Me
  * 
@@ -73,6 +75,9 @@ public class Job implements Callable<String> {
     private Date submittedDate;
     private String position;
     private long executionTime;
+    private Boolean running = false;
+
+    private JobManager jobManager;
 
     /**
      * @param sessionId
@@ -215,6 +220,8 @@ public class Job implements Callable<String> {
     @Override
     public String call() throws Exception {
         log.info( "Starting job (" + name + ") for session: (" + sessionId + ") and IP: (" + ipAddress + ")" );
+        this.running = true;
+        this.position = "Running...";
         // Write content to input
         File file = new File( pathToInput );
 
@@ -246,6 +253,10 @@ public class Job implements Callable<String> {
         StringWriter writer = new StringWriter();
         IOUtils.copy( resultFile, writer, "UTF-8" );
         log.info( "Finished job (" + name + ") for session: (" + sessionId + ") and IP: (" + ipAddress + ")" );
+        this.running = false;
+        this.complete = true;
+        jobManager.updatePositions();
+        jobManager = null;
         return writer.toString();
     }
 
@@ -321,6 +332,14 @@ public class Job implements Callable<String> {
 
     public void setFailedMessage( String failedMessage ) {
         this.failedMessage = failedMessage;
+    }
+
+    public Boolean getRunning() {
+        return running;
+    }
+
+    public void setJobManager( JobManager jobManager ) {
+        this.jobManager = jobManager;
     }
 
     public static void setPaths( String scriptName, String scriptBasePath, String pathToInput, String pathToOutput ) {

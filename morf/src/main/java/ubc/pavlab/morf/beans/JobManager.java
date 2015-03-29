@@ -103,53 +103,36 @@ public class JobManager {
         synchronized ( jobs ) {
             log.info( "Submitting job (" + job.getId() + ") for session: (" + job.getSessionId() + ") and IP: ("
                     + job.getIpAddress() + ")" );
+            job.setJobManager( this );
             Future<String> future = executor.submit( job );
             job.setFuture( future );
             jobs.add( job );
+            job.setPosition( Integer.toString( jobs.size() ) );
         }
         return job;
     }
 
-    // TODO This could be optimized
-    public Integer queuePosition( Job job ) {
-        if ( job.getComplete() ) {
-            return 0;
-        }
-
+    public void updatePositions() {
         synchronized ( jobs ) {
-            if ( !jobs.contains( job ) ) {
-                log.warn( "Job: (" + job.getId() + ") for session: (" + job.getSessionId() + ") and IP: ("
-                        + job.getIpAddress() + ") not complete and not in job queue!" );
-                return null;
-            }
-
             int idx = 1;
 
             for ( Iterator<Job> iterator = jobs.iterator(); iterator.hasNext(); ) {
-                Job j = iterator.next();
-                if ( j.equals( job ) ) {
-                    // log.info("Position of (" + job.getName() + ") in queue: " + idx);
-                    return idx;
-                } else if ( j.getComplete() ) {
-                    // job is done and still in job queue, remove
+                Job job = iterator.next();
+
+                if ( job.getRunning() ) {
+                    job.setPosition( "Running..." );
+                    idx++;
+                } else if ( job.getComplete() ) {
+                    job.setPosition( "Done" );
                     iterator.remove();
                 } else {
-                    // loop through queue increment counter for every not done job before the given job
+                    job.setPosition( Integer.toString( idx ) );
                     idx++;
                 }
 
             }
-
-            log.warn( "Job: (" + job.getId() + ") for session: (" + job.getSessionId() + ") and IP: ("
-                    + job.getIpAddress()
-                    + ") not complete, passed synchronized check for contained in job queue and was not found!" );
-
-            return null;
+            log.info( String.format( "Jobs in queue: %d", jobs.size() ) );
         }
-    }
-
-    public int jobsInQueue() {
-        return jobs.size();
     }
 
 }
