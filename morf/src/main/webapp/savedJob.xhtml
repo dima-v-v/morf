@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:of="http://omnifaces.org/functions"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+<h:body>
+
+	<ui:composition template="/WEB-INF/templates/template.xhtml">
+
+		<ui:define name="metadata">
+			<f:metadata>
+				<f:viewParam id="key" name="key" value="#{savedJobView.key}" />
+				<f:event type="preRenderView" listener="#{savedJobView.init}" />
+			</f:metadata>
+		</ui:define>
+
+		<ui:define name="content">
+			<h:form>
+
+				<p:outputPanel id="jobDetail" style="text-align:center;"
+					rendered="#{savedJobView.savedJob != null}">
+					<h:outputText value="This link will remain active for another #{savedJobView.timeLeft()} hours" />
+					<p:panelGrid columns="2">
+						<h:outputText value="Id:" />
+						<h:outputText value="#{savedJobView.savedJob.id}" />
+
+						<h:outputText value="Label:" />
+						<h:outputText value="#{savedJobView.savedJob.name}" />
+
+						<h:outputText value="Size:" />
+						<h:outputText value="#{savedJobView.savedJob.sequenceSize}" />
+
+						<h:outputText value="Content:" />
+						<h:outputText
+							value="#{of:abbreviate(savedJobView.savedJob.content, 15)}" />
+
+						<h:outputText value="Submitted:" />
+						<h:outputText value="#{savedJobView.savedJob.submittedDate}" />
+
+						<h:outputText value="Position:" />
+						<h:outputText value="#{savedJobView.savedJob.position}" />
+
+						<h:outputText value="Complete:" />
+						<h:outputText value="failed"
+							rendered="#{savedJobView.savedJob.failed}" />
+						<h:outputText value="#{savedJobView.savedJob.complete}"
+							rendered="#{!(savedJobView.savedJob.failed)}" />
+
+						<h:outputText value="Execution Time:"
+							rendered="#{savedJobView.savedJob.complete}" />
+						<h:outputText
+							value="#{savedJobView.savedJob.executionTime} seconds"
+							rendered="#{savedJobView.savedJob.complete}" />
+
+						<h:outputText value="Result:"
+							rendered="#{savedJobView.savedJob.complete}" />
+						<p:panel style="border-style:none;" rendered="#{savedJobView.savedJob.complete}">
+							<p:commandButton value="Download" ajax="false"
+								onclick="PrimeFaces.monitorDownload(start, stop);"
+								icon="ui-icon-arrowthick-1-s"
+								rendered="#{savedJobView.savedJob.complete}">
+								<p:fileDownload value="#{savedJobView.savedJob.file}" />
+							</p:commandButton>
+						</p:panel>
+					</p:panelGrid>
+					<p:chart type="line" model="#{savedJobView.chart}"
+						style="width:800px;margin-top:50px;"
+						rendered="#{savedJobView.chartReady}" />
+				</p:outputPanel>
+				<p:outputPanel style="text-align:center;"
+					rendered="#{savedJobView.savedJob == null}">
+					<h:outputText value="No job found with given key!" />
+				</p:outputPanel>
+
+			</h:form>
+		</ui:define>
+	</ui:composition>
+
+</h:body>
+
+</html>

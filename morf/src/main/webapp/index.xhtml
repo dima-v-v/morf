@@ -9,7 +9,7 @@
 	xmlns:ui="http://java.sun.com/jsf/facelets">
     <h:body>
  
-    	<ui:composition template="template.xhtml">
+    	<ui:composition template="/WEB-INF/templates/template.xhtml">
      		<ui:define name="content">
 			<p:outputPanel id="centerPanel" layout="block">
 				<p:outputPanel id="jobsPanel" layout="block"
@@ -135,12 +135,23 @@
 									<h:outputText value="failed" rendered="#{indexView.selectedJob.failed}"/>
 									<h:outputText value="#{indexView.selectedJob.complete}" rendered="#{!(indexView.selectedJob.failed)}"/>
 									
-									<h:outputText value="Execution Time:" />
-									<h:outputText value="#{indexView.selectedJob.executionTime} seconds" />
+									<h:outputText value="Execution Time:" rendered="#{indexView.selectedJob.complete}"/>
+									<h:outputText value="#{indexView.selectedJob.executionTime} seconds" rendered="#{indexView.selectedJob.complete}"/>
+									
+									<h:outputText value="Save for later:" />
+									<p:link outcome="savedJob" value="#{indexView.selectedJob.savedKey}" 
+										target="_blank" rendered="#{indexView.selectedJob.saved}">
+									    <f:param name="key" value="#{indexView.selectedJob.savedKey}" />
+									</p:link>
+									<p:commandButton value="Save"
+											icon="fa fa-heart"
+											actionListener="#{indexView.saveJob}"
+											update = ":formJobs:jobDetail"
+											rendered="#{!indexView.selectedJob.saved}"/>
 
 									<h:outputText value="Result:"
 										rendered="#{indexView.selectedJob.complete}" />
-									<p:panel style="border-style:none;">
+									<p:panel style="border-style:none;" rendered="#{indexView.selectedJob.complete}">
 										<p:commandButton value="Download" ajax="false"
 											onclick="PrimeFaces.monitorDownload(start, stop);"
 											icon="ui-icon-arrowthick-1-s"
@@ -154,6 +165,7 @@
 											oncomplete="PF('chartDlgWdg').show()"
 											rendered="#{indexView.selectedJob.complete}"/>
 									</p:panel>
+									
 								</p:panelGrid>
 							</p:outputPanel>
 						</p:dialog>

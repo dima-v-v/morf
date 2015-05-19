@@ -19,11 +19,15 @@
 
 package ubc.pavlab.morf.beans;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -33,6 +37,8 @@ import javax.faces.bean.ManagedBean;
 import org.apache.log4j.Logger;
 
 import ubc.pavlab.morf.models.Job;
+import ubc.pavlab.morf.models.PurgeOldJobs;
+import ubc.pavlab.morf.service.SessionIdentifierGenerator;
 
 /**
  * TODO Document Me
@@ -46,6 +52,16 @@ public class JobManager {
 
     private static final Logger log = Logger.getLogger( JobManager.class );
 
+    // Contains map of random token to saved job for future viewing
+    private Map<String, Job> savedJobs = new HashMap<>();
+
+    // Used to create new save tokens
+    private final SessionIdentifierGenerator sig = new SessionIdentifierGenerator();
+
+    // Used to periodically purge the old saved jobs
+    private ScheduledExecutorService scheduler;
+    public static final long PURGE_AFTER = 86400000;
+
     // Contains a representation of the internal queue of jobs
     private LinkedList<Job> jobs = new LinkedList<Job>();
 
@@ -58,6 +74,9 @@ public class JobManager {
     @PostConstruct
     public void init() {
         executor = Executors.newSingleThreadExecutor();
+        scheduler = Executors.newSingleThreadScheduledExecutor();
+        // old after 1 day, checks every hour
+        scheduler.scheduleAtFixedRate( new PurgeOldJobs( savedJobs, PURGE_AFTER ), 0, 1, TimeUnit.HOURS );
         // executor = (ThreadPoolExecutor) Executors.newSingleThreadExecutor();
     }
 
@@ -66,6 +85,7 @@ public class JobManager {
         log.info( "JobManager destroyed" );
         // processJob.shutdownNow();
         executor.shutdownNow();
+        scheduler.shutdownNow();
     }
 
     public boolean cancelJob( Job job ) {
@@ -132,6 +152,27 @@ public class JobManager {
 
             }
             log.info( String.format( "Jobs in queue: %d", jobs.size() ) );
+        }
+    }
+
+    public Job fetchSavedJob( String key, boolean remove ) {
+        synchronized ( savedJobs ) {
+            if ( remove ) {
+                return savedJobs.remove( key );
+            } else {
+                return savedJobs.get( key );
+            }
+        }
+    }
+
+    public String saveJob( Job job ) {
+        synchronized ( savedJobs ) {
+            String key = sig.nextSessionId();
+            job.setSavedKey( key );
+            job.setSaved( true );
+            job.setSavedDate( System.currentTimeMillis() );
+            savedJobs.put( key, job );
+            return key;
         }
     }
 

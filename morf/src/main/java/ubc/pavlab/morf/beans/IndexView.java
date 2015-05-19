@@ -64,12 +64,18 @@ public class IndexView implements Serializable {
 
     }
 
+    public void saveJob() {
+        if ( !selectedJob.isSaved() ) {
+            userManager.saveJob( selectedJob );
+        }
+
+    }
+
     public void applyExampleInput() {
         content = ">PDB:3bxl_B\n" + settingsCache.getProperty( "morf.exampleInput" );
     }
 
     public void createChart() {
-        log.info( "fetchChartData" );
 
         if ( selectedJob.getComplete() && !selectedJob.getFailed() ) {
             LineChartModel model = new LineChartModel();

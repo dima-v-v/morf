@@ -64,6 +64,10 @@ public class UserManager implements Serializable {
         MAX_JOBS_IN_QUEUE = Integer.parseInt( settingsCache.getProperty( "morf.maxJobsInQueue" ) );
     }
 
+    public String saveJob( Job job ) {
+        return jobManager.saveJob( job );
+    }
+
     public int getNewJobId() {
         synchronized ( jobIdIncrementer ) {
             return jobIdIncrementer++;

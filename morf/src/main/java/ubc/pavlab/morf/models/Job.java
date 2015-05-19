@@ -77,6 +77,10 @@ public class Job implements Callable<String> {
     private long executionTime;
     private Boolean running = false;
 
+    private boolean saved = false;
+    private String savedKey;
+    private Long savedDate;
+
     private JobManager jobManager;
 
     /**
@@ -336,6 +340,30 @@ public class Job implements Callable<String> {
 
     public Boolean getRunning() {
         return running;
+    }
+
+    public boolean isSaved() {
+        return saved;
+    }
+
+    public void setSaved( boolean saved ) {
+        this.saved = saved;
+    }
+
+    public String getSavedKey() {
+        return savedKey;
+    }
+
+    public void setSavedKey( String savedKey ) {
+        this.savedKey = savedKey;
+    }
+
+    public Long getSavedDate() {
+        return savedDate;
+    }
+
+    public void setSavedDate( Long savedDate ) {
+        this.savedDate = savedDate;
     }
 
     public void setJobManager( JobManager jobManager ) {

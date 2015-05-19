@@ -6,6 +6,9 @@
 	xmlns:p="http://primefaces.org/ui"
 	xmlns:of="http://omnifaces.org/functions"
 	xmlns:ui="http://java.sun.com/jsf/facelets">
+<f:view>
+<ui:insert name="metadata"/>
+
 <h:head>
 	<title>MoRF</title>
 	<h:outputStylesheet
@@ -58,8 +61,8 @@
 			<div class="footer">
 				<p>
 					&copy; UBC, Centre for High-throughput Biology, 2015
-					<h:link value="Terms and Conditions" outcome="about.xhtml" />
-					<h:link value="Contact Us" outcome="about.xhtml" style="position:absolute;right:50px;"/>
+					<h:link value="Terms and Conditions" outcome="/about.xhtml" />
+					<h:link value="Contact Us" outcome="/about.xhtml" style="position:absolute;right:50px;"/>
 				</p>
 			</div>
 		</p:layoutUnit>
@@ -73,4 +76,5 @@
 
 
 </h:body>
+</f:view>
 </html>
