@@ -87,7 +87,7 @@ public class IndexView implements Serializable {
             yAxis.setMax( 1 );
 
             Axis xAxis = model.getAxis( AxisType.X );
-            xAxis.setTickAngle( 35 );
+            xAxis.setTickAngle( 75 );
             xAxis.setMin( 0 );
 
             LineChartSeries series = new LineChartSeries();
@@ -102,17 +102,25 @@ public class IndexView implements Serializable {
             }
 
             String textStr[] = res.split( "\\r?\\n" );
-            int x = 0;
+            int maxPos = 0;
             for ( int i = 0; i < textStr.length; i++ ) {
                 String[] line = textStr[i].split( "\t" );
                 if ( !line[0].startsWith( "#" ) ) {
-                    double val = Double.valueOf( textStr[i].split( "\t" )[1] );
-                    series.set( x++, val );
+                    try {
+                        int pos = Integer.valueOf( textStr[i].split( "\t" )[0] );
+                        if ( pos > maxPos ) {
+                            maxPos = pos;
+                        }
+                        double val = Double.valueOf( textStr[i].split( "\t" )[2] );
+                        series.set( pos, val );
+                    } catch ( NumberFormatException e ) {
+                        log.error( e );
+                    }
                 }
 
             }
 
-            xAxis.setMax( x );
+            xAxis.setMax( maxPos );
 
             model.addSeries( series );
 

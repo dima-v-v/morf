@@ -178,7 +178,7 @@
 							oncomplete="handlePollComplete(xhr, status, args)" />
 					</h:form>
 					<h:form id="chartForm">
-						<p:dialog id="chartDlg" dynamic="true" fitViewport="true" modal="false" widgetVar="chartDlgWdg">
+						<p:dialog id="chartDlg" dynamic="true" fitViewport="true" modal="false" widgetVar="chartDlgWdg" resizable="false">
 							
 								<p:outputPanel id="chartPanel" layout="block" rendered="#{indexView.chartReady}">
 									<p:chart type="line" model="#{indexView.chart}" style="width:800px;" />
