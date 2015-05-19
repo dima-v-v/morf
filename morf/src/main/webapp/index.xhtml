@@ -17,6 +17,7 @@
 					<div class="title">
 					<h1>Computational Identification of Binding Regions in Disordered Proteins</h1>
 					<h2>MoRF<sub>CHiBi_<i>Web</i></sub></h2>
+					<h3>Now fully functional with more features on the way!</h3>	
 					</div>
 					<h:form id="inputForm">
 						<p:growl id="growl" life="2000" />
@@ -29,21 +30,28 @@
 							<p:outputLabel for="inputContent" value="FASTA: " />
 							<p:inputTextarea id="inputContent" value="#{indexView.content}"
 								rows="10" cols="100" autoResize="false" />
-						</h:panelGrid>
+							<p:outputLabel for="inputContent" value="" />
+							<p:panel style="border-style:none;">
 						<p:commandButton value="Submit Job" icon="ui-icon-disk"
 							update="growl,:formJobs:tableJobs"
 							actionListener="#{indexView.submitJob}"
-							styleClass="ui-priority-primary" onclick="startPoller()" />
-						<p:commandButton value="Clear" type="button" icon="ui-icon-trash" styleClass="ui-priority-primary" onclick="clearFastaInput()"/>
+							styleClass="ui-priority-primary" onclick="startPoller()" style="margin-right:25px"/>
+						<p:commandButton value="Clear" type="button" icon="ui-icon-trash" styleClass="ui-priority-primary" onclick="clearFastaInput()" style="margin-right:25px"/>
+						<p:commandButton value="Example Input" icon="ui-icon-copy" styleClass="ui-priority-primary" 
+										actionListener="#{indexView.applyExampleInput}" update=":inputForm"/>
+						</p:panel>
+						</h:panelGrid>
+
 					</h:form>
-					<br />
 					<p:separator />
 					<br />
 					<h:form id="formJobs">
 						<p:growl id="tableGrowl" life="2000" />
 						<p:dataTable id="tableJobs" var="job" value="#{userManager.jobs}"
 							rowStyleClass="#{job.complete eq true ? (job.failed eq true ? 'red-row': 'green-row') : 'yellow-row'}"
-							sortBy="#{job.submittedDate}">
+							sortBy="#{job.submittedDate}"
+							scrollable="true" scrollHeight="350"
+							resizableColumns="true">
 							<f:facet name="header">
 					            Jobs
 					        </f:facet>
@@ -68,10 +76,25 @@
 								<h:outputText value="failed" rendered="#{job.failed}"/>
 								<h:outputText value="#{job.complete}" rendered="#{!(job.failed)}"/>
 							</p:column>
-							<p:column style="width:64px;text-align: center">
+							<p:column headerText="Actions" style="width:128px;text-align: center">
 								<p:commandButton update=":formJobs:jobDetail"
 									oncomplete="PF('jobDialog').show()" icon="ui-icon-search"
 									title="View">
+									<f:setPropertyActionListener value="#{job}"
+										target="#{indexView.selectedJob}" />
+								</p:commandButton>
+								<p:commandButton title="Download" ajax="false"
+									onclick="PrimeFaces.monitorDownload(start, stop);"
+									icon="ui-icon-arrowthick-1-s"
+									disabled="#{!job.complete or job.failed}">
+									<p:fileDownload value="#{job.file}" />
+								</p:commandButton>
+								<p:commandButton title="Graph"
+									icon="fa fa-area-chart"
+									action="#{indexView.createChart}"
+									update = ":chartForm"
+									oncomplete="PF('chartDlgWdg').show()"
+									disabled="#{!job.complete or job.failed}">
 									<f:setPropertyActionListener value="#{job}"
 										target="#{indexView.selectedJob}" />
 								</p:commandButton>
@@ -117,14 +140,24 @@
 
 									<h:outputText value="Result:"
 										rendered="#{indexView.selectedJob.complete}" />
-									<p:commandButton value="Download" ajax="false"
-										onclick="PrimeFaces.monitorDownload(start, stop);"
-										icon="ui-icon-arrowthick-1-s"
-										rendered="#{indexView.selectedJob.complete}">
-										<p:fileDownload value="#{indexView.selectedJob.file}" />
-									</p:commandButton>
+									<p:panel style="border-style:none;">
+										<p:commandButton value="Download" ajax="false"
+											onclick="PrimeFaces.monitorDownload(start, stop);"
+											icon="ui-icon-arrowthick-1-s"
+											rendered="#{indexView.selectedJob.complete}">
+											<p:fileDownload value="#{indexView.selectedJob.file}" />
+										</p:commandButton>
+										<p:commandButton value="Graph"
+											icon="fa fa-area-chart"
+											actionListener="#{indexView.createChart}"
+											update = ":chartForm"
+											oncomplete="PF('chartDlgWdg').show()"
+											rendered="#{indexView.selectedJob.complete}"/>
+									</p:panel>
 								</p:panelGrid>
 							</p:outputPanel>
+						</p:dialog>
+						<p:dialog id="chartDlg">
 						</p:dialog>
 						<p:poll widgetVar="poller"
 							interval="#{settingsCache.getProperty('morf.pollInterval')}"
@@ -132,6 +165,16 @@
 							update="tableJobs"
 							oncomplete="handlePollComplete(xhr, status, args)" />
 					</h:form>
+					<h:form id="chartForm">
+						<p:dialog id="chartDlg" dynamic="true" fitViewport="true" modal="false" widgetVar="chartDlgWdg">
+							
+								<p:outputPanel id="chartPanel" layout="block" rendered="#{indexView.chartReady}">
+									<p:chart type="line" model="#{indexView.chart}" style="width:800px;" />
+								</p:outputPanel>
+							
+						</p:dialog>
+						</h:form>
+
 				</p:outputPanel>
 				<p:outputPanel id="authenticatePanel" layout="block"
 					rendered="#{!(userManager.authenticated)}">

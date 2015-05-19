@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Serializable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
@@ -17,6 +20,10 @@ import javax.faces.event.ActionEvent;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.log4j.Logger;
+import org.primefaces.model.chart.Axis;
+import org.primefaces.model.chart.AxisType;
+import org.primefaces.model.chart.LineChartModel;
+import org.primefaces.model.chart.LineChartSeries;
 
 import ubc.pavlab.morf.models.Job;
 import ubc.pavlab.morf.models.ValidationResult;
@@ -43,6 +50,10 @@ public class IndexView implements Serializable {
     private Job selectedJob;
     private Job jobToRemove;
 
+    // Chart Stuff
+    private boolean chartReady = false;
+    private LineChartModel chart;
+
     public IndexView() {
         log.info( "IndexView created" );
     }
@@ -50,12 +61,69 @@ public class IndexView implements Serializable {
     @PostConstruct
     public void init() {
         log.info( "IndexView init" );
+
     }
 
-    /*
-     * public void getResult(ActionEvent actionEvent) { String res = userManager.getResultIfReady(currentSelectedName);
-     * if (res != null) { addMessage(res); } else { addMessage("Something went wrong!"); } }
-     */
+    public void applyExampleInput() {
+        content = ">PDB:3bxl_B\n" + settingsCache.getProperty( "morf.exampleInput" );
+    }
+
+    public void createChart() {
+        log.info( "fetchChartData" );
+
+        if ( selectedJob.getComplete() && !selectedJob.getFailed() ) {
+            LineChartModel model = new LineChartModel();
+            model.setAnimate( true );
+            model.setExtender( "chartExtender" );
+
+            Axis yAxis = model.getAxis( AxisType.Y );
+            yAxis.setMin( 0 );
+            yAxis.setMax( 1 );
+
+            Axis xAxis = model.getAxis( AxisType.X );
+            xAxis.setTickAngle( 35 );
+            xAxis.setMin( 0 );
+
+            LineChartSeries series = new LineChartSeries();
+            series.setShowMarker( false );
+            // series.setShowLine( false );
+
+            String res = null;
+            try {
+                res = selectedJob.getFuture().get( 1, TimeUnit.SECONDS );
+            } catch ( InterruptedException | ExecutionException | TimeoutException e ) {
+                log.error( e );
+            }
+
+            String textStr[] = res.split( "\\r?\\n" );
+            int x = 0;
+            for ( int i = 0; i < textStr.length; i++ ) {
+                String[] line = textStr[i].split( "\t" );
+                if ( !line[0].startsWith( "#" ) ) {
+                    double val = Double.valueOf( textStr[i].split( "\t" )[1] );
+                    series.set( x++, val );
+                }
+
+            }
+
+            xAxis.setMax( x );
+
+            model.addSeries( series );
+
+            if ( series.getData().size() > 0 ) {
+                chartReady = true;
+            } else {
+                chartReady = false;
+            }
+
+            chart = model;
+
+        } else {
+            log.info( "Job contains no data" );
+            chartReady = false;
+        }
+
+    }
 
     public void cancelJob() {
 
@@ -232,6 +300,14 @@ public class IndexView implements Serializable {
 
     public void setJobToRemove( Job jobToRemove ) {
         this.jobToRemove = jobToRemove;
+    }
+
+    public boolean isChartReady() {
+        return chartReady;
+    }
+
+    public LineChartModel getChart() {
+        return chart;
     }
 
 }
