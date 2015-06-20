@@ -76,7 +76,7 @@ public class JobManager {
         executor = Executors.newSingleThreadExecutor();
         scheduler = Executors.newSingleThreadScheduledExecutor();
         // old after 1 day, checks every hour
-        scheduler.scheduleAtFixedRate( new PurgeOldJobs( savedJobs, PURGE_AFTER ), 0, 1, TimeUnit.HOURS );
+        scheduler.scheduleAtFixedRate( new PurgeOldJobs( savedJobs ), 0, 1, TimeUnit.HOURS );
         // executor = (ThreadPoolExecutor) Executors.newSingleThreadExecutor();
     }
 
@@ -170,7 +170,7 @@ public class JobManager {
             String key = sig.nextSessionId();
             job.setSavedKey( key );
             job.setSaved( true );
-            job.setSavedDate( System.currentTimeMillis() );
+            job.setSaveExpiredDate( System.currentTimeMillis() + JobManager.PURGE_AFTER );
             savedJobs.put( key, job );
             return key;
         }

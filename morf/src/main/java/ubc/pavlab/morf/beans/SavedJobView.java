@@ -4,6 +4,8 @@
 package ubc.pavlab.morf.beans;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -13,12 +15,12 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 
 import org.apache.log4j.Logger;
-import org.primefaces.model.chart.Axis;
-import org.primefaces.model.chart.AxisType;
+import org.primefaces.context.RequestContext;
 import org.primefaces.model.chart.LineChartModel;
-import org.primefaces.model.chart.LineChartSeries;
 
 import ubc.pavlab.morf.models.Job;
+
+import com.google.gson.Gson;
 
 @ManagedBean
 @ViewScoped
@@ -48,23 +50,11 @@ public class SavedJobView implements Serializable {
     public void init() {
         log.info( "SavedJobView init" );
         savedJob = jobManager.fetchSavedJob( key, false );
+    }
 
-        if ( savedJob != null && savedJob.getComplete() && !savedJob.getFailed() ) {
-            LineChartModel model = new LineChartModel();
-            model.setAnimate( true );
-            model.setExtender( "chartExtender" );
+    public void createChart() {
 
-            Axis yAxis = model.getAxis( AxisType.Y );
-            yAxis.setMin( 0 );
-            yAxis.setMax( 1 );
-
-            Axis xAxis = model.getAxis( AxisType.X );
-            xAxis.setTickAngle( 75 );
-            xAxis.setMin( 0 );
-
-            LineChartSeries series = new LineChartSeries();
-            series.setShowMarker( false );
-            // series.setShowLine( false );
+        if ( savedJob.getComplete() && !savedJob.getFailed() ) {
 
             String res = null;
             try {
@@ -73,18 +63,19 @@ public class SavedJobView implements Serializable {
                 log.error( e );
             }
 
+            Map<Integer, Double> seriesValues = new HashMap<>();
+            Map<Integer, String> seriesLabels = new HashMap<>();
+
             String textStr[] = res.split( "\\r?\\n" );
-            int maxPos = 0;
             for ( int i = 0; i < textStr.length; i++ ) {
                 String[] line = textStr[i].split( "\t" );
                 if ( !line[0].startsWith( "#" ) ) {
                     try {
-                        int pos = Integer.valueOf( textStr[i].split( "\t" )[0] );
-                        if ( pos > maxPos ) {
-                            maxPos = pos;
-                        }
-                        double val = Double.valueOf( textStr[i].split( "\t" )[2] );
-                        series.set( pos, val );
+                        String[] split = textStr[i].split( "\t" );
+                        int pos = Integer.valueOf( split[0] );
+                        double val = Double.valueOf( split[2] );
+                        seriesValues.put( pos, val );
+                        seriesLabels.put( pos, split[1] );
                     } catch ( NumberFormatException e ) {
                         log.error( e );
                     }
@@ -92,27 +83,20 @@ public class SavedJobView implements Serializable {
 
             }
 
-            xAxis.setMax( maxPos );
-
-            model.addSeries( series );
-
-            if ( series.getData().size() > 0 ) {
+            if ( seriesValues.size() > 0 ) {
                 chartReady = true;
             } else {
                 chartReady = false;
             }
 
-            chart = model;
+            RequestContext.getCurrentInstance().addCallbackParam( "hc_values", new Gson().toJson( seriesValues ) );
+            RequestContext.getCurrentInstance().addCallbackParam( "hc_labels", new Gson().toJson( seriesLabels ) );
 
         } else {
             log.info( "Job contains no data" );
             chartReady = false;
         }
 
-    }
-
-    public long timeLeft() {
-        return ( JobManager.PURGE_AFTER - ( System.currentTimeMillis() - savedJob.getSavedDate() ) ) / 1000 / 60 / 60;
     }
 
     public Job getSavedJob() {

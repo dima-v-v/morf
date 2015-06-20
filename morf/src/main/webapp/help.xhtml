@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:of="http://omnifaces.org/functions"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+<h:body>
+
+	<ui:composition template="/WEB-INF/templates/template.xhtml">
+		<ui:define name="content">
+			<h:form>
+
+				<div class="title">
+					<h1>
+						MoRF<sub>CHiBi_<i>Web</i></sub>
+					</h1>
+				</div>
+				
+				<div style="padding-left:15px;">
+				
+				<h3>Instructions:</h3>
+
+				<ol class="spaced-list">
+
+					<li>Obtain one protein sequence of desired protein in FASTA
+						format.</li>
+					<li>Enter the sequence into the input box and press "Submit
+						Job".
+						<ul>
+							<li>An example sequence can be shown by clicking "Example
+								Input".</li>
+							<li>Input box can be cleared with "Clear".</li>
+						</ul>
+					</li>
+
+					<li>The name, size and execution time are shown under headings
+						"Label", "Size", and "Execution Time", respectively.</li>
+					<li>"Status" indicates whether the input is "Running" or
+						"Pending" and when it is complete, the system will indicate if the
+						input "Failed" or if it is "Complete"</li>
+					<li>Once complete, the results can be analyzed further through
+						the following:
+						<ul>
+							<li>Download: The MoRF potential of each amino acid is
+								numerically indicated; a higher number suggests a greater
+								probability that residue is in a MoRF residue.</li>
+							<li>Graph: A graph of the input region is illustrated; the
+								higher peaks illustrate greater probability of a MoRF. Hovering
+								over the graph indicates the MoRF potential and the amino acid
+								position at that point.</li>
+							<li>Save: A new window with the data from MoRF­CHiBi­Web
+								will remain on the server for 24 hours.</li>
+							<li>Cancel: This will remove or cancel any inputs.</li>
+						</ul>
+					</li>
+
+
+
+				</ol>
+				</div>
+
+
+
+			</h:form>
+		</ui:define>
+	</ui:composition>
+
+</h:body>
+
+</html>

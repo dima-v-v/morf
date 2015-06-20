@@ -17,13 +17,22 @@
 				<f:event type="preRenderView" listener="#{savedJobView.init}" />
 			</f:metadata>
 		</ui:define>
+		
+    	<ui:define name="js">
+    	    	<h:outputScript library="js" name="highcharts.js" />
+	    		<h:outputScript>
+		    		$(document).ready(function() {
+						createChart();
+					});
+				</h:outputScript>
+    	</ui:define>
 
 		<ui:define name="content">
 			<h:form>
 
 				<p:outputPanel id="jobDetail" style="text-align:center;"
 					rendered="#{savedJobView.savedJob != null}">
-					<h:outputText value="This link will remain active for another #{savedJobView.timeLeft()} hours" />
+					<h:outputText value="This link will remain active for another #{savedJobView.savedJob.saveTimeLeft} hours" />
 					<p:panelGrid columns="2">
 						<h:outputText value="Id:" />
 						<h:outputText value="#{savedJobView.savedJob.id}" />
@@ -67,9 +76,11 @@
 							</p:commandButton>
 						</p:panel>
 					</p:panelGrid>
-					<p:chart type="line" model="#{savedJobView.chart}"
-						style="width:800px;margin-top:50px;"
-						rendered="#{savedJobView.chartReady}" />
+					<div id="hc_container" style="width: 800px; height: 500px;"/>
+					<p:remoteCommand name="createChart"
+						actionListener="#{savedJobView.createChart()}"
+						oncomplete="handleCreateChart(xhr, status, args);">
+					</p:remoteCommand>
 				</p:outputPanel>
 				<p:outputPanel style="text-align:center;"
 					rendered="#{savedJobView.savedJob == null}">

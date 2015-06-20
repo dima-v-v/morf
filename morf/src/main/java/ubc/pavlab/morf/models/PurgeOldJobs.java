@@ -5,14 +5,10 @@ import java.util.Map;
 
 public class PurgeOldJobs implements Runnable {
 
-    // Saved jobs are considered old after this many milliseconds
-    private final long purgeAfter;
-
     private Map<String, Job> savedJobs;
 
-    public PurgeOldJobs( Map<String, Job> savedJobs, long purgeAfter ) {
+    public PurgeOldJobs( Map<String, Job> savedJobs ) {
         this.savedJobs = savedJobs;
-        this.purgeAfter = purgeAfter;
     }
 
     @Override
@@ -22,10 +18,10 @@ public class PurgeOldJobs implements Runnable {
             for ( Iterator<Map.Entry<String, Job>> it = savedJobs.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<String, Job> entry = it.next();
                 Job job = entry.getValue();
-                if ( System.currentTimeMillis() - job.getSavedDate() > purgeAfter ) {
+                if ( System.currentTimeMillis() > job.getSaveExpiredDate() ) {
                     job.setSavedKey( null );
                     job.setSaved( false );
-                    job.setSavedDate( null );
+                    job.setSaveExpiredDate( null );
                     it.remove();
                 }
             }

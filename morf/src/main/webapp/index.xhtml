@@ -8,15 +8,17 @@
 	xmlns:of="http://omnifaces.org/functions"
 	xmlns:ui="http://java.sun.com/jsf/facelets">
     <h:body>
- 
     	<ui:composition template="/WEB-INF/templates/template.xhtml">
+	    	<ui:define name="js">
+	    	    	<h:outputScript library="js" name="highcharts.js" />
+	    	</ui:define>
      		<ui:define name="content">
 			<p:outputPanel id="centerPanel" layout="block">
 				<p:outputPanel id="jobsPanel" layout="block"
 					rendered="#{userManager.authenticated}">
 					<div class="title">
-					<h1>Computational Identification of Binding Regions in Disordered Proteins</h1>
-					<h2>MoRF<sub>CHiBi_<i>Web</i></sub></h2>
+					<h1>MoRF<sub>CHiBi_<i>Web</i></sub></h1>
+					<h2>Computational Identification of Binding Regions in Disordered Proteins</h2>
 					<h3>Now fully functional with more features on the way!</h3>	
 					</div>
 					<h:form id="inputForm">
@@ -25,7 +27,7 @@
 						<h:panelGrid columns="2" style="margin-bottom:10px"
 							cellpadding="5">
 							<h:outputText value="" />
-							<h:outputText value="Enter one protein sequence in fasta format then press 'Submit Job'" />
+							<h:outputText value="Enter one protein sequence in FASTA format" />
 
 							<p:outputLabel for="inputContent" value="FASTA: " />
 							<p:inputTextarea id="inputContent" value="#{indexView.content}"
@@ -55,34 +57,38 @@
 							<f:facet name="header">
 					            Jobs
 					        </f:facet>
-							<p:column headerText="Id">
-								<h:outputText value="#{job.id}" />
-							</p:column>
-							<p:column headerText="Label">
-								<h:outputText value="#{job.name}" />
-							</p:column>
-							<p:column headerText="Size">
-								<h:outputText value="#{job.sequenceSize}" />
-							</p:column>
-							<p:column headerText="Submitted">
-								<h:outputText value="#{job.submittedDate}" />
-							</p:column>
-
-							<p:column headerText="Position">
-								<h:outputText value="#{job.position}" />
-							</p:column>
-
-							<p:column headerText="Complete">
-								<h:outputText value="failed" rendered="#{job.failed}"/>
-								<h:outputText value="#{job.complete}" rendered="#{!(job.failed)}"/>
-							</p:column>
-							<p:column headerText="Actions" style="width:128px;text-align: center">
+					        
+							<p:column style="width:32px;">
 								<p:commandButton update=":formJobs:jobDetail"
 									oncomplete="PF('jobDialog').show()" icon="ui-icon-search"
 									title="View">
 									<f:setPropertyActionListener value="#{job}"
 										target="#{indexView.selectedJob}" />
 								</p:commandButton>
+							</p:column>
+					        
+							<p:column headerText="Id" style="width:64px;text-align: center;">
+								<h:outputText value="#{job.id}" />
+							</p:column>
+							<p:column headerText="Label" style="text-align: center;">
+								<h:outputText value="#{job.name}" />
+							</p:column>
+							<p:column headerText="Size [residues]" style="text-align: center;">
+								<h:outputText value="#{job.sequenceSize}" />
+							</p:column>
+							<p:column headerText="Submitted" style="text-align: center;">
+								<h:outputText value="#{job.submittedDate}" />
+							</p:column>
+
+							<p:column headerText="Status" style="text-align: center;">
+								<h:outputText value="#{job.position}" />
+							</p:column>
+							
+							<p:column headerText="Execution Time" style="text-align: center;">
+								<h:outputText value="#{job.executionTime} seconds" rendered="#{job.complete}"/>
+							</p:column>	
+
+							<p:column headerText="Results" style="width:128px;text-align: center">
 								<p:commandButton title="Download" ajax="false"
 									onclick="PrimeFaces.monitorDownload(start, stop);"
 									icon="ui-icon-arrowthick-1-s"
@@ -92,8 +98,7 @@
 								<p:commandButton title="Graph"
 									icon="fa fa-area-chart"
 									action="#{indexView.createChart}"
-									update = ":chartForm"
-									oncomplete="PF('chartDlgWdg').show()"
+									oncomplete="handleCreateChart(xhr, status, args);PF('chartDlgWdg').show()"
 									disabled="#{!job.complete or job.failed}">
 									<f:setPropertyActionListener value="#{job}"
 										target="#{indexView.selectedJob}" />
@@ -104,6 +109,21 @@
 									action="#{indexView.cancelJob}">
 									<f:setPropertyActionListener value="#{job}"
 										target="#{indexView.jobToRemove}" />
+								</p:commandButton>
+							</p:column>
+
+							<p:column headerText="Save" style="width:96px;text-align: center">
+								<p:link outcome="savedJob"
+									target="_blank" rendered="#{job.saved}">
+									<span class="fa fa-external-link" style="display:inline-block;" >
+									<h:outputText value="&nbsp;#{job.saveTimeLeft} hrs left" />
+									</span>
+								    <f:param name="key" value="#{job.savedKey}" />
+								</p:link>
+
+								
+								<p:commandButton icon="fa fa-heart" action="#{indexView.saveJob}" update = "tableJobs" rendered="#{!job.saved}">
+									<f:setPropertyActionListener value="#{job}" target="#{indexView.jobToSave}" />	
 								</p:commandButton>
 							</p:column>
 						</p:dataTable>
@@ -138,16 +158,17 @@
 									<h:outputText value="Execution Time:" rendered="#{indexView.selectedJob.complete}"/>
 									<h:outputText value="#{indexView.selectedJob.executionTime} seconds" rendered="#{indexView.selectedJob.complete}"/>
 									
-									<h:outputText value="Save for later:" />
-									<p:link outcome="savedJob" value="#{indexView.selectedJob.savedKey}" 
+									<h:outputText value="Save for later:" />										
+									<p:link outcome="savedJob"
 										target="_blank" rendered="#{indexView.selectedJob.saved}">
+										<span class="fa fa-external-link" style="display:inline-block;" >
+										<h:outputText value="&nbsp;#{indexView.selectedJob.saveTimeLeft} hrs left" />
+										</span>
 									    <f:param name="key" value="#{indexView.selectedJob.savedKey}" />
-									</p:link>
-									<p:commandButton value="Save"
-											icon="fa fa-heart"
-											actionListener="#{indexView.saveJob}"
-											update = ":formJobs:jobDetail"
-											rendered="#{!indexView.selectedJob.saved}"/>
+									</p:link>					
+									<p:commandButton icon="fa fa-heart" action="#{indexView.saveJob}" update = ":formJobs:jobDetail" rendered="#{!indexView.selectedJob.saved}">
+										<f:setPropertyActionListener value="#{indexView.selectedJob}" target="#{indexView.jobToSave}" />	
+									</p:commandButton>
 
 									<h:outputText value="Result:"
 										rendered="#{indexView.selectedJob.complete}" />
@@ -169,21 +190,18 @@
 								</p:panelGrid>
 							</p:outputPanel>
 						</p:dialog>
-						<p:dialog id="chartDlg">
-						</p:dialog>
+
 						<p:poll widgetVar="poller"
 							interval="#{settingsCache.getProperty('morf.pollInterval')}"
 							listener="#{userManager.updateQueuePositions}" autoStart="true"
 							update="tableJobs"
 							oncomplete="handlePollComplete(xhr, status, args)" />
 					</h:form>
-					<h:form id="chartForm">
-						<p:dialog id="chartDlg" dynamic="true" fitViewport="true" modal="false" widgetVar="chartDlgWdg" resizable="false">
+					<h:form id="chartForm">						
+						<p:dialog id="chartDlg" fitViewport="true" modal="false" widgetVar="chartDlgWdg" resizable="false" height="500px" width="900px">
 							
-								<p:outputPanel id="chartPanel" layout="block" rendered="#{indexView.chartReady}">
-									<p:chart type="line" model="#{indexView.chart}" style="width:800px;" />
-								</p:outputPanel>
-							
+							<div id="hc_container" style="width: 100%; height: 100%;"/>
+														
 						</p:dialog>
 						</h:form>
 

@@ -79,7 +79,7 @@ public class Job implements Callable<String> {
 
     private boolean saved = false;
     private String savedKey;
-    private Long savedDate;
+    private Long saveExpiredDate;
 
     private JobManager jobManager;
 
@@ -358,12 +358,16 @@ public class Job implements Callable<String> {
         this.savedKey = savedKey;
     }
 
-    public Long getSavedDate() {
-        return savedDate;
+    public Long getSaveExpiredDate() {
+        return saveExpiredDate;
     }
 
-    public void setSavedDate( Long savedDate ) {
-        this.savedDate = savedDate;
+    public void setSaveExpiredDate( Long savedDate ) {
+        this.saveExpiredDate = savedDate;
+    }
+
+    public Long getSaveTimeLeft() {
+        return ( ( saveExpiredDate - System.currentTimeMillis() ) ) / 1000 / 60 / 60;
     }
 
     public void setJobManager( JobManager jobManager ) {

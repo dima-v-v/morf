@@ -16,7 +16,7 @@
 	<h:outputStylesheet library="css" name="style.css" />
 	<h:outputStylesheet library="css" name="showcase.css" />
 	<h:outputScript library="js" name="morf.js" />
-	<h:outputScript library="js" name="chartExtender.js" />
+  	<ui:insert name="js" />
 
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<!-- Prevents caching at the Proxy Server -->
@@ -44,6 +44,8 @@
 						styleClass="right-border" />
 					<p:menuitem value="About" url="about.xhtml"
 						icon="fa fa-info-circle" styleClass="right-border" />
+					<p:menuitem value="Help" url="help.xhtml"
+						icon="fa fa-question-circle" styleClass="right-border" />
 					<f:facet name="options" style="vertical-align:middle;">
 						<h2 style="position:absolute;margin:1px 0;right:30px;">MoRF</h2>
 			        </f:facet>

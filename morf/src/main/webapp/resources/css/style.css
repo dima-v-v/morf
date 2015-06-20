@@ -89,3 +89,7 @@ font-family: "Courier New", Courier, monospace
  #inputForm table tr,  #inputForm table td {
  border:none;
  }
+ 
+ .spaced-list li {
+ 	line-height:2em;
+ }
