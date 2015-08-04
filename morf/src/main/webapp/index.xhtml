@@ -24,15 +24,11 @@
 					<h:form id="inputForm">
 						<p:growl id="growl" life="2000" />
 						
-						<h:panelGrid columns="2" style="margin-bottom:10px"
+						<h:panelGrid columns="1" style="margin-bottom:10px;width:75%;"
 							cellpadding="5">
-							<h:outputText value="" />
 							<h:outputText value="Enter one protein sequence in FASTA format" />
 
-							<p:outputLabel for="inputContent" value="FASTA: " />
-							<p:inputTextarea id="inputContent" value="#{indexView.content}"
-								rows="10" cols="100" autoResize="false" />
-							<p:outputLabel for="inputContent" value="" />
+							<p:inputTextarea id="inputContent" value="#{indexView.content}" rows="10" style="width:100%;" autoResize="false" />
 							<p:panel style="border-style:none;">
 						<p:commandButton value="Submit Job" icon="ui-icon-disk"
 							update="growl,:formJobs:tableJobs"
@@ -81,12 +77,8 @@
 							</p:column>
 
 							<p:column headerText="Status" style="text-align: center;">
-								<h:outputText value="#{job.position}" />
+								<h:outputText value="#{job.status}" />
 							</p:column>
-							
-							<p:column headerText="Execution Time" style="text-align: center;">
-								<h:outputText value="#{job.executionTime} seconds" rendered="#{job.complete}"/>
-							</p:column>	
 
 							<p:column headerText="Results" style="width:128px;text-align: center">
 								<p:commandButton title="Download" ajax="false"
@@ -129,7 +121,7 @@
 						</p:dataTable>
 
 						<p:dialog header="Job Info" widgetVar="jobDialog" modal="false"
-							showEffect="fade" hideEffect="fade" resizable="false">
+							showEffect="fade" hideEffect="fade" resizable="false" dynamic="true">
 							<p:outputPanel id="jobDetail" style="text-align:center;">
 								<p:panelGrid columns="2">
 									<h:outputText value="Id:" />
@@ -148,16 +140,9 @@
 									<h:outputText value="Submitted:" />
 									<h:outputText value="#{indexView.selectedJob.submittedDate}" />
 
-									<h:outputText value="Position:" />
-									<h:outputText value="#{indexView.selectedJob.position}" />
-
-									<h:outputText value="Complete:"/>
-									<h:outputText value="failed" rendered="#{indexView.selectedJob.failed}"/>
-									<h:outputText value="#{indexView.selectedJob.complete}" rendered="#{!(indexView.selectedJob.failed)}"/>
-									
-									<h:outputText value="Execution Time:" rendered="#{indexView.selectedJob.complete}"/>
-									<h:outputText value="#{indexView.selectedJob.executionTime} seconds" rendered="#{indexView.selectedJob.complete}"/>
-									
+									<h:outputText value="Status:" />
+									<h:outputText value="#{indexView.selectedJob.status}" />
+																	
 									<h:outputText value="Save for later:" />										
 									<p:link outcome="savedJob"
 										target="_blank" rendered="#{indexView.selectedJob.saved}">
@@ -176,7 +161,8 @@
 										<p:commandButton value="Download" ajax="false"
 											onclick="PrimeFaces.monitorDownload(start, stop);"
 											icon="ui-icon-arrowthick-1-s"
-											rendered="#{indexView.selectedJob.complete}">
+											rendered="#{indexView.selectedJob.complete}"
+											disabled="#{!indexView.selectedJob.complete or indexView.selectedJob.failed}">
 											<p:fileDownload value="#{indexView.selectedJob.file}" />
 										</p:commandButton>
 										<p:commandButton value="Graph"
@@ -184,7 +170,8 @@
 											actionListener="#{indexView.createChart}"
 											update = ":chartForm"
 											oncomplete="PF('chartDlgWdg').show()"
-											rendered="#{indexView.selectedJob.complete}"/>
+											rendered="#{indexView.selectedJob.complete}"
+											disabled="#{!indexView.selectedJob.complete or indexView.selectedJob.failed}"/>
 									</p:panel>
 									
 								</p:panelGrid>

@@ -91,6 +91,8 @@ public class SavedJobView implements Serializable {
 
             RequestContext.getCurrentInstance().addCallbackParam( "hc_values", new Gson().toJson( seriesValues ) );
             RequestContext.getCurrentInstance().addCallbackParam( "hc_labels", new Gson().toJson( seriesLabels ) );
+            RequestContext.getCurrentInstance().addCallbackParam( "hc_title",
+                    "MoRF Potential of '" + savedJob.getName() + "' vs Position" );
 
         } else {
             log.info( "Job contains no data" );

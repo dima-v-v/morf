@@ -53,30 +53,34 @@ import ubc.pavlab.morf.beans.JobManager;
 public class Job implements Callable<String> {
 
     private static final Logger log = Logger.getLogger( Job.class );
+
+    // Static path to resources
     private static String scriptName;
     private static String scriptBasePath;
     private static String pathToInput;
     private static String pathToOutput;
 
+    // Information on creation of job
     private String sessionId;
     private String ipAddress;
     private String name;
     private int id;
     private String content;
     private int sequenceSize;
-
-    private Boolean failed = false;
-    private String failedMessage;
-
-    private Boolean complete = false;
-    private Future<String> future;
-    // private String result;
-    private StreamedContent resultFile;
     private Date submittedDate;
-    private String position;
-    private long executionTime;
-    private Boolean running = false;
 
+    // Information on running / completion
+    private Boolean running = false;
+    private Boolean failed = false;
+    private Boolean complete = false;
+    private String status;
+
+    // Results
+    private Future<String> future;
+    private StreamedContent resultFile;
+    private long executionTime;
+
+    // Saving Job information / results for later
     private boolean saved = false;
     private String savedKey;
     private Long saveExpiredDate;
@@ -88,13 +92,14 @@ public class Job implements Callable<String> {
      * @param name
      * @param contents
      */
-    public Job( String sessionId, String name, int id, String content, String ipAddress ) {
+    public Job( String sessionId, String name, int id, String content, int sequenceSize, String ipAddress ) {
         super();
         this.sessionId = sessionId;
         this.name = name;
         this.content = content;
         this.ipAddress = ipAddress;
         this.id = id;
+        this.sequenceSize = sequenceSize;
     }
 
     public String getSessionId() {
@@ -178,7 +183,7 @@ public class Job implements Callable<String> {
                 if ( !this.failed ) {
                     res = this.future.get( 1, TimeUnit.SECONDS );
                 } else {
-                    res = this.failedMessage;
+                    res = this.status;
                 }
 
                 InputStream in = IOUtils.toInputStream( res, "UTF-8" );
@@ -225,7 +230,7 @@ public class Job implements Callable<String> {
     public String call() throws Exception {
         log.info( "Starting job (" + name + ") for session: (" + sessionId + ") and IP: (" + ipAddress + ")" );
         this.running = true;
-        this.position = "Running...";
+        this.status = "Running...";
         // Write content to input
         File file = new File( pathToInput );
 
@@ -294,12 +299,12 @@ public class Job implements Callable<String> {
         this.submittedDate = submittedDate;
     }
 
-    public String getPosition() {
-        return position;
+    public String getStatus() {
+        return status;
     }
 
-    public void setPosition( String position ) {
-        this.position = position;
+    public void setStatus( String status ) {
+        this.status = status;
     }
 
     public String getIpAddress() {
@@ -328,14 +333,6 @@ public class Job implements Callable<String> {
 
     public void setFailed( Boolean failed ) {
         this.failed = failed;
-    }
-
-    public String getFailedMessage() {
-        return failedMessage;
-    }
-
-    public void setFailedMessage( String failedMessage ) {
-        this.failedMessage = failedMessage;
     }
 
     public Boolean getRunning() {

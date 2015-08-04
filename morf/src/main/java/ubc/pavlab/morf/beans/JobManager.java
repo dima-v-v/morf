@@ -127,7 +127,7 @@ public class JobManager {
             Future<String> future = executor.submit( job );
             job.setFuture( future );
             jobs.add( job );
-            job.setPosition( Integer.toString( jobs.size() ) );
+            job.setStatus( "Position: " + Integer.toString( jobs.size() ) );
         }
         return job;
     }
@@ -140,13 +140,13 @@ public class JobManager {
                 Job job = iterator.next();
 
                 if ( job.getRunning() ) {
-                    job.setPosition( "Running..." );
+                    job.setStatus( "Running..." );
                     idx++;
                 } else if ( job.getComplete() ) {
-                    job.setPosition( "Done" );
+                    job.setStatus( "Completed in " + job.getExecutionTime() + "s" );
                     iterator.remove();
                 } else {
-                    job.setPosition( Integer.toString( idx ) );
+                    job.setStatus( "Position: " + Integer.toString( idx ) );
                     idx++;
                 }
 

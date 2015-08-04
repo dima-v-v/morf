@@ -53,7 +53,11 @@ function handleCreateChart(xhr, status, args){
                 }
              },
         title: {
-            text: 'MoRF Potential vs Position',
+            text: args.hc_title,
+        },
+        subtitle: {
+            text: 'Drag To Zoom',
+            x: -20
         },
         legend : {
         	enabled: false
@@ -61,8 +65,7 @@ function handleCreateChart(xhr, status, args){
         xAxis: {
             title: {
                 text: 'Position',
-                min:0,
-                max:2500
+                min:0
             },
         },
         yAxis: {
@@ -71,13 +74,14 @@ function handleCreateChart(xhr, status, args){
             },
         },
         tooltip: {
+        	crosshairs:true,
             positioner: function (labelWidth, labelHeight, point) {
                 return { x: Math.max(Math.min(this.chart.chartWidth - labelWidth, point.plotX-70),0), y: 50 };
             },
             headerFormat: '<b>{series.name}</b><br />',
             pointFormat: 'x = {point.x}, y = {point.y}',
             formatter:function(){
-               return '<b>'+this.series.name+'</b><br/> Position: ' + this.x + ", " + labels[this.x] + "<br/> Probability: " + this.y;
+               return '<b>'+this.series.name+'</b><br/> Position: ' + this.x + ", " + labels[this.x] + "<br/> Probability: " + this.y.toFixed(3);
             }
         },
         plotOptions: {
@@ -85,17 +89,23 @@ function handleCreateChart(xhr, status, args){
                 color: {
                     linearGradient: { x1: 0, y1: dataMin, x2: 0, y2: dataMax},
                     stops: [
-                        [0, Highcharts.getOptions().colors[0]],
-                        [1, Highcharts.getOptions().colors[5]]
+                        [0, Highcharts.getOptions().colors[5]],
+                        [1, Highcharts.getOptions().colors[0]]
                     ]
                 },
                 marker: {
-                    radius: 2
+                    radius: 0.5,
+                    states: {
+                    	hover: {
+                    		enabled: false,
+                    		radius: 0.5
+                    	}
+                    }
                 },
-                lineWidth: 1,
+                lineWidth: 1.5,
                 states: {
                     hover: {
-                        lineWidth: 1
+                        lineWidth: 1.5
                     }
                 },
                 threshold: null
@@ -127,9 +137,23 @@ function handleCreateChart(xhr, status, args){
         }]
     }
     
-    a = new Highcharts.Chart(options);
+    var a = new Highcharts.Chart(options, function(c) {
+    	setResizer(c)
+    });
+    
+    
 	
 }
+
+function setResizer(chart) {
+	$(window).resize(function() {
+		setTimeout(function() {
+			chart.reflow();
+		}, 200);
+		
+    });
+}
+
 
 $(document).ready(function() {
    console.log("spellcheck off")

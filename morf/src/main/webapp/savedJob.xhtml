@@ -32,51 +32,47 @@
 
 				<p:outputPanel id="jobDetail" style="text-align:center;"
 					rendered="#{savedJobView.savedJob != null}">
+					<h3>#{savedJobView.savedJob.name}</h3>
 					<h:outputText value="This link will remain active for another #{savedJobView.savedJob.saveTimeLeft} hours" />
-					<p:panelGrid columns="2">
-						<h:outputText value="Id:" />
-						<h:outputText value="#{savedJobView.savedJob.id}" />
-
-						<h:outputText value="Label:" />
-						<h:outputText value="#{savedJobView.savedJob.name}" />
-
-						<h:outputText value="Size:" />
-						<h:outputText value="#{savedJobView.savedJob.sequenceSize}" />
-
-						<h:outputText value="Content:" />
-						<h:outputText
-							value="#{of:abbreviate(savedJobView.savedJob.content, 15)}" />
-
-						<h:outputText value="Submitted:" />
-						<h:outputText value="#{savedJobView.savedJob.submittedDate}" />
-
-						<h:outputText value="Position:" />
-						<h:outputText value="#{savedJobView.savedJob.position}" />
-
-						<h:outputText value="Complete:" />
-						<h:outputText value="failed"
-							rendered="#{savedJobView.savedJob.failed}" />
-						<h:outputText value="#{savedJobView.savedJob.complete}"
-							rendered="#{!(savedJobView.savedJob.failed)}" />
-
-						<h:outputText value="Execution Time:"
-							rendered="#{savedJobView.savedJob.complete}" />
-						<h:outputText
-							value="#{savedJobView.savedJob.executionTime} seconds"
-							rendered="#{savedJobView.savedJob.complete}" />
-
-						<h:outputText value="Result:"
-							rendered="#{savedJobView.savedJob.complete}" />
-						<p:panel style="border-style:none;" rendered="#{savedJobView.savedJob.complete}">
-							<p:commandButton value="Download" ajax="false"
-								onclick="PrimeFaces.monitorDownload(start, stop);"
-								icon="ui-icon-arrowthick-1-s"
-								rendered="#{savedJobView.savedJob.complete}">
-								<p:fileDownload value="#{savedJobView.savedJob.file}" />
-							</p:commandButton>
-						</p:panel>
-					</p:panelGrid>
-					<div id="hc_container" style="width: 800px; height: 500px;"/>
+					<p:separator style="margin-top:25px;margin-bottom:25px;"/>
+					<div class="ui-grid ui-grid-responsive">
+					    <div class="ui-grid-row">
+					        <div class="ui-grid-col-6">
+							    <p:fieldset legend="Content" style="margin-bottom:20px;">
+							        <h:panelGrid columns="1" cellpadding="5" width="100%">
+							        	<h:outputText value="Size: #{savedJobView.savedJob.sequenceSize}"/>
+							            <h:outputText value="#{of:abbreviate(savedJobView.savedJob.content, 75)}"/>
+							        </h:panelGrid>
+							    </p:fieldset>
+							    <p:fieldset legend="Submitted:" style="margin-bottom:20px;">
+							        <h:panelGrid columns="1" cellpadding="5" width="100%">
+							            <h:outputText value="#{savedJobView.savedJob.submittedDate}"/>
+							        </h:panelGrid>
+							    </p:fieldset>
+							    <p:fieldset legend="Status" style="margin-bottom:20px;">
+							        <h:panelGrid columns="1" cellpadding="5" width="100%">
+							            <h:outputText value="#{savedJobView.savedJob.status}"/>
+							        </h:panelGrid>
+							    </p:fieldset>
+							    <p:fieldset legend="Results" style="margin-bottom:20px;" rendered="#{savedJobView.savedJob.complete}">
+							        <h:panelGrid columns="1" cellpadding="5" width="100%">
+										<p:panel style="border-style:none;" rendered="#{savedJobView.savedJob.complete}">
+											<p:commandButton value="Download" ajax="false"
+												onclick="PrimeFaces.monitorDownload(start, stop);"
+												icon="ui-icon-arrowthick-1-s"
+												rendered="#{savedJobView.savedJob.complete}"
+												disabled="#{!savedJobView.savedJob.complete or savedJobView.savedJob.failed}">
+												<p:fileDownload value="#{savedJobView.savedJob.file}" />
+											</p:commandButton>
+										</p:panel>
+							        </h:panelGrid>
+							    </p:fieldset>
+							</div>
+					        <div class="ui-grid-col-6">
+					        <div id="hc_container" style="width: 100%; height: 100%;"/>
+							</div>
+					    </div>
+					</div>					
 					<p:remoteCommand name="createChart"
 						actionListener="#{savedJobView.createChart()}"
 						oncomplete="handleCreateChart(xhr, status, args);">

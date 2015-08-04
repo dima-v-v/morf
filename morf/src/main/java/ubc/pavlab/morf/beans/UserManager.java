@@ -18,6 +18,7 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.primefaces.context.RequestContext;
 
@@ -38,7 +39,7 @@ public class UserManager implements Serializable {
     private int MAX_JOBS_IN_QUEUE = 2;
     private Object jobSubmitLock = new Object();
     private Boolean stopPolling = true;
-    private Boolean authenticated = false;
+    private Boolean authenticated = true;
     private Integer jobIdIncrementer = 0;
 
     @ManagedProperty(value = "#{jobManager}")
@@ -62,6 +63,7 @@ public class UserManager implements Serializable {
     public void init() {
         log.info( "UserManager init" );
         MAX_JOBS_IN_QUEUE = Integer.parseInt( settingsCache.getProperty( "morf.maxJobsInQueue" ) );
+        authenticated = StringUtils.isBlank( settingsCache.getProperty( "morf.password" ) );
     }
 
     public String saveJob( Job job ) {
@@ -84,7 +86,7 @@ public class UserManager implements Serializable {
         if ( !jobs.contains( job ) ) {
             job.setComplete( true );
             job.setFailed( true );
-            job.setFailedMessage( failedMessage );
+            job.setStatus( failedMessage );
             jobs.add( job );
         }
     }
@@ -95,7 +97,7 @@ public class UserManager implements Serializable {
         if ( !jobs.contains( job ) ) {
             jobs.add( job );
             jobQueue.add( job );
-            job.setPosition( "Pending..." );
+            job.setStatus( "Submission Pending..." );
         }
         submitJobFromQueue();
 

@@ -116,6 +116,8 @@ public class IndexView implements Serializable {
 
             RequestContext.getCurrentInstance().addCallbackParam( "hc_values", new Gson().toJson( seriesValues ) );
             RequestContext.getCurrentInstance().addCallbackParam( "hc_labels", new Gson().toJson( seriesLabels ) );
+            RequestContext.getCurrentInstance().addCallbackParam( "hc_title",
+                    "MoRF Potential of '" + selectedJob.getName() + "' vs Position" );
 
         } else {
             log.info( "Job contains no data" );
@@ -238,8 +240,7 @@ public class IndexView implements Serializable {
 
             }
 
-            Job job = new Job( userManager.getSessionId(), label, id, content, ipAddress );
-            job.setSequenceSize( sequenceSize );
+            Job job = new Job( userManager.getSessionId(), label, id, content, sequenceSize, ipAddress );
 
             if ( userManager.jobExists( job ) ) {
                 addMessage( "Job already exists under id (" + id + ")", FacesMessage.SEVERITY_WARN );
@@ -249,7 +250,7 @@ public class IndexView implements Serializable {
                 // RequestContext.getCurrentInstance().addCallbackParam("stopPolling", false);
             }
         } else {
-            Job job = new Job( userManager.getSessionId(), label, id, content, ipAddress );
+            Job job = new Job( userManager.getSessionId(), label, id, content, 0, ipAddress );
             userManager.addFailedJob( job, vr.getContent() );
             addMessage( "Malformed FASTA Format!", FacesMessage.SEVERITY_ERROR );
 
