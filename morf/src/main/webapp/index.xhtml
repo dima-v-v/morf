@@ -18,13 +18,13 @@
 					rendered="#{userManager.authenticated}">
 					<div class="title">
 					<h1>MoRF<sub>CHiBi_<i>Web</i></sub></h1>
-					<h2>Computational Identification of Binding Regions in Disordered Proteins</h2>
-					<h3>Now fully functional with more features on the way!</h3>	
+					<h2>Computational Identification of MoRFs in Protein Sequences</h2>
+					<h3>Beta Version: 0.9</h3>	
 					</div>
 					<h:form id="inputForm">
 						<p:growl id="growl" life="2000" />
 						
-						<h:panelGrid columns="1" style="margin-bottom:10px;width:75%;"
+						<h:panelGrid columns="1" style="margin:0 auto;width:75%;"
 							cellpadding="5">
 							<h:outputText value="Enter one protein sequence in FASTA format" />
 
@@ -98,7 +98,8 @@
 								<p:commandButton
 									update=":formJobs:tableGrowl, :formJobs:tableJobs"
 									icon="fa fa-remove" title="Cancel"
-									action="#{indexView.cancelJob}">
+									action="#{indexView.cancelJob}"
+									disabled="#{job.running}">
 									<f:setPropertyActionListener value="#{job}"
 										target="#{indexView.jobToRemove}" />
 								</p:commandButton>

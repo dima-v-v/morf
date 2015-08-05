@@ -32,8 +32,8 @@ import ubc.pavlab.morf.models.Job;
 public class UserManager implements Serializable {
 
     /**
-	 * 
-	 */
+     * 
+     */
     private static final long serialVersionUID = -3568877185808646254L;
     private static final Logger log = Logger.getLogger( UserManager.class );
     private int MAX_JOBS_IN_QUEUE = 2;
@@ -116,7 +116,8 @@ public class UserManager implements Serializable {
                 if ( job.getComplete() ) {
                     canceled = jobManager.removeJob( job );
                 } else {
-                    canceled = jobManager.cancelJob( job );
+                    canceled = false;
+                    //canceled = jobManager.cancelJob( job ); // Off for now because doesn't work
                 }
                 if ( canceled ) {
                     jobs.remove( job );

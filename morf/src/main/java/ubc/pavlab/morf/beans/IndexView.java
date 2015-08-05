@@ -24,18 +24,18 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.log4j.Logger;
 import org.primefaces.context.RequestContext;
 
+import com.google.gson.Gson;
+
 import ubc.pavlab.morf.models.Job;
 import ubc.pavlab.morf.models.ValidationResult;
-
-import com.google.gson.Gson;
 
 @ManagedBean
 @ViewScoped
 public class IndexView implements Serializable {
 
     /**
-	 * 
-	 */
+     * 
+     */
     private static final long serialVersionUID = 2438909388677798292L;
 
     private static final Logger log = Logger.getLogger( IndexView.class );
@@ -74,7 +74,7 @@ public class IndexView implements Serializable {
     }
 
     public void applyExampleInput() {
-        content = ">PDB:3bxl_B\n" + settingsCache.getProperty( "morf.exampleInput" );
+        content = ">Example\n" + settingsCache.getProperty( "morf.exampleInput" );
     }
 
     public void createChart() {
@@ -94,7 +94,7 @@ public class IndexView implements Serializable {
             String textStr[] = res.split( "\\r?\\n" );
             for ( int i = 0; i < textStr.length; i++ ) {
                 String[] line = textStr[i].split( "\t" );
-                if ( !line[0].startsWith( "#" ) ) {
+                if ( !line[0].startsWith( "#" ) && !line[0].startsWith( ">" ) ) {
                     try {
                         String[] split = textStr[i].split( "\t" );
                         int pos = Integer.valueOf( split[0] );
@@ -116,8 +116,7 @@ public class IndexView implements Serializable {
 
             RequestContext.getCurrentInstance().addCallbackParam( "hc_values", new Gson().toJson( seriesValues ) );
             RequestContext.getCurrentInstance().addCallbackParam( "hc_labels", new Gson().toJson( seriesLabels ) );
-            RequestContext.getCurrentInstance().addCallbackParam( "hc_title",
-                    "MoRF Potential of '" + selectedJob.getName() + "' vs Position" );
+            RequestContext.getCurrentInstance().addCallbackParam( "hc_title", selectedJob.getName() );
 
         } else {
             log.info( "Job contains no data" );

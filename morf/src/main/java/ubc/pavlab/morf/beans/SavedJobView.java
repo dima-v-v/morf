@@ -18,9 +18,9 @@ import org.apache.log4j.Logger;
 import org.primefaces.context.RequestContext;
 import org.primefaces.model.chart.LineChartModel;
 
-import ubc.pavlab.morf.models.Job;
-
 import com.google.gson.Gson;
+
+import ubc.pavlab.morf.models.Job;
 
 @ManagedBean
 @ViewScoped
@@ -91,8 +91,7 @@ public class SavedJobView implements Serializable {
 
             RequestContext.getCurrentInstance().addCallbackParam( "hc_values", new Gson().toJson( seriesValues ) );
             RequestContext.getCurrentInstance().addCallbackParam( "hc_labels", new Gson().toJson( seriesLabels ) );
-            RequestContext.getCurrentInstance().addCallbackParam( "hc_title",
-                    "MoRF Potential of '" + savedJob.getName() + "' vs Position" );
+            RequestContext.getCurrentInstance().addCallbackParam( "hc_title", savedJob.getName() );
 
         } else {
             log.info( "Job contains no data" );

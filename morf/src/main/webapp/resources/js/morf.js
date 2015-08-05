@@ -57,7 +57,8 @@ function handleCreateChart(xhr, status, args){
         },
         subtitle: {
             text: 'Drag To Zoom',
-            x: -20
+            align: 'right',
+            x: -100,
         },
         legend : {
         	enabled: false
