@@ -49,7 +49,8 @@
 							rowStyleClass="#{job.complete eq true ? (job.failed eq true ? 'red-row': 'green-row') : 'yellow-row'}"
 							sortBy="#{job.submittedDate}"
 							scrollable="true" scrollHeight="350"
-							resizableColumns="true">
+							resizableColumns="true"
+							emptyMessage="No Jobs Found.">
 							<f:facet name="header">
 					            Jobs
 					        </f:facet>

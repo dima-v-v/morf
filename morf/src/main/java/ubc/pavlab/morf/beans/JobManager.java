@@ -158,14 +158,18 @@ public class JobManager {
             log.info( String.format( "Jobs in queue: %d", jobs.size() ) );
 
             // Add new job for given session
-            UserManager um = allUserManagers.get( sessionId );
-
-            if ( um != null ) {
-                um.updateQueuePositions();
-            }
+            forceSubmitJobs( sessionId );
 
             EventBus eventBus = EventBusFactory.getDefault().eventBus();
             eventBus.publish( "/jobDone", String.valueOf( jobs.size() ) );
+        }
+    }
+
+    private void forceSubmitJobs( String sessionId ) {
+        UserManager um = allUserManagers.get( sessionId );
+
+        if ( um != null ) {
+            um.updateQueuePositions();
         }
     }
 

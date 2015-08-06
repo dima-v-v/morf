@@ -121,12 +121,16 @@ public class UserManager implements Serializable {
             } else if ( jobs.contains( job ) ) {
                 if ( job.getComplete() ) {
                     canceled = jobManager.removeJob( job );
-                } else {
+                } else if ( job.getRunning() ) {
                     canceled = false;
-                    //canceled = jobManager.cancelJob( job ); // Off for now because doesn't work
+                    //canceled = jobManager.cancelJob( job ); // Off for now because doesn't work if job is running
+                } else {
+                    canceled = jobManager.cancelJob( job );
+
                 }
                 if ( canceled ) {
                     jobs.remove( job );
+                    submitJobFromQueue();
                 }
                 // already submitted must send cancel request
             }

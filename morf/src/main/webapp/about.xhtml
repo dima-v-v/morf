@@ -36,12 +36,23 @@ MoRF_CHiBi is a light, fast, accurate and easy to use computational MoRF predict
 							target="_top">#{settingsCache.getProperty('morf.contact1.email')}</a>) or #{settingsCache.getProperty('morf.contact2.name')} (<a
 							href="mailto:#{settingsCache.getProperty('morf.contact2.email')}?Subject=MoRF"
 							target="_top">#{settingsCache.getProperty('morf.contact2.email')}</a>)
-        </h:panelGrid>
+        			</h:panelGrid>
 				</p:fieldset>
 
 				<p:fieldset legend="Citation" style="margin-bottom:20px">
 					<h:panelGrid columns="1" cellpadding="5">
 						<h:outputText value="Under review" />
+					</h:panelGrid>
+				</p:fieldset>
+				
+				<p:fieldset legend="Credits" style="margin-bottom:20px">
+					<h:panelGrid columns="1" cellpadding="0">
+						<h4 style="margin-bottom:5px">Computational MoRF Prediction Software Tool</h4>
+						<h:outputText value="Nawar Malhis &amp; Joerg Gsponer" style="margin-left:15px"/>
+						<h4 style="margin-bottom:5px">Fully-Synchronized Job Queueing System &amp; Web Application</h4>
+						<h:outputText value="Matthew Jacobson" style="margin-left:15px"/>
+						<h:outputText value="JacobsonMT+MoRF [at] gmail [dot] com" style="margin-left:15px"/>
+						<a href="https://github.com/JacobsonMT" target="_blank" style="margin-left:15px">https://github.com/JacobsonMT</a>
 					</h:panelGrid>
 				</p:fieldset>
 

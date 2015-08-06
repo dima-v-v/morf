@@ -6,11 +6,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
@@ -26,6 +21,7 @@ import org.primefaces.context.RequestContext;
 
 import com.google.gson.Gson;
 
+import ubc.pavlab.morf.models.Chart;
 import ubc.pavlab.morf.models.Job;
 import ubc.pavlab.morf.models.ValidationResult;
 
@@ -79,49 +75,15 @@ public class IndexView implements Serializable {
 
     public void createChart() {
 
-        if ( selectedJob.getComplete() && !selectedJob.getFailed() ) {
+        Chart chart = new Chart( selectedJob );
 
-            String res = null;
-            try {
-                res = selectedJob.getFuture().get( 1, TimeUnit.SECONDS );
-            } catch ( InterruptedException | ExecutionException | TimeoutException e ) {
-                log.error( e );
-            }
+        chartReady = chart.isReady();
 
-            Map<Integer, Double> seriesValues = new HashMap<>();
-            Map<Integer, String> seriesLabels = new HashMap<>();
-
-            String textStr[] = res.split( "\\r?\\n" );
-            for ( int i = 0; i < textStr.length; i++ ) {
-                String[] line = textStr[i].split( "\t" );
-                if ( !line[0].startsWith( "#" ) && !line[0].startsWith( ">" ) ) {
-                    try {
-                        String[] split = textStr[i].split( "\t" );
-                        int pos = Integer.valueOf( split[0] );
-                        double val = Double.valueOf( split[2] );
-                        seriesValues.put( pos, val );
-                        seriesLabels.put( pos, split[1] );
-                    } catch ( NumberFormatException e ) {
-                        log.error( e );
-                    }
-                }
-
-            }
-
-            if ( seriesValues.size() > 0 ) {
-                chartReady = true;
-            } else {
-                chartReady = false;
-            }
-
-            RequestContext.getCurrentInstance().addCallbackParam( "hc_values", new Gson().toJson( seriesValues ) );
-            RequestContext.getCurrentInstance().addCallbackParam( "hc_labels", new Gson().toJson( seriesLabels ) );
-            RequestContext.getCurrentInstance().addCallbackParam( "hc_title", selectedJob.getName() );
-
-        } else {
-            log.info( "Job contains no data" );
-            chartReady = false;
-        }
+        RequestContext.getCurrentInstance().addCallbackParam( "hc_values",
+                new Gson().toJson( chart.getSeriesValues() ) );
+        RequestContext.getCurrentInstance().addCallbackParam( "hc_labels",
+                new Gson().toJson( chart.getSeriesLabels() ) );
+        RequestContext.getCurrentInstance().addCallbackParam( "hc_title", chart.getName() );
 
     }
 
