@@ -48,7 +48,7 @@ function handleCreateChart(xhr, status, args){
                       // align: 'right', // by default
                       // verticalAlign: 'top', // by default
                       x: -10,
-                      y: -30
+                      y: -40
                    }
                 }
              },
@@ -59,6 +59,7 @@ function handleCreateChart(xhr, status, args){
             text: 'Drag To Zoom',
             align: 'right',
             x: -100,
+            y: 25,
         },
         legend : {
         	enabled: false

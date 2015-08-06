@@ -69,7 +69,7 @@ public class SavedJobView implements Serializable {
             String textStr[] = res.split( "\\r?\\n" );
             for ( int i = 0; i < textStr.length; i++ ) {
                 String[] line = textStr[i].split( "\t" );
-                if ( !line[0].startsWith( "#" ) ) {
+                if ( !line[0].startsWith( "#" ) && !line[0].startsWith( ">" ) ) {
                     try {
                         String[] split = textStr[i].split( "\t" );
                         int pos = Integer.valueOf( split[0] );
