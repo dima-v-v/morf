@@ -1,15 +1,3 @@
-function handlePollComplete(xhr, status, args) {
-    if(args.stopPolling) {
-    	PF('poller').stop();
-    }
-}
-
-function startPoller() {
-    if(!PF('poller').active) {
-    	PF('poller').start();
-    }
-}
-
 function start() {
    PF('statusDialog').show();
 }
@@ -22,9 +10,13 @@ function clearFastaInput() {
 	$('#inputForm\\:inputContent').val('');
 }
 
+function pushUpdateHandler() {
+   pushUpdate();
+}
+
 function handleCreateChart(xhr, status, args){
 	
-	console.log(args);
+	//console.log(args);
 	var values = JSON.parse(args.hc_values);
 	var labels = JSON.parse(args.hc_labels);
 
@@ -37,7 +29,7 @@ function handleCreateChart(xhr, status, args){
 	   if (val > dataMax) dataMax = val;
 	   if (val < dataMin) dataMin = val;
    }
-   console.log(data);
+   //console.log(data);
 	
     var options = {
     	chart : {

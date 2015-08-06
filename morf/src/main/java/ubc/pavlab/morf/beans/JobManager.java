@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -35,6 +36,8 @@ import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 
 import org.apache.log4j.Logger;
+import org.primefaces.push.EventBus;
+import org.primefaces.push.EventBusFactory;
 
 import ubc.pavlab.morf.models.Job;
 import ubc.pavlab.morf.models.PurgeOldJobs;
@@ -70,6 +73,7 @@ public class JobManager {
     private ExecutorService executor;
 
     // private ScheduledExecutorService produceJobScheduler;
+    private Map<String, UserManager> allUserManagers = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void init() {
@@ -132,7 +136,7 @@ public class JobManager {
         return job;
     }
 
-    public void updatePositions() {
+    public void updatePositions( String sessionId ) {
         synchronized ( jobs ) {
             int idx = 1;
 
@@ -152,6 +156,16 @@ public class JobManager {
 
             }
             log.info( String.format( "Jobs in queue: %d", jobs.size() ) );
+
+            // Add new job for given session
+            UserManager um = allUserManagers.get( sessionId );
+
+            if ( um != null ) {
+                um.updateQueuePositions();
+            }
+
+            EventBus eventBus = EventBusFactory.getDefault().eventBus();
+            eventBus.publish( "/jobDone", String.valueOf( jobs.size() ) );
         }
     }
 
@@ -174,6 +188,14 @@ public class JobManager {
             savedJobs.put( key, job );
             return key;
         }
+    }
+
+    public void addSession( String sessionId, UserManager um ) {
+        allUserManagers.put( sessionId, um );
+    }
+
+    public void removeSession( String sessionId ) {
+        allUserManagers.remove( sessionId );
     }
 
 }

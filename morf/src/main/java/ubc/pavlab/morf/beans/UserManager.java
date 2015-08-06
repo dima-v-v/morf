@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Queue;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
@@ -20,7 +21,6 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.primefaces.context.RequestContext;
 
 import ubc.pavlab.morf.models.Job;
 
@@ -59,11 +59,17 @@ public class UserManager implements Serializable {
         log.info( "UserManager created" );
     }
 
+    @PreDestroy
+    public void destroy() {
+        jobManager.removeSession( this.getSessionId() );
+    }
+
     @PostConstruct
     public void init() {
         log.info( "UserManager init" );
         MAX_JOBS_IN_QUEUE = Integer.parseInt( settingsCache.getProperty( "morf.maxJobsInQueue" ) );
         authenticated = StringUtils.isBlank( settingsCache.getProperty( "morf.password" ) );
+        jobManager.addSession( this.getSessionId(), this );
     }
 
     public String saveJob( Job job ) {
@@ -160,21 +166,20 @@ public class UserManager implements Serializable {
      */
 
     public synchronized void updateQueuePositions() {
-
         for ( int i = 0; i < MAX_JOBS_IN_QUEUE; i++ ) {
             submitJobFromQueue();
         }
-        boolean somethingIsRunning = false;
-        for ( Job job : jobs ) {
-            if ( !job.getComplete() ) {
-                somethingIsRunning = true;
-            }
-        }
-        if ( !somethingIsRunning ) {
-            // log.info("Stopping polling");
-            // stopPolling = true;
-            RequestContext.getCurrentInstance().addCallbackParam( "stopPolling", true );
-        }
+        //        boolean somethingIsRunning = false;
+        //        for ( Job job : jobs ) {
+        //            if ( !job.getComplete() ) {
+        //                somethingIsRunning = true;
+        //            }
+        //        }
+        //        if ( !somethingIsRunning ) {
+        //            // log.info("Stopping polling");
+        //            // stopPolling = true;
+        //            RequestContext.getCurrentInstance().addCallbackParam( "stopPolling", true );
+        //        }
     }
 
     public void authenticate( String password ) {

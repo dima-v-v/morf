@@ -264,7 +264,7 @@ public class Job implements Callable<String> {
         log.info( "Finished job (" + name + ") for session: (" + sessionId + ") and IP: (" + ipAddress + ")" );
         this.running = false;
         this.complete = true;
-        jobManager.updatePositions();
+        jobManager.updatePositions( this.sessionId );
         jobManager = null;
         return writer.toString();
     }
