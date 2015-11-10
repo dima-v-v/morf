@@ -64,7 +64,7 @@ function handleCreateChart(xhr, status, args){
         },
         yAxis: {
             title: {
-                text: 'MoRF Probability'
+                text: 'MoRF Propensity'
             },
         },
         tooltip: {

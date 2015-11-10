@@ -169,9 +169,8 @@
 										</p:commandButton>
 										<p:commandButton value="Graph"
 											icon="fa fa-area-chart"
-											actionListener="#{indexView.createChart}"
-											update = ":chartForm"
-											oncomplete="PF('chartDlgWdg').show()"
+											action="#{indexView.createChart}"
+											oncomplete="handleCreateChart(xhr, status, args);PF('chartDlgWdg').show()"
 											rendered="#{indexView.selectedJob.complete}"
 											disabled="#{!indexView.selectedJob.complete or indexView.selectedJob.failed}"/>
 									</p:panel>
