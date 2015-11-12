@@ -19,14 +19,10 @@
 
 package ubc.pavlab.morf.beans;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Properties;
+import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ApplicationScoped;
@@ -35,6 +31,7 @@ import javax.faces.bean.ManagedBean;
 import org.apache.log4j.Logger;
 
 import ubc.pavlab.morf.models.Job;
+import ubc.pavlab.morf.utility.PropertiesFile;
 
 /**
  * TODO Document Me
@@ -53,9 +50,11 @@ public class SettingsCache implements Serializable {
 
     private static final Logger log = Logger.getLogger( SettingsCache.class );
 
-    private static final String PROPERTIES_FILE = "/home/nmalhis/MCW/morf.properties";
+    private static final String PROPERTIES_PATH = "/home/nmalhis/MCW/";
+    private static final String PROPERTIES_BACKUP_PATH = System.getProperty( "user.dir" );
+    private static final String PROPERTIES_FILE = "morf.properties";
 
-    private Properties prop = new Properties();
+    private PropertiesFile prop = new PropertiesFile();
 
     public SettingsCache() {
         log.info( "SettingsCache created" );
@@ -64,44 +63,22 @@ public class SettingsCache implements Serializable {
     @PostConstruct
     public void init() {
         log.info( "SettingsCache init" );
-
-        InputStream input = null;
-
-        try {
-
-            try {
-                // TODO possibly look at classpath first?
-                input = new FileInputStream( PROPERTIES_FILE );
-            } catch ( FileNotFoundException e ) {
-                log.warn( "Could not find PROPERTIES_FILE : (" + PROPERTIES_FILE + ") looking in: ("
-                        + System.getProperty( "user.dir" ) + ")" );
-                input = new FileInputStream( "morf.properties" );
-            }
-
-            // load a properties file from class path, inside static method
-            prop.load( input );
-
-            for ( String property : prop.stringPropertyNames() ) {
-                log.debug( property + ": " + prop.getProperty( property ) );
-            }
-
-            String scriptPath = prop.getProperty( "morf.script" );
-            Path p = Paths.get( scriptPath );
-
-            Job.setPaths( p.getFileName().toString(), p.getParent().toString(), prop.getProperty( "morf.input" ),
-                    prop.getProperty( "morf.output" ) );
-
-        } catch ( IOException ex ) {
-            ex.printStackTrace();
-        } finally {
-            if ( input != null ) {
-                try {
-                    input.close();
-                } catch ( IOException e ) {
-                    e.printStackTrace();
-                }
-            }
+        prop.load( PROPERTIES_FILE, PROPERTIES_PATH, PROPERTIES_BACKUP_PATH );
+        for ( Entry<Object, Object> e : prop.entrySet() ) {
+            log.info( e.getKey().toString() + " : " + e.getValue().toString() );
         }
+
+        String scriptPath = prop.getProperty( "morf.script" );
+        Path p = Paths.get( scriptPath );
+
+        Job.setPathsA( p.getFileName().toString(), p.getParent().toString(), prop.getProperty( "morf.input" ),
+                prop.getProperty( "morf.output" ) );
+
+        scriptPath = prop.getProperty( "morf.scriptB" );
+        p = Paths.get( scriptPath );
+
+        Job.setPathsB( p.getFileName().toString(), p.getParent().toString(), prop.getProperty( "morf.inputB" ),
+                prop.getProperty( "morf.outputB" ) );
 
     }
 
