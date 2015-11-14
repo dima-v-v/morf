@@ -181,7 +181,6 @@ public class JobManager {
     }
 
     public void emailJobCompletion( Job job, String attachment ) {
-        log.info( job.getEmail() );
         if ( job.getEmail() != null ) {
 
             String recipientEmail = job.getEmail();

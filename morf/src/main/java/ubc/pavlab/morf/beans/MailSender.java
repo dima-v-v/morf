@@ -51,7 +51,7 @@ import org.apache.log4j.Logger;
 @ApplicationScoped
 public class MailSender {
 
-    private static final Logger log = Logger.getLogger( JobManager.class );
+    private static final Logger log = Logger.getLogger( MailSender.class );
 
     @ManagedProperty(value = "#{settingsCache}")
     private SettingsCache settingsCache;
@@ -115,13 +115,12 @@ public class MailSender {
             log.info( "Email Sent To: " + recipientEmail );
 
         } catch ( MessagingException e ) {
-            throw new RuntimeException( e );
+            log.error( e );
         }
     }
 
     public void sendMail( String recipientEmail, String subject, String content, String attachmentName,
             String attachment ) {
-        log.info( recipientEmail );
         Session session = Session.getInstance( props,
                 new javax.mail.Authenticator() {
                     @Override
@@ -161,7 +160,7 @@ public class MailSender {
             log.info( "Email Sent To: " + recipientEmail );
 
         } catch ( MessagingException e ) {
-            throw new RuntimeException( e );
+            log.error( e );
         }
     }
 
