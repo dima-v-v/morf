@@ -18,16 +18,39 @@ function handleCreateChart(xhr, status, args){
 	
 	//console.log(args);
 	var values = JSON.parse(args.hc_values);
+	console.log(values)
 	var labels = JSON.parse(args.hc_labels);
+	
+	var seriesNames = ['MCW', 'Conservation', 'MC', 'MDC'];
+	
+	var tooltips = [];
+	
+	var tooltipCreator = function(idx, rowData) { // Purely for speed
+      var s = '<b>Position: ' + idx + ", " + labels[idx] + '</b>';
+      
+      for (var i = 0; i < rowData.length; i++) {
+         var val = vals[i];
+         s += '<br/>' + seriesNames[i] + ': ' + val.toFixed(3);
+      }
+      return s;
+	}
 
-	var data = [];
+	var data = [[], [], [], []];
 	var dataMin = 1;
 	var dataMax = 0;
+	var idx = 0;
    for (pos in values) {
-	   var val = values[pos];
-	   data.push([parseInt(pos,10), val]);
-	   if (val > dataMax) dataMax = val;
-	   if (val < dataMin) dataMin = val;
+	   var vals = values[pos];
+	   tooltips[idx] = tooltipCreator(idx, vals)
+	   idx+=1
+	   for (var i = 0; i < vals.length; i++) {
+         var val = vals[i];
+         if (val > dataMax) dataMax = val;
+         if (val < dataMin) dataMin = val;
+         data[i].push([parseInt(pos,10), val]);
+      }
+	   
+
    }
    //console.log(data);
 	
@@ -75,18 +98,64 @@ function handleCreateChart(xhr, status, args){
             headerFormat: '<b>{series.name}</b><br />',
             pointFormat: 'x = {point.x}, y = {point.y}',
             formatter:function(){
-               return '<b>'+this.series.name+'</b><br/> Position: ' + this.x + ", " + labels[this.x] + "<br/> Probability: " + this.y.toFixed(3);
-            }
+//               console.log(this)
+//               var s = '<b>Position: ' + this.x + ", " + labels[this.x] + '</b>';
+//
+//               $.each(this.points, function () {
+//                   s += '<br/>' + this.series.name + ': ' +
+//                       this.y.toFixed(3);
+//               });
+//               return s;
+               return tooltips[this.x]
+               //return '<b>'+this.series.name+'</b><br/> Position: ' + this.x + ", " + labels[this.x] + "<br/> Probability: " + this.y.toFixed(3);
+            },
+            shared: true
         },
         plotOptions: {
+           series : {
+              events: {
+                 legendItemClick: function(event) {
+
+                    var defaultBehaviour = event.browserEvent.metaKey || event.browserEvent.ctrlKey;
+
+                    if (!defaultBehaviour) {
+
+                       var seriesIndex = this.index;
+                       var series = this.chart.series;
+
+                       var reset = this.isolated;
+
+
+                       for (var i = 0; i < series.length; i++)
+                       {
+                          if (series[i].index != seriesIndex)
+                          {
+                             if (reset) {
+                                series[i].setVisible(true, false)
+                                series[i].isolated=false;
+                             } else {
+                                series[i].setVisible(false, false)
+                                series[i].isolated=false; 
+                             }
+
+                          } else {
+                             if (reset) {
+                                series[i].setVisible(true, false)
+                                series[i].isolated=false;
+                             } else {
+                                series[i].setVisible(true, false)
+                                series[i].isolated=true;
+                             }
+                          }
+                       }
+                       this.chart.redraw();
+
+                       return false;
+                    }
+                 }
+              }
+           },
             line: {
-                color: {
-                    linearGradient: { x1: 0, y1: dataMin, x2: 0, y2: dataMax},
-                    stops: [
-                        [0, Highcharts.getOptions().colors[5]],
-                        [1, Highcharts.getOptions().colors[0]]
-                    ]
-                },
                 marker: {
                     radius: 0.5,
                     states: {
@@ -103,32 +172,48 @@ function handleCreateChart(xhr, status, args){
                     }
                 },
                 threshold: null
-            },
-            area: {
-                fillColor: {
-                    linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1},
-                    stops: [
-                        [0, Highcharts.getOptions().colors[0]],
-                        [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
-                    ]
-                },
-                marker: {
-                    radius: 2
-                },
-                lineWidth: 1,
-                states: {
-                    hover: {
-                        lineWidth: 1
-                    }
-                },
-                threshold: null
             }
+        },
+        legend : {
+           align : 'right',
+           verticalAlign: 'top',
+           layout: 'vertical',
+           y:20
         },
         series: [{
         	type: 'line',
-            name: 'MoRF Potential',
-            data: data
-        }]
+            name: 'MCW',
+            data: data[0],
+            color: {
+               linearGradient: { x1: 0, y1: dataMin, x2: 0, y2: dataMax},
+               stops: [
+                   [0, Highcharts.getOptions().colors[5]],
+                   [1, Highcharts.getOptions().colors[0]]
+               ]
+           },
+           zIndex: 4
+        },
+        {
+           type: 'line',
+              name: 'Conservation',
+              data: data[1],
+              color: 'black',
+              zIndex: 1
+          },
+          {
+             type: 'line',
+                name: 'MC',
+                data: data[2],
+                color: 'green',
+                zIndex: 3
+            },
+            {
+               type: 'line',
+                  name: 'MDC',
+                  data: data[3],
+                  color: 'yellow',
+                  zIndex: 2
+              }]
     }
     
     var a = new Highcharts.Chart(options, function(c) {

@@ -55,10 +55,15 @@ public class Job implements Callable<String> {
     private static final Logger log = Logger.getLogger( Job.class );
 
     // Static path to resources
-    private static String scriptName;
-    private static String scriptBasePath;
-    private static String pathToInput;
-    private static String pathToOutput;
+    private static String scriptNameA;
+    private static String scriptBasePathA;
+    private static String pathToInputA;
+    private static String pathToOutputA;
+
+    private static String scriptNameB;
+    private static String scriptBasePathB;
+    private static String pathToInputB;
+    private static String pathToOutputB;
 
     // Information on creation of job
     private String sessionId;
@@ -68,6 +73,8 @@ public class Job implements Callable<String> {
     private String content;
     private int sequenceSize;
     private Date submittedDate;
+    private boolean trainOnFullData;
+    private String email;
 
     // Information on running / completion
     private Boolean running = false;
@@ -92,7 +99,8 @@ public class Job implements Callable<String> {
      * @param name
      * @param contents
      */
-    public Job( String sessionId, String name, int id, String content, int sequenceSize, String ipAddress ) {
+    public Job( String sessionId, String name, int id, String content, int sequenceSize, String ipAddress,
+            boolean trainOnFullData, String email ) {
         super();
         this.sessionId = sessionId;
         this.name = name;
@@ -100,6 +108,8 @@ public class Job implements Callable<String> {
         this.ipAddress = ipAddress;
         this.id = id;
         this.sequenceSize = sequenceSize;
+        this.trainOnFullData = trainOnFullData;
+        this.email = email;
     }
 
     public String getSessionId() {
@@ -229,8 +239,17 @@ public class Job implements Callable<String> {
     @Override
     public String call() throws Exception {
         log.info( "Starting job (" + name + ") for session: (" + sessionId + ") and IP: (" + ipAddress + ")" );
+
         this.running = true;
         this.status = "Running...";
+
+        String pathToInput = trainOnFullData ? pathToInputA : pathToInputB;
+        String scriptName = trainOnFullData ? scriptNameA : scriptNameB;
+        String scriptBasePath = trainOnFullData ? scriptBasePathA : scriptBasePathB;
+        String pathToOutput = trainOnFullData ? pathToOutputA : pathToOutputB;
+
+        log.info( scriptName );
+
         // Write content to input
         File file = new File( pathToInput );
 
@@ -265,6 +284,7 @@ public class Job implements Callable<String> {
         this.running = false;
         this.complete = true;
         jobManager.updatePositions( this.sessionId );
+        jobManager.emailJobCompletion( this, writer.toString() );
         jobManager = null;
         return writer.toString();
     }
@@ -297,6 +317,22 @@ public class Job implements Callable<String> {
 
     public void setSubmittedDate( Date submittedDate ) {
         this.submittedDate = submittedDate;
+    }
+
+    public boolean isTrainOnFullData() {
+        return trainOnFullData;
+    }
+
+    public void setTrainOnFullData( boolean trainOnFullData ) {
+        this.trainOnFullData = trainOnFullData;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail( String email ) {
+        this.email = email;
     }
 
     public String getStatus() {
@@ -371,11 +407,20 @@ public class Job implements Callable<String> {
         this.jobManager = jobManager;
     }
 
-    public static void setPaths( String scriptName, String scriptBasePath, String pathToInput, String pathToOutput ) {
-        Job.scriptName = scriptName;
-        Job.scriptBasePath = scriptBasePath;
-        Job.pathToInput = pathToInput;
-        Job.pathToOutput = pathToOutput;
+    public static void setPathsA( String scriptName, String scriptBasePath, String pathToInput, String pathToOutput ) {
+        Job.scriptNameA = scriptName;
+        Job.scriptBasePathA = scriptBasePath;
+        Job.pathToInputA = pathToInput;
+        Job.pathToOutputA = pathToOutput;
+
+    }
+
+    public static void setPathsB( String scriptName, String scriptBasePath, String pathToInput, String pathToOutput ) {
+        Job.scriptNameB = scriptName;
+        Job.scriptBasePathB = scriptBasePath;
+        Job.pathToInputB = pathToInput;
+        Job.pathToOutputB = pathToOutput;
+
     }
 
 }

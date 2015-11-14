@@ -93,3 +93,12 @@ font-family: "Courier New", Courier, monospace
  .spaced-list li {
  	line-height:2em;
  }
+ 
+ .optionsPanel {
+ width:300px;
+ text-align:center;
+ }
+ 
+ div[id="formJobs\:stickyGrowl_container"] > div {
+            background: #a5dda5 !important;
+        }

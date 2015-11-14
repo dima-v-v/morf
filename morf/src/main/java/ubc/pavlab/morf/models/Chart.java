@@ -37,7 +37,7 @@ public class Chart {
 
     private static final Logger log = Logger.getLogger( Chart.class );
 
-    private final Map<Integer, Double> seriesValues = new LinkedHashMap<>();
+    private final Map<Integer, double[]> seriesValues = new LinkedHashMap<>();
     private final Map<Integer, String> seriesLabels = new LinkedHashMap<>();
     private final String name;
     private final boolean ready;
@@ -61,13 +61,14 @@ public class Chart {
 
                 String textStr[] = res.split( "\\r?\\n" );
                 for ( int i = 0; i < textStr.length; i++ ) {
-                    String[] line = textStr[i].split( "\t" );
-                    if ( !line[0].startsWith( "#" ) && !line[0].startsWith( ">" ) ) {
+                    String[] split = textStr[i].split( "\t" );
+                    if ( !split[0].startsWith( "#" ) && !split[0].startsWith( ">" ) ) {
                         try {
-                            String[] split = textStr[i].split( "\t" );
                             int pos = Integer.valueOf( split[0] );
-                            double val = Double.valueOf( split[2] );
-                            seriesValues.put( pos, val );
+                            //double val = Double.valueOf( split[2] );
+                            seriesValues.put( pos,
+                                    new double[] { Double.valueOf( split[2] ), Double.valueOf( split[3] ),
+                                            Double.valueOf( split[4] ), Double.valueOf( split[5] ) } );
                             seriesLabels.put( pos, split[1] );
                         } catch ( NumberFormatException e ) {
                             log.error( e );
@@ -93,7 +94,7 @@ public class Chart {
 
     }
 
-    public Map<Integer, Double> getSeriesValues() {
+    public Map<Integer, double[]> getSeriesValues() {
         return seriesValues;
     }
 

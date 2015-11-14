@@ -28,6 +28,7 @@ import javax.annotation.PostConstruct;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import ubc.pavlab.morf.models.Job;
@@ -84,6 +85,19 @@ public class SettingsCache implements Serializable {
 
     public String getProperty( String key ) {
         return prop.getProperty( key );
+    }
+
+    public String getBaseUrl() {
+        String base = prop.getProperty( "morf.baseURL" );
+        if ( StringUtils.isBlank( base ) ) {
+            return "http://www.chibi.ubc.ca/morf/";
+        } else {
+            return base;
+        }
+    }
+
+    public boolean getShowTraining() {
+        return prop.getProperty( "morf.showTraining" ).toLowerCase().equals( "true" );
     }
 
     public boolean contains( String key ) {

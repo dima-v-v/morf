@@ -34,6 +34,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 
 import org.apache.log4j.Logger;
 import org.primefaces.push.EventBus;
@@ -54,6 +55,12 @@ import ubc.pavlab.morf.service.SessionIdentifierGenerator;
 public class JobManager {
 
     private static final Logger log = Logger.getLogger( JobManager.class );
+
+    @ManagedProperty(value = "#{mailSender}")
+    private MailSender mailSender;
+
+    @ManagedProperty(value = "#{settingsCache}")
+    private SettingsCache settingsCache;
 
     // Contains map of random token to saved job for future viewing
     private Map<String, Job> savedJobs = new HashMap<>();
@@ -173,6 +180,34 @@ public class JobManager {
         }
     }
 
+    public void emailJobCompletion( Job job, String attachment ) {
+        log.info( job.getEmail() );
+        if ( job.getEmail() != null ) {
+
+            String recipientEmail = job.getEmail();
+            String subject = "Job Complete";
+
+            StringBuilder content = new StringBuilder();
+            content.append( "<p>Job Complete</p>" );
+            content.append( "<p>Label: " + job.getName() + "</p>" );
+            content.append( "<p>Size: " + job.getSequenceSize() + "</p>" );
+            content.append( "<p>Training: " + ( job.isTrainOnFullData() ? "Full" : "Training" ) + "</p>" );
+            content.append( "<p>Submitted: " + job.getSubmittedDate() + "</p>" );
+            content.append( "<p>Status: " + job.getStatus() + "</p>" );
+            if ( job.isSaved() ) {
+                content.append(
+                        "<p>Saved Link: " + "<a href='http://" + settingsCache.getBaseUrl() + "savedJob.xhtml?key="
+                                + job.getSavedKey()
+                                + "' target='_blank'>http://" + settingsCache.getBaseUrl() + "savedJob.xhtml?key="
+                                + job.getSavedKey() + "'</a></p>" );
+            }
+            String attachmentName = job.getName() + ".txt";
+
+            mailSender.sendMail( recipientEmail, subject, content.toString(), attachmentName, attachment );
+        }
+
+    }
+
     public Job fetchSavedJob( String key, boolean remove ) {
         synchronized ( savedJobs ) {
             if ( remove ) {
@@ -200,6 +235,15 @@ public class JobManager {
 
     public void removeSession( String sessionId ) {
         allUserManagers.remove( sessionId );
+    }
+
+    public void setMailSender( MailSender mailSender ) {
+        this.mailSender = mailSender;
+    }
+
+    public void setSettingsCache( SettingsCache settingsCache ) {
+        this.settingsCache = settingsCache;
+
     }
 
 }

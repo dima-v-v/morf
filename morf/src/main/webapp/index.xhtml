@@ -19,16 +19,46 @@
 					<div class="title">
 					<h1>MoRF<sub>CHiBi_<i>Web</i></sub></h1>
 					<h2>Computational Identification of MoRFs in Protein Sequences</h2>
-					<h3>Beta Version: 0.9</h3>	
+					<h3>Beta Version: 0.10</h3>	
 					</div>
 					<h:form id="inputForm">
 						<p:growl id="growl" life="2000" />
 						
-						<h:panelGrid columns="1" style="margin:0 auto;width:75%;"
-							cellpadding="5">
+						<h:panelGrid columns="2" style="margin:0 auto;width:95%;"
+							cellpadding="5" columnClasses="optionsPanel, inputPanel">
+							<p:panel style="border-style:none;"/>
 							<h:outputText value="Enter one protein sequence in FASTA format" />
-
+							<p:panel style="border-style:none;">
+								<h:panelGrid columns="1" style="margin:0 auto;width:100%;"
+									cellpadding="5">
+									<h:outputText value="Training Dataset" style="text-align:center;" rendered="#{settingsCache.showTraining}"/>
+							        <p:selectOneButton value="#{indexView.trainOnDataset}" rendered="#{settingsCache.showTraining}">
+						            <f:selectItem itemLabel="Full" itemValue="True" />
+						            <f:selectItem itemLabel="Training" itemValue="False" />
+						        </p:selectOneButton>
+						        <h:outputText value=""/>
+									 <h:outputText value="Email When Complete" style="text-align:center;margin-top:10px"/>
+									 <p:panel id="emailPanelId" style="border-style:none;">
+							    	<h:selectBooleanCheckbox id="emailCheckboxId" value="#{indexView.emailChecked}" >
+							        <p:ajax event="change" update="emailPanelId" />
+							    </h:selectBooleanCheckbox>
+							    
+							    <p:inputText value="#{indexView.email}" rendered="#{indexView.emailChecked}" validatorMessage="Not a valid email." placeholder="example@email.com">
+							    <f:validateRegex pattern="^.+\@.+\..+$" />
+							    
+							    </p:inputText>
+							    </p:panel>
+						        </h:panelGrid>
+							</p:panel>
 							<p:inputTextarea id="inputContent" value="#{indexView.content}" rows="10" style="width:100%;" autoResize="false" />
+							<p:panel style="border-style:none;">
+								<h:panelGrid columns="1" style="margin:0 auto;width:100%;"
+									cellpadding="5">
+
+						        </h:panelGrid>
+							   
+
+							</p:panel>
 							<p:panel style="border-style:none;">
 						<p:commandButton value="Submit Job" icon="ui-icon-disk"
 							update="growl,:formJobs:tableJobs"
@@ -36,7 +66,7 @@
 							styleClass="ui-priority-primary" style="margin-right:25px"/>
 						<p:commandButton value="Clear" type="button" icon="ui-icon-trash" styleClass="ui-priority-primary" onclick="clearFastaInput()" style="margin-right:25px"/>
 						<p:commandButton value="Example Input" icon="ui-icon-copy" styleClass="ui-priority-primary" 
-										actionListener="#{indexView.applyExampleInput}" update=":inputForm"/>
+										actionListener="#{indexView.applyExampleInput}" update=":inputForm"/>					    
 						</p:panel>
 						</h:panelGrid>
 
@@ -45,6 +75,11 @@
 					<br />
 					<h:form id="formJobs">
 						<p:growl id="tableGrowl" life="2000" />
+						<p:growl id="stickyGrowl" sticky="true" >
+						        <h:outputScript>
+						            $("#formJobs\\:stickyGrowl_container").effect( "shake", { times: 3, distance: 4 } );
+						        </h:outputScript>
+						</p:growl>
 						<p:dataTable id="tableJobs" var="job" value="#{userManager.jobs}"
 							rowStyleClass="#{job.complete eq true ? (job.failed eq true ? 'red-row': 'green-row') : 'yellow-row'}"
 							sortBy="#{job.submittedDate}"
@@ -72,6 +107,9 @@
 							</p:column>
 							<p:column headerText="Size [residues]" style="text-align: center;">
 								<h:outputText value="#{job.sequenceSize}" />
+							</p:column>
+							<p:column headerText="Training" style="text-align: center;" rendered="#{settingsCache.showTraining}">
+								<h:outputText value="#{job.trainOnFullData ? 'Full' : 'Training'}" />
 							</p:column>
 							<p:column headerText="Submitted" style="text-align: center;">
 								<h:outputText value="#{job.submittedDate}" />
@@ -116,7 +154,7 @@
 								</p:link>
 
 								
-								<p:commandButton icon="fa fa-heart" action="#{indexView.saveJob}" update = "tableJobs" rendered="#{!job.saved}">
+								<p:commandButton icon="fa fa-heart" action="#{indexView.saveJob}" update = ":formJobs:stickyGrowl, tableJobs" rendered="#{!job.saved}">
 									<f:setPropertyActionListener value="#{job}" target="#{indexView.jobToSave}" />	
 								</p:commandButton>
 							</p:column>
@@ -134,6 +172,9 @@
 									
 									<h:outputText value="Size:" />
 									<h:outputText value="#{indexView.selectedJob.sequenceSize}" />
+									
+									<h:outputText value="Training:" rendered="#{settingsCache.showTraining}"/>
+									<h:outputText value="#{indexView.selectedJob.trainOnFullData ? 'Full' : 'Training'}" rendered="#{settingsCache.showTraining}"/>
 
 									<h:outputText value="Content:" />
 									<h:outputText
@@ -144,6 +185,12 @@
 
 									<h:outputText value="Status:" />
 									<h:outputText value="#{indexView.selectedJob.status}" />
+									
+									<h:outputText value="Email:"/>
+							        <p:inplace editor="true" emptyLabel = "Click To Set Email">
+							            <p:inputText value="#{indexView.selectedJob.email}" label="text" rendered="#{not empty indexView.selectedJob.email}"/>
+							            <p:inputText value="#{indexView.selectedJob.email}" label="text" rendered="#{empty indexView.selectedJob.email}"/>
+							        </p:inplace>
 																	
 									<h:outputText value="Save for later:" />										
 									<p:link outcome="savedJob"

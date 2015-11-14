@@ -44,6 +44,10 @@ public class IndexView implements Serializable {
 
     // private String currentSelectedName;
     private String content;
+    private String trainOnDataset = "True";
+    private Boolean emailChecked = false;
+    private String email;
+
     private Job selectedJob;
     private Job jobToRemove;
     private Job jobToSave;
@@ -58,13 +62,15 @@ public class IndexView implements Serializable {
     @PostConstruct
     public void init() {
         log.info( "IndexView init" );
-
     }
 
     public void saveJob() {
         if ( !jobToSave.isSaved() ) {
             log.info( "saved" );
             userManager.saveJob( jobToSave );
+            addMessage( "Job (" + jobToSave.getId()
+                    + ") successfully saved. The job will be available at the provided link for "
+                    + jobToSave.getSaveTimeLeft() + " hours.", FacesMessage.SEVERITY_INFO );
         }
 
     }
@@ -201,7 +207,8 @@ public class IndexView implements Serializable {
 
             }
 
-            Job job = new Job( userManager.getSessionId(), label, id, content, sequenceSize, ipAddress );
+            Job job = new Job( userManager.getSessionId(), label, id, content, sequenceSize, ipAddress,
+                    trainOnDataset.equals( "True" ), emailChecked ? email : null );
 
             if ( userManager.jobExists( job ) ) {
                 addMessage( "Job already exists under id (" + id + ")", FacesMessage.SEVERITY_WARN );
@@ -211,7 +218,8 @@ public class IndexView implements Serializable {
                 // RequestContext.getCurrentInstance().addCallbackParam("stopPolling", false);
             }
         } else {
-            Job job = new Job( userManager.getSessionId(), label, id, content, 0, ipAddress );
+            Job job = new Job( userManager.getSessionId(), label, id, content, 0, ipAddress,
+                    trainOnDataset.equals( "True" ), null );
             userManager.addFailedJob( job, vr.getContent() );
             addMessage( "Malformed FASTA Format!", FacesMessage.SEVERITY_ERROR );
 
@@ -239,12 +247,28 @@ public class IndexView implements Serializable {
         this.content = content.trim() + "\r\n";
     }
 
-    public void setUserManager( UserManager userManager ) {
-        this.userManager = userManager;
+    public String getTrainOnDataset() {
+        return trainOnDataset;
     }
 
-    public void setSettingsCache( SettingsCache settingsCache ) {
-        this.settingsCache = settingsCache;
+    public void setTrainOnDataset( String trainOnDataset ) {
+        this.trainOnDataset = trainOnDataset;
+    }
+
+    public Boolean getEmailChecked() {
+        return emailChecked;
+    }
+
+    public void setEmailChecked( Boolean emailChecked ) {
+        this.emailChecked = emailChecked;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail( String email ) {
+        this.email = email;
     }
 
     public Job getSelectedJob() {
@@ -273,6 +297,14 @@ public class IndexView implements Serializable {
 
     public boolean isChartReady() {
         return chartReady;
+    }
+
+    public void setUserManager( UserManager userManager ) {
+        this.userManager = userManager;
+    }
+
+    public void setSettingsCache( SettingsCache settingsCache ) {
+        this.settingsCache = settingsCache;
     }
 
 }
