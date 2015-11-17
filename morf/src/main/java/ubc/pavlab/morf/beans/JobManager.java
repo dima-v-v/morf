@@ -70,7 +70,7 @@ public class JobManager {
 
     // Used to periodically purge the old saved jobs
     private ScheduledExecutorService scheduler;
-    public static final long PURGE_AFTER = 86400000;
+    public static long PURGE_AFTER = 86400000;
 
     // Contains a representation of the internal queue of jobs
     private LinkedList<Job> jobs = new LinkedList<Job>();
@@ -84,6 +84,7 @@ public class JobManager {
 
     @PostConstruct
     public void init() {
+        PURGE_AFTER = settingsCache.getJobPurgeTime() * 60 * 60 * 1000;
         executor = Executors.newSingleThreadExecutor();
         scheduler = Executors.newSingleThreadScheduledExecutor();
         // old after 1 day, checks every hour
@@ -194,11 +195,9 @@ public class JobManager {
             content.append( "<p>Submitted: " + job.getSubmittedDate() + "</p>" );
             content.append( "<p>Status: " + job.getStatus() + "</p>" );
             if ( job.isSaved() ) {
-                content.append(
-                        "<p>Saved Link: " + "<a href='http://" + settingsCache.getBaseUrl() + "savedJob.xhtml?key="
-                                + job.getSavedKey()
-                                + "' target='_blank'>http://" + settingsCache.getBaseUrl() + "savedJob.xhtml?key="
-                                + job.getSavedKey() + "'</a></p>" );
+                content.append( "<p>Saved Link: " + "<a href='http://" + settingsCache.getBaseUrl()
+                        + "savedJob.xhtml?key=" + job.getSavedKey() + "' target='_blank'>http://"
+                        + settingsCache.getBaseUrl() + "savedJob.xhtml?key=" + job.getSavedKey() + "'</a></p>" );
             }
             String attachmentName = job.getName() + ".txt";
 

@@ -100,6 +100,22 @@ public class SettingsCache implements Serializable {
         return prop.getProperty( "morf.showTraining" ).toLowerCase().equals( "true" );
     }
 
+    public long getJobPurgeTime() {
+        String timeInHours = prop.getProperty( "morf.jobPurgeTime" );
+        long defaultTime = 24;
+
+        if ( StringUtils.isBlank( timeInHours ) ) {
+            return defaultTime;
+        } else {
+            try {
+                return Long.valueOf( timeInHours );
+            } catch ( NumberFormatException e ) {
+                return defaultTime;
+            }
+        }
+
+    }
+
     public boolean contains( String key ) {
         return prop.contains( key );
     }

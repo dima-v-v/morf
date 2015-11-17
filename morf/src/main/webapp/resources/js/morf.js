@@ -1,3 +1,5 @@
+var MAXIMALLY_DISTINCT_COLORS = ["#2bce48", "#191919", "#0007dc", "#4c005c", "#993f00", "#005c31", "#f0a3ff", "#ffcc99", "#808080", "#94ffb5", "#8f7c00", "#9dcc00", "#c20088", "#003380", "#ffa405", "#ffa8bb", "#426600", "#ff0010", "#5ef1f2", "#00998f", "#e0ff66", "#740aff", "#990000", "#ffff80", "#ffff00", "#ff5005"];
+
 function start() {
    PF('statusDialog').show();
 }
@@ -73,12 +75,13 @@ function handleCreateChart(xhr, status, args){
         subtitle: {
             text: 'Drag To Zoom',
             align: 'right',
-            x: -100,
+            x: -140,
             y: 25,
         },
         legend : {
         	enabled: false
         },
+        colors : MAXIMALLY_DISTINCT_COLORS,
         xAxis: {
             title: {
                 text: 'Position',
@@ -197,21 +200,18 @@ function handleCreateChart(xhr, status, args){
            type: 'line',
               name: 'Conservation',
               data: data[1],
-              color: 'black',
               zIndex: 1
           },
           {
              type: 'line',
                 name: 'MC',
                 data: data[2],
-                color: 'green',
                 zIndex: 3
             },
             {
                type: 'line',
                   name: 'MDC',
                   data: data[3],
-                  color: 'yellow',
                   zIndex: 2
               }]
     }

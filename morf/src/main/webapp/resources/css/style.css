@@ -76,7 +76,7 @@ div.ui-datatable-tablewrapper table tbody td {
  }
  
  sub {
- font: normal 55% sans-serif;
+ font: normal 45% sans-serif;
  }
  i {
  font-style: italic;
@@ -95,10 +95,23 @@ font-family: "Courier New", Courier, monospace
  }
  
  .optionsPanel {
- width:300px;
+ width:350px;
  text-align:center;
  }
  
- div[id="formJobs\:stickyGrowl_container"] > div {
+/*  div[id="formJobs\:stickyGrowl_container"] > div {
             background: #a5dda5 !important;
-        }
+        } */
+        
+span.ui-inplace-display {
+	text-decoration: underline;
+}
+
+.ui-icon.ui-confirm-dialog-severity {
+    background-position: 0 0 !important; 
+    background-image: none !important;
+}
+
+a {
+	text-decoration: underline !important;
+}

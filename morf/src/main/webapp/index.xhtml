@@ -19,35 +19,39 @@
 					<div class="title">
 					<h1>MoRF<sub>CHiBi_<i>Web</i></sub></h1>
 					<h2>Computational Identification of MoRFs in Protein Sequences</h2>
-					<h3>Beta Version: 0.10</h3>	
+					<h3>Beta Version: 0.11</h3>	
 					</div>
 					<h:form id="inputForm">
-						<p:growl id="growl" life="2000" />
+						<p:growl id="growl" life="2000" globalOnly="true" severity="info"/>
+						<p:growl id="stickyGrowl" sticky="true" globalOnly="true" severity="error,fatal,warn" escape="false">
+						        <h:outputScript>
+						            $("#inputForm\\:stickyGrowl_container").effect( "shake", { times: 3, distance: 4 } );
+						        </h:outputScript>
+						</p:growl>
 						
 						<h:panelGrid columns="2" style="margin:0 auto;width:95%;"
 							cellpadding="5" columnClasses="optionsPanel, inputPanel">
 							<p:panel style="border-style:none;"/>
 							<h:outputText value="Enter one protein sequence in FASTA format" />
 							<p:panel style="border-style:none;">
-								<h:panelGrid columns="1" style="margin:0 auto;width:100%;"
+								<h:panelGrid columns="2" style="margin:0 auto;width:100%;"
 									cellpadding="5">
+									<f:facet name="header"> 
+									<h:outputText value="Options"/>
+									</f:facet>
 									<h:outputText value="Training Dataset" style="text-align:center;" rendered="#{settingsCache.showTraining}"/>
 							        <p:selectOneButton value="#{indexView.trainOnDataset}" rendered="#{settingsCache.showTraining}">
 						            <f:selectItem itemLabel="Full" itemValue="True" />
 						            <f:selectItem itemLabel="Training" itemValue="False" />
 						        </p:selectOneButton>
 						        <h:outputText value=""/>
-									 <h:outputText value="Email When Complete" style="text-align:center;margin-top:10px"/>
-									 <p:panel id="emailPanelId" style="border-style:none;">
-							    	<h:selectBooleanCheckbox id="emailCheckboxId" value="#{indexView.emailChecked}" >
-							        <p:ajax event="change" update="emailPanelId" />
-							    </h:selectBooleanCheckbox>
-							    
-							    <p:inputText value="#{indexView.email}" rendered="#{indexView.emailChecked}" validatorMessage="Not a valid email." placeholder="example@email.com">
-							    <f:validateRegex pattern="^.+\@.+\..+$" />
-							    
-							    </p:inputText>
-							    </p:panel>
+						        <h:outputText value=""/>
+									<h:outputText value="Email:"/>
+							        <p:inplace editor="true" emptyLabel = "Click To Set Email">
+							            <p:inputText value="#{indexView.email}" label="text">
+							            <f:validateRegex pattern="^.+\@.+\..+$" />
+							            </p:inputText>
+							        </p:inplace>
 						        </h:panelGrid>
 							</p:panel>
 							<p:inputTextarea id="inputContent" value="#{indexView.content}" rows="10" style="width:100%;" autoResize="false" />
@@ -61,25 +65,20 @@
 							</p:panel>
 							<p:panel style="border-style:none;">
 						<p:commandButton value="Submit Job" icon="ui-icon-disk"
-							update="growl,:formJobs:tableJobs"
-							actionListener="#{indexView.submitJob}"
-							styleClass="ui-priority-primary" style="margin-right:25px"/>
+							update=":formConfirm:confirmDialog"
+							actionListener="#{indexView.validateJob}"
+							styleClass="ui-priority-primary" style="margin-right:25px" oncomplete="PF('confirmDlg').show()"/>
 						<p:commandButton value="Clear" type="button" icon="ui-icon-trash" styleClass="ui-priority-primary" onclick="clearFastaInput()" style="margin-right:25px"/>
 						<p:commandButton value="Example Input" icon="ui-icon-copy" styleClass="ui-priority-primary" 
 										actionListener="#{indexView.applyExampleInput}" update=":inputForm"/>					    
 						</p:panel>
+
 						</h:panelGrid>
 
 					</h:form>
 					<p:separator />
 					<br />
 					<h:form id="formJobs">
-						<p:growl id="tableGrowl" life="2000" />
-						<p:growl id="stickyGrowl" sticky="true" >
-						        <h:outputScript>
-						            $("#formJobs\\:stickyGrowl_container").effect( "shake", { times: 3, distance: 4 } );
-						        </h:outputScript>
-						</p:growl>
 						<p:dataTable id="tableJobs" var="job" value="#{userManager.jobs}"
 							rowStyleClass="#{job.complete eq true ? (job.failed eq true ? 'red-row': 'green-row') : 'yellow-row'}"
 							sortBy="#{job.submittedDate}"
@@ -135,7 +134,7 @@
 										target="#{indexView.selectedJob}" />
 								</p:commandButton>
 								<p:commandButton
-									update=":formJobs:tableGrowl, :formJobs:tableJobs"
+									update=":inputForm:growl, :formJobs:tableJobs"
 									icon="fa fa-remove" title="Cancel"
 									action="#{indexView.cancelJob}"
 									disabled="#{job.running}">
@@ -154,7 +153,7 @@
 								</p:link>
 
 								
-								<p:commandButton icon="fa fa-heart" action="#{indexView.saveJob}" update = ":formJobs:stickyGrowl, tableJobs" rendered="#{!job.saved}">
+								<p:commandButton icon="fa fa-heart" action="#{indexView.saveJob}" update = ":inputForm:stickyGrowl, tableJobs" rendered="#{!job.saved}">
 									<f:setPropertyActionListener value="#{job}" target="#{indexView.jobToSave}" />	
 								</p:commandButton>
 							</p:column>
@@ -200,7 +199,7 @@
 										</span>
 									    <f:param name="key" value="#{indexView.selectedJob.savedKey}" />
 									</p:link>					
-									<p:commandButton icon="fa fa-heart" action="#{indexView.saveJob}" update = ":formJobs:jobDetail" rendered="#{!indexView.selectedJob.saved}">
+									<p:commandButton icon="fa fa-heart" action="#{indexView.saveJob}" update = ":inputForm:stickyGrowl, :formJobs:jobDetail" rendered="#{!indexView.selectedJob.saved}">
 										<f:setPropertyActionListener value="#{indexView.selectedJob}" target="#{indexView.jobToSave}" />	
 									</p:commandButton>
 
@@ -239,7 +238,7 @@
 														
 						</p:dialog>
 						</h:form>
-
+					
 				</p:outputPanel>
 				<p:outputPanel id="authenticatePanel" layout="block"
 					rendered="#{!(userManager.authenticated)}">
@@ -259,6 +258,49 @@
 					</h:form>
 				</p:outputPanel>
 			</p:outputPanel>
+    		</ui:define>
+    		<ui:define name="dialogs">
+    			<h:form id="formConfirm" rendered="#{userManager.authenticated}">
+							<p:confirmDialog id="confirmDialog" header="Submit Job?"
+								widgetVar="confirmDlg" showEffect="fade" severity="" style="min-width:349px;" closeOnEscape="true">
+								<f:facet name="message">
+									<p style="width:349px;font-style: italic;">After submission your job status/results will be remain available at the provided link for a period of #{settingsCache.jobPurgeTime}h.</p>
+									<p style="width:349px;font-style: italic;">If an email is provided, you will receive notice of job completion.</p>
+									<p:separator/>
+									<h:panelGrid columns="2" style="margin:0 auto;width:100%;" cellpadding="5">
+										<h:outputText value="Label:"/>
+										<p:inplace editor="true" emptyLabel="Click To Set Label">
+											<p:inputText value="#{indexView.label}" label="text" required="true">
+												<f:validateRegex pattern="[^\s\-]+" />
+											</p:inputText>
+										</p:inplace>
+										<h:outputText value="Sequence Size:"/>
+										<h:outputText value="#{indexView.sequenceSize}"/>
+										<h:outputText value="Training:" rendered="#{settingsCache.showTraining}"/>
+							        <p:selectOneButton value="#{indexView.trainOnDataset}" rendered="#{settingsCache.showTraining}">
+						            <f:selectItem itemLabel="Full" itemValue="True" />
+						            <f:selectItem itemLabel="Training" itemValue="False" />
+						        </p:selectOneButton>
+										<h:outputText value="Email:"/>
+										<p:inplace editor="true" emptyLabel="Click To Set Email">
+											<p:inputText value="#{indexView.email}" label="text">
+												<f:validateRegex pattern="^.+\@.+\..+$" />
+											</p:inputText>
+										</p:inplace>
+									</h:panelGrid>
+								</f:facet>
+								<div style="text-align:center">
+								<p:commandButton value="Yes"
+									actionListener="#{indexView.submitJob}"
+									update=":inputForm:stickyGrowl, :inputForm:growl,:formJobs:tableJobs"
+									styleClass="ui-confirmdialog-yes" icon="ui-icon-check"
+									onclick="PF('confirmDlg').hide()" style="margin: 0 15px 0 0;"/>
+								<p:commandButton value="No" type="button"
+									styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+									onclick="PF('confirmDlg').hide()"/>
+									</div>
+							</p:confirmDialog>
+				</h:form>
     		</ui:define>
     	</ui:composition>
  

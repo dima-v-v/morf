@@ -47,7 +47,7 @@
 					<p:menuitem value="Help" url="help.xhtml"
 						icon="fa fa-question-circle" styleClass="right-border" />
 					<f:facet name="options" style="vertical-align:middle;">
-						<h2 style="position:absolute;margin:1px 0;right:30px;">MoRF</h2>
+						<h4 style="position:absolute;margin:8px 0;right:30px;">Michael Smith Laboratories - Centre for High-Throughput Biology, University of British Columbia</h4>
 			        </f:facet>
 				</p:menubar>
 			</h:form>
@@ -69,6 +69,10 @@
 			</div>
 		</p:layoutUnit>
 	</p:layout>
+	
+	<ui:insert name="dialogs">
+   <!-- a modal dialog etc. -->
+	</ui:insert>
 
 	<p:dialog modal="true" widgetVar="statusDialog" header="Status"
 		draggable="false" closable="false" resizable="false">

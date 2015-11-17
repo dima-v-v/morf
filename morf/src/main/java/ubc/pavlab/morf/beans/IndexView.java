@@ -16,14 +16,15 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.primefaces.context.RequestContext;
-
-import com.google.gson.Gson;
 
 import ubc.pavlab.morf.models.Chart;
 import ubc.pavlab.morf.models.Job;
 import ubc.pavlab.morf.models.ValidationResult;
+
+import com.google.gson.Gson;
 
 @ManagedBean
 @ViewScoped
@@ -45,12 +46,14 @@ public class IndexView implements Serializable {
     // private String currentSelectedName;
     private String content;
     private String trainOnDataset = "True";
-    private Boolean emailChecked = false;
     private String email;
 
     private Job selectedJob;
     private Job jobToRemove;
     private Job jobToSave;
+
+    private String label;
+    private int sequenceSize;
 
     // Chart Stuff
     private boolean chartReady = false;
@@ -65,12 +68,19 @@ public class IndexView implements Serializable {
     }
 
     public void saveJob() {
-        if ( !jobToSave.isSaved() ) {
+        saveJob( jobToSave, true );
+    }
+
+    private void saveJob( Job job, boolean message ) {
+        if ( !job.isSaved() ) {
             log.info( "saved" );
-            userManager.saveJob( jobToSave );
-            addMessage( "Job (" + jobToSave.getId()
-                    + ") successfully saved. The job will be available at the provided link for "
-                    + jobToSave.getSaveTimeLeft() + " hours.", FacesMessage.SEVERITY_INFO );
+            userManager.saveJob( job );
+            if ( message ) {
+                addMessage(
+                        "Job (" + job.getId()
+                                + ") successfully saved. The job will be available at the provided link for "
+                                + job.getSaveTimeLeft() + " hours.", FacesMessage.SEVERITY_WARN );
+            }
         }
 
     }
@@ -85,10 +95,10 @@ public class IndexView implements Serializable {
 
         chartReady = chart.isReady();
 
-        RequestContext.getCurrentInstance().addCallbackParam( "hc_values",
-                new Gson().toJson( chart.getSeriesValues() ) );
-        RequestContext.getCurrentInstance().addCallbackParam( "hc_labels",
-                new Gson().toJson( chart.getSeriesLabels() ) );
+        RequestContext.getCurrentInstance()
+                .addCallbackParam( "hc_values", new Gson().toJson( chart.getSeriesValues() ) );
+        RequestContext.getCurrentInstance()
+                .addCallbackParam( "hc_labels", new Gson().toJson( chart.getSeriesLabels() ) );
         RequestContext.getCurrentInstance().addCallbackParam( "hc_title", chart.getName() );
 
     }
@@ -177,6 +187,25 @@ public class IndexView implements Serializable {
         return new ValidationResult( res, resultContent.toString() );
     }
 
+    public void validateJob( ActionEvent actionEvent ) {
+        label = "unknown";
+        sequenceSize = 0;
+
+        String textStr[] = content.split( "\\r?\\n" );
+
+        if ( textStr.length > 1 ) {
+            label = textStr[0];
+            // if ( label.startsWith( ">" ) ) {
+            // label = label.substring( 1 );
+            // }
+
+            for ( int i = 1; i < textStr.length; i++ ) {
+                sequenceSize += textStr[i].length();
+            }
+
+        }
+    }
+
     public void submitJob( ActionEvent actionEvent ) {
         ValidationResult vr = validate( content );
 
@@ -186,35 +215,41 @@ public class IndexView implements Serializable {
         if ( ipAddress == null ) {
             ipAddress = request.getRemoteAddr();
         }
-        String label = "unknown";
-        int sequenceSize = 0;
+        // label = "unknown";
+        // sequenceSize = 0;
 
         int id = userManager.getNewJobId();
 
         if ( vr.isSuccess() ) {
             // TODO
-            String textStr[] = content.split( "\\r?\\n" );
-
-            if ( textStr.length > 1 ) {
-                label = textStr[0];
-                // if ( label.startsWith( ">" ) ) {
-                // label = label.substring( 1 );
-                // }
-
-                for ( int i = 1; i < textStr.length; i++ ) {
-                    sequenceSize += textStr[i].length();
-                }
-
-            }
+            // String textStr[] = content.split( "\\r?\\n" );
+            //
+            // if ( textStr.length > 1 ) {
+            // label = textStr[0];
+            // // if ( label.startsWith( ">" ) ) {
+            // // label = label.substring( 1 );
+            // // }
+            //
+            // for ( int i = 1; i < textStr.length; i++ ) {
+            // sequenceSize += textStr[i].length();
+            // }
+            //
+            // }
 
             Job job = new Job( userManager.getSessionId(), label, id, content, sequenceSize, ipAddress,
-                    trainOnDataset.equals( "True" ), emailChecked ? email : null );
+                    trainOnDataset.equals( "True" ), StringUtils.isBlank( email ) ? null : email );
 
             if ( userManager.jobExists( job ) ) {
                 addMessage( "Job already exists under id (" + id + ")", FacesMessage.SEVERITY_WARN );
             } else {
-                addMessage( "Job (" + id + ") submitted for (" + label + ")", FacesMessage.SEVERITY_INFO );
                 userManager.submitJob( job );
+                saveJob( job, false );
+                addMessage(
+                        "Job (" + id + ") submitted for (" + label
+                                + ") <br/> The job will be available at the provided <a href='http://"
+                                + settingsCache.getBaseUrl() + "savedJob.xhtml?key=" + job.getSavedKey()
+                                + "' target='_blank'>link</a> for " + job.getSaveTimeLeft() + " hours.",
+                        FacesMessage.SEVERITY_WARN );
                 // RequestContext.getCurrentInstance().addCallbackParam("stopPolling", false);
             }
         } else {
@@ -255,14 +290,6 @@ public class IndexView implements Serializable {
         this.trainOnDataset = trainOnDataset;
     }
 
-    public Boolean getEmailChecked() {
-        return emailChecked;
-    }
-
-    public void setEmailChecked( Boolean emailChecked ) {
-        this.emailChecked = emailChecked;
-    }
-
     public String getEmail() {
         return email;
     }
@@ -297,6 +324,18 @@ public class IndexView implements Serializable {
 
     public boolean isChartReady() {
         return chartReady;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel( String label ) {
+        this.label = label;
+    }
+
+    public int getSequenceSize() {
+        return sequenceSize;
     }
 
     public void setUserManager( UserManager userManager ) {
