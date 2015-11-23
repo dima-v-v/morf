@@ -73,6 +73,7 @@ div.ui-datatable-tablewrapper table tbody td {
  
  div.title {
  text-align:center;
+ margin-bottom:50px;
  }
  
  sub {
@@ -95,9 +96,18 @@ font-family: "Courier New", Courier, monospace
  }
  
  .optionsPanel {
- width:350px;
- text-align:center;
+ width:375px;
+ text-align:left;
+ vertical-align: top;
  }
+ 
+  .optionsPanel td { 
+  height:44px;
+  }
+  
+  .optionsPanel tr td:first-child {
+  	width:103px;
+  }
  
 /*  div[id="formJobs\:stickyGrowl_container"] > div {
             background: #a5dda5 !important;
@@ -114,4 +124,20 @@ span.ui-inplace-display {
 
 a {
 	text-decoration: underline !important;
+}
+
+button.red span {
+	color:#fc5252;
+}
+
+table.dialogPanelLabelColumn tr td:first-child {
+	width: 120px;
+}
+
+table.dialogPanelLabelColumn tr {
+	height: 33px;
+}
+
+table.dialogPanelLabelColumn tr td {
+	border:none !important;
 }

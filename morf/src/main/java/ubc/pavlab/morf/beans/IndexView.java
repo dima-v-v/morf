@@ -20,11 +20,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.primefaces.context.RequestContext;
 
+import com.google.gson.Gson;
+
 import ubc.pavlab.morf.models.Chart;
 import ubc.pavlab.morf.models.Job;
 import ubc.pavlab.morf.models.ValidationResult;
-
-import com.google.gson.Gson;
 
 @ManagedBean
 @ViewScoped
@@ -49,6 +49,7 @@ public class IndexView implements Serializable {
     private String email;
 
     private Job selectedJob;
+    private Job submittedJob;
     private Job jobToRemove;
     private Job jobToSave;
 
@@ -79,7 +80,8 @@ public class IndexView implements Serializable {
                 addMessage(
                         "Job (" + job.getId()
                                 + ") successfully saved. The job will be available at the provided link for "
-                                + job.getSaveTimeLeft() + " hours.", FacesMessage.SEVERITY_WARN );
+                                + job.getSaveTimeLeft() + " hours.",
+                        FacesMessage.SEVERITY_WARN );
             }
         }
 
@@ -187,6 +189,7 @@ public class IndexView implements Serializable {
         return new ValidationResult( res, resultContent.toString() );
     }
 
+    @Deprecated
     public void validateJob( ActionEvent actionEvent ) {
         label = "unknown";
         sequenceSize = 0;
@@ -204,6 +207,15 @@ public class IndexView implements Serializable {
             }
 
         }
+
+        log.info( email );
+
+        if ( StringUtils.isBlank( email ) ) {
+            RequestContext.getCurrentInstance().addCallbackParam( "confirm", true );
+        } else {
+            RequestContext.getCurrentInstance().addCallbackParam( "confirm", false );
+            submitJob( null );
+        }
     }
 
     public void submitJob( ActionEvent actionEvent ) {
@@ -215,26 +227,26 @@ public class IndexView implements Serializable {
         if ( ipAddress == null ) {
             ipAddress = request.getRemoteAddr();
         }
-        // label = "unknown";
-        // sequenceSize = 0;
+        label = "unknown";
+        sequenceSize = 0;
 
         int id = userManager.getNewJobId();
 
         if ( vr.isSuccess() ) {
             // TODO
-            // String textStr[] = content.split( "\\r?\\n" );
-            //
-            // if ( textStr.length > 1 ) {
-            // label = textStr[0];
-            // // if ( label.startsWith( ">" ) ) {
-            // // label = label.substring( 1 );
-            // // }
-            //
-            // for ( int i = 1; i < textStr.length; i++ ) {
-            // sequenceSize += textStr[i].length();
-            // }
-            //
-            // }
+            String textStr[] = content.split( "\\r?\\n" );
+
+            if ( textStr.length > 1 ) {
+                label = textStr[0];
+                // if ( label.startsWith( ">" ) ) {
+                // label = label.substring( 1 );
+                // }
+
+                for ( int i = 1; i < textStr.length; i++ ) {
+                    sequenceSize += textStr[i].length();
+                }
+
+            }
 
             Job job = new Job( userManager.getSessionId(), label, id, content, sequenceSize, ipAddress,
                     trainOnDataset.equals( "True" ), StringUtils.isBlank( email ) ? null : email );
@@ -251,6 +263,15 @@ public class IndexView implements Serializable {
                                 + "' target='_blank'>link</a> for " + job.getSaveTimeLeft() + " hours.",
                         FacesMessage.SEVERITY_WARN );
                 // RequestContext.getCurrentInstance().addCallbackParam("stopPolling", false);
+
+                if ( StringUtils.isBlank( email ) ) {
+                    RequestContext.getCurrentInstance().addCallbackParam( "confirm", true );
+                } else {
+                    RequestContext.getCurrentInstance().addCallbackParam( "confirm", false );
+                }
+
+                submittedJob = job;
+
             }
         } else {
             Job job = new Job( userManager.getSessionId(), label, id, content, 0, ipAddress,
@@ -304,6 +325,14 @@ public class IndexView implements Serializable {
 
     public void setSelectedJob( Job selectedJob ) {
         this.selectedJob = selectedJob;
+    }
+
+    public Job getSubmittedJob() {
+        return submittedJob;
+    }
+
+    public void setSubmittedJob( Job submittedJob ) {
+        this.submittedJob = submittedJob;
     }
 
     public Job getJobToRemove() {

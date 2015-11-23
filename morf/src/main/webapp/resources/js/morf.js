@@ -1,5 +1,15 @@
 var MAXIMALLY_DISTINCT_COLORS = ["#2bce48", "#191919", "#0007dc", "#4c005c", "#993f00", "#005c31", "#f0a3ff", "#ffcc99", "#808080", "#94ffb5", "#8f7c00", "#9dcc00", "#c20088", "#003380", "#ffa405", "#ffa8bb", "#426600", "#ff0010", "#5ef1f2", "#00998f", "#e0ff66", "#740aff", "#990000", "#ffff80", "#ffff00", "#ff5005"];
 
+function isUndefined( variable ) {
+   return ( typeof variable === 'undefined' );
+}
+
+function handleValidateJobSubmitComplete(xhr, status, args) {
+   if(args.confirm) {
+      PF('noEmailDlg').show();
+   }
+}
+
 function start() {
    PF('statusDialog').show();
 }
@@ -64,7 +74,7 @@ function handleCreateChart(xhr, status, args){
                    position: {
                       // align: 'right', // by default
                       // verticalAlign: 'top', // by default
-                      x: -10,
+                      x: -200,
                       y: -40
                    }
                 }
@@ -127,7 +137,12 @@ function handleCreateChart(xhr, status, args){
                        var series = this.chart.series;
 
                        var reset = this.isolated;
+                       
+                       if (isUndefined(reset) ) {
+                          reset = true;
+                       }
 
+                       console.log(seriesIndex, series, reset, this.isolated);
 
                        for (var i = 0; i < series.length; i++)
                        {
@@ -186,6 +201,8 @@ function handleCreateChart(xhr, status, args){
         series: [{
         	type: 'line',
             name: 'MCW',
+            visible: true,
+            isolated: true,
             data: data[0],
             color: {
                linearGradient: { x1: 0, y1: dataMin, x2: 0, y2: dataMax},
@@ -199,18 +216,24 @@ function handleCreateChart(xhr, status, args){
         {
            type: 'line',
               name: 'Conservation',
+              visible: false,
+              isolated: false,
               data: data[1],
               zIndex: 1
           },
           {
              type: 'line',
                 name: 'MC',
+                visible: false,
+                isolated: false,
                 data: data[2],
                 zIndex: 3
             },
             {
                type: 'line',
                   name: 'MDC',
+                  visible: false,
+                  isolated: false,
                   data: data[3],
                   zIndex: 2
               }]

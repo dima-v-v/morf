@@ -51,7 +51,7 @@ public class SettingsCache implements Serializable {
 
     private static final Logger log = Logger.getLogger( SettingsCache.class );
 
-    private static final String PROPERTIES_PATH = "/home/nmalhis/MCW/";
+    private static final String PROPERTIES_PATH = "/home/nmalhis/MCW2/";
     private static final String PROPERTIES_BACKUP_PATH = System.getProperty( "user.dir" );
     private static final String PROPERTIES_FILE = "morf.properties";
 

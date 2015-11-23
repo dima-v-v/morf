@@ -80,6 +80,7 @@ padding:20px; border-radius:5px; border-right:solid 60px #404c51;}
 .OrangeBtn:hover{ background-color:#feb66d;}
 	
 /* text colors */
+.red{color:#fc5252;}
 .orange{color:#fca752;}
 .gray{color:#84939f;}
 .pink{color:#e26e61;}
