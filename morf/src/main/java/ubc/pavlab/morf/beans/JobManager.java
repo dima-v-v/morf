@@ -83,7 +83,6 @@ public class JobManager {
     private Map<String, UserManager> allUserManagers = new ConcurrentHashMap<>();
 
     // Job Queue info;
-    private int jobsInQueue = 0;
     private int residuesInQueue = 0;
 
     @PostConstruct
@@ -179,8 +178,6 @@ public class JobManager {
             // Add new job for given session
             forceSubmitJobs( sessionId );
 
-            jobsInQueue = jobs.size();
-
             EventBus eventBus = EventBusFactory.getDefault().eventBus();
             eventBus.publish( "/jobDone", String.valueOf( jobs.size() ) );
         }
@@ -252,7 +249,7 @@ public class JobManager {
     }
 
     public int getJobsInQueue() {
-        return jobsInQueue;
+        return jobs.size();
     }
 
     public int getResiduesInQueue() {

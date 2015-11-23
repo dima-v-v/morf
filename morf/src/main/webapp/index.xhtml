@@ -22,7 +22,7 @@
 						</h1>
 						<h2>Computational Identification of MoRFs in Protein
 							Sequences</h2>
-						<h3>Beta Version: 0.11</h3>
+						<h3>Beta Version: 0.12</h3>
 					</div>
 					<h:form id="inputForm">
 						<p:growl id="growl" life="2000" globalOnly="true" severity="info" />
@@ -84,7 +84,7 @@
 							</p:panel>
 							<p:panel style="border-style:none;">
 								<p:commandButton value="Submit Job" icon="ui-icon-disk"
-									update=":formEmailDlg:panelEmailDlg, :inputForm:stickyGrowl, :inputForm:growl,:formJobs:tableJobs"
+									update=":formEmailDlg:panelEmailDlg, :inputForm:stickyGrowl, :inputForm:growl,:formJobs:tableJobs, :inputForm:panelServerInfo"
 									actionListener="#{indexView.submitJob}"
 									styleClass="ui-priority-primary" style="margin-right:25px"
 									oncomplete="handleValidateJobSubmitComplete(xhr, status, args)" />
@@ -376,7 +376,7 @@
 						</h:panelGrid>
 						<p:commandButton value="Authenticate"
 							icon="ui-icon-arrowthickstop-1-e"
-							update="authenticateGrowl :centerPanel"
+							update="authenticateGrowl, :centerPanel, :formEmailDlg, :formConfirm"
 							action="#{userManager.authenticate(pass.value)}"
 							styleClass="ui-priority-primary" />
 					</h:form>
@@ -385,10 +385,10 @@
 		</ui:define>
 		<ui:define name="dialogs">
 		
-		<h:form id="formEmailDlg" rendered="#{userManager.authenticated}">
+		<h:form id="formEmailDlg" >
 				<p:dialog id="noEmailDlg" header="No Email Provided"
 					widgetVar="noEmailDlg" showEffect="fade"
-					style="min-width:349px;" closeOnEscape="true" resizable="false" >
+					style="min-width:349px;" closeOnEscape="true" resizable="false" rendered="#{userManager.authenticated}">
 					<p:panel id="panelEmailDlg">
 						<p style="width: 349px; font-style: italic;">No email was provided, you can set one below to receive notice and results of job completion by email.</p>
 						<p style="width: 349px; font-style: italic;">Otherwise, your job will available at this 
@@ -416,8 +416,8 @@
 				</h:form>
 		
 		
-			<h:form id="formConfirm" rendered="#{userManager.authenticated}">
-			    <p:confirmDialog global="true" showEffect="fade">
+			<h:form id="formConfirm">
+			    <p:confirmDialog global="true" showEffect="fade" rendered="#{userManager.authenticated}">
 			        <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
 			        <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
 			    </p:confirmDialog>
