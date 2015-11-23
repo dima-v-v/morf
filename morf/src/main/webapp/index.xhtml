@@ -289,10 +289,8 @@
 										</p:column>
 									</p:row>
 									<p:row>
-										<p:column colspan="2"
-											rendered="#{indexView.selectedJob.complete}">
-											<p:panel style="border-style:none;"
-												rendered="#{indexView.selectedJob.complete}">
+										<p:column colspan="2">
+											<p:panel style="border-style:none;">
 												<p:commandButton value="Download" ajax="false"
 													onclick="PrimeFaces.monitorDownload(start, stop);"
 													icon="ui-icon-arrowthick-1-s"
@@ -302,7 +300,7 @@
 												<p:commandButton value="Graph" icon="fa fa-area-chart"
 													action="#{indexView.createChart}"
 													oncomplete="handleCreateChart(xhr, status, args);PF('chartDlgWdg').show()"
-													disabled="#{!indexView.selectedJob.complete or indexView.selectedJob.failed}" />
+													disabled="#{!indexView.selectedJob.complete or indexView.selectedJob.failed}"/>
 												<p:button value="Link" icon="fa fa-external-link"
 													outcome="savedJob" target="_blank"
 													rendered="#{indexView.selectedJob.saved}" >
@@ -319,7 +317,7 @@
 
 						<p:socket onMessage="pushUpdateHandler" channel="/jobDone" />
 
-						<p:remoteCommand name="pushUpdate" update="tableJobs" />
+						<p:remoteCommand name="pushUpdate" update="tableJobs, jobDetail" />
 
 
 					</h:form>
