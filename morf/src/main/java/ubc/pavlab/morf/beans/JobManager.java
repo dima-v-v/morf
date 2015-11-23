@@ -227,6 +227,17 @@ public class JobManager {
         }
     }
 
+    public void renewSaveJob( Job job ) {
+        synchronized ( savedJobs ) {
+            if ( job.isSaved() ) {
+                job.setSaveExpiredDate( System.currentTimeMillis() + JobManager.PURGE_AFTER );
+            } else {
+
+            }
+
+        }
+    }
+
     public void addSession( String sessionId, UserManager um ) {
         allUserManagers.put( sessionId, um );
     }

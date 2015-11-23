@@ -34,7 +34,10 @@
 					rendered="#{savedJobView.savedJob != null}">
 					<h3>#{savedJobView.savedJob.name}</h3>
 					<h:outputText value="This link will remain active for another #{savedJobView.savedJob.saveTimeLeft} hours" />
-					<p:separator style="margin-top:25px;margin-bottom:25px;"/>
+					<p:panel styleClass="no-border" style="margin-top:10px;">
+					<p:commandButton value="&nbsp; Renew Link Expiration" icon="fa fa-refresh" actionListener="#{savedJobView.renewSaveJob()}"/>
+					</p:panel>
+					<p:separator style="margin-top:15px;margin-bottom:25px;"/>
 					<div class="ui-grid ui-grid-responsive">
 					    <div class="ui-grid-row">
 					        <div class="ui-grid-col-6">

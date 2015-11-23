@@ -8,15 +8,16 @@ import java.io.Serializable;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
+import javax.faces.context.FacesContext;
 
 import org.apache.log4j.Logger;
 import org.primefaces.context.RequestContext;
 import org.primefaces.model.chart.LineChartModel;
 
-import com.google.gson.Gson;
-
 import ubc.pavlab.morf.models.Chart;
 import ubc.pavlab.morf.models.Job;
+
+import com.google.gson.Gson;
 
 @ManagedBean
 @ViewScoped
@@ -44,6 +45,9 @@ public class SavedJobView implements Serializable {
     }
 
     public void init() {
+        if ( FacesContext.getCurrentInstance().getPartialViewContext().isAjaxRequest() ) {
+            return; // Skip ajax requests.
+        }
         log.info( "SavedJobView init" );
         savedJob = jobManager.fetchSavedJob( key, false );
     }
@@ -54,12 +58,16 @@ public class SavedJobView implements Serializable {
 
         chartReady = chart.isReady();
 
-        RequestContext.getCurrentInstance().addCallbackParam( "hc_values",
-                new Gson().toJson( chart.getSeriesValues() ) );
-        RequestContext.getCurrentInstance().addCallbackParam( "hc_labels",
-                new Gson().toJson( chart.getSeriesLabels() ) );
+        RequestContext.getCurrentInstance()
+                .addCallbackParam( "hc_values", new Gson().toJson( chart.getSeriesValues() ) );
+        RequestContext.getCurrentInstance()
+                .addCallbackParam( "hc_labels", new Gson().toJson( chart.getSeriesLabels() ) );
         RequestContext.getCurrentInstance().addCallbackParam( "hc_title", chart.getName() );
 
+    }
+
+    public void renewSaveJob() {
+        jobManager.renewSaveJob( savedJob );
     }
 
     public Job getSavedJob() {
