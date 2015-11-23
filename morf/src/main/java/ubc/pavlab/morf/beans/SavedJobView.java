@@ -62,6 +62,7 @@ public class SavedJobView implements Serializable {
                 .addCallbackParam( "hc_values", new Gson().toJson( chart.getSeriesValues() ) );
         RequestContext.getCurrentInstance()
                 .addCallbackParam( "hc_labels", new Gson().toJson( chart.getSeriesLabels() ) );
+        RequestContext.getCurrentInstance().addCallbackParam( "hc_names", new Gson().toJson( chart.getSeriesNames() ) );
         RequestContext.getCurrentInstance().addCallbackParam( "hc_title", chart.getName() );
 
     }

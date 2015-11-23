@@ -30,11 +30,12 @@ function handleCreateChart(xhr, status, args){
 	
 	//console.log(args);
 	var values = JSON.parse(args.hc_values);
-	console.log(values)
 	var labels = JSON.parse(args.hc_labels);
 	
-	var seriesNames = ['MCW', 'Conservation', 'MC', 'MDC'];
+	var OFFSET = 2;
 	
+	var seriesNames = JSON.parse(args.hc_names).slice(OFFSET);
+		
 	var tooltips = [];
 	
 	var tooltipCreator = function(idx, rowData) { // Purely for speed
@@ -47,19 +48,25 @@ function handleCreateChart(xhr, status, args){
       return s;
 	}
 
-	var data = [[], [], [], []];
+	var data = [];
+	for (var i=0;i<seriesNames.length ;i++) {
+		data[i] = [];
+	}
+	
+	
 	var dataMin = 1;
 	var dataMax = 0;
 	var idx = 0;
    for (pos in values) {
 	   var vals = values[pos];
+	   var posInt = parseInt(pos,10);
 	   tooltips[idx] = tooltipCreator(idx, vals)
 	   idx+=1
 	   for (var i = 0; i < vals.length; i++) {
          var val = vals[i];
          if (val > dataMax) dataMax = val;
          if (val < dataMin) dataMin = val;
-         data[i].push([parseInt(pos,10), val]);
+         data[i].push([posInt, val]);
       }
 	   
 
@@ -138,11 +145,11 @@ function handleCreateChart(xhr, status, args){
 
                        var reset = this.isolated;
                        
-                       if (isUndefined(reset) ) {
-                          reset = true;
-                       }
+//                       if (isUndefined(reset) ) {
+//                          reset = true;
+//                       }
 
-                       console.log(seriesIndex, series, reset, this.isolated);
+//                       console.log(seriesIndex, series, reset, this.isolated);
 
                        for (var i = 0; i < series.length; i++)
                        {
@@ -202,7 +209,6 @@ function handleCreateChart(xhr, status, args){
         	type: 'line',
             name: 'MCW',
             visible: true,
-            isolated: true,
             data: data[0],
             color: {
                linearGradient: { x1: 0, y1: dataMin, x2: 0, y2: dataMax},
@@ -211,36 +217,32 @@ function handleCreateChart(xhr, status, args){
                    [1, Highcharts.getOptions().colors[0]]
                ]
            },
-           zIndex: 4
-        },
-        {
-           type: 'line',
-              name: 'Conservation',
-              visible: false,
-              isolated: false,
-              data: data[1],
-              zIndex: 1
-          },
-          {
-             type: 'line',
-                name: 'MC',
-                visible: false,
-                isolated: false,
-                data: data[2],
-                zIndex: 3
-            },
-            {
-               type: 'line',
-                  name: 'MDC',
-                  visible: false,
-                  isolated: false,
-                  data: data[3],
-                  zIndex: 2
-              }]
+           zIndex: data.length
+        }]
     }
     
+    // Add in additional series
+    for (var i = 1; i < data.length; i++) {
+		var vals = data[i];
+	    options.series.push( {
+	           type: 'line',
+	              name: seriesNames[i],
+	              visible: false,
+	              isolated: false,
+	              data: vals,
+	              zIndex: data.length - i
+	          } );
+	}
+    
+
+    
     var a = new Highcharts.Chart(options, function(c) {
-    	setResizer(c)
+    	setResizer(c);
+    	for (var i = 0; i < c.series.length; i++) {
+			var s = c.series[i];
+			s.isolated = i == 0;
+			
+		}
     });
     
     
@@ -260,5 +262,8 @@ function setResizer(chart) {
 $(document).ready(function() {
    console.log("spellcheck off")
    $('#inputForm\\:inputContent').attr('spellcheck',false);
+   $('body').on('click', '.custom-ui-clear-inplace', function(e) {
+	   $(this).parent().siblings('.ui-inputfield').val('');
+   });
 
    });

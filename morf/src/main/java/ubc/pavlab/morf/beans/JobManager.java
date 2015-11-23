@@ -82,6 +82,10 @@ public class JobManager {
     // private ScheduledExecutorService produceJobScheduler;
     private Map<String, UserManager> allUserManagers = new ConcurrentHashMap<>();
 
+    // Job Queue info;
+    private int jobsInQueue = 0;
+    private int residuesInQueue = 0;
+
     @PostConstruct
     public void init() {
         PURGE_AFTER = settingsCache.getJobPurgeTime() * 60 * 60 * 1000;
@@ -140,6 +144,7 @@ public class JobManager {
             job.setFuture( future );
             jobs.add( job );
             job.setStatus( "Position: " + Integer.toString( jobs.size() ) );
+            residuesInQueue += job.getSequenceSize();
         }
         return job;
     }
@@ -147,6 +152,7 @@ public class JobManager {
     public void updatePositions( String sessionId ) {
         synchronized ( jobs ) {
             int idx = 1;
+            int residues = 0;
 
             for ( Iterator<Job> iterator = jobs.iterator(); iterator.hasNext(); ) {
                 Job job = iterator.next();
@@ -154,19 +160,26 @@ public class JobManager {
                 if ( job.getRunning() ) {
                     job.setStatus( "Running..." );
                     idx++;
+                    residues += job.getSequenceSize();
                 } else if ( job.getComplete() ) {
                     job.setStatus( "Completed in " + job.getExecutionTime() + "s" );
                     iterator.remove();
                 } else {
                     job.setStatus( "Position: " + Integer.toString( idx ) );
                     idx++;
+                    residues += job.getSequenceSize();
                 }
 
             }
             log.info( String.format( "Jobs in queue: %d", jobs.size() ) );
 
+            // This happens before force submit so that we can add the residues of the new jobs
+            residuesInQueue = residues;
+
             // Add new job for given session
             forceSubmitJobs( sessionId );
+
+            jobsInQueue = jobs.size();
 
             EventBus eventBus = EventBusFactory.getDefault().eventBus();
             eventBus.publish( "/jobDone", String.valueOf( jobs.size() ) );
@@ -236,6 +249,14 @@ public class JobManager {
             }
 
         }
+    }
+
+    public int getJobsInQueue() {
+        return jobsInQueue;
+    }
+
+    public int getResiduesInQueue() {
+        return residuesInQueue;
     }
 
     public void addSession( String sessionId, UserManager um ) {

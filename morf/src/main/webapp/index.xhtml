@@ -33,27 +33,42 @@
 						        </h:outputScript>
 						</p:growl>
 
-						<h:panelGrid columns="2" style="margin:0 auto;width:95%;"
+						<h:panelGrid columns="2" style="margin:0 auto;width:100%;"
 							cellpadding="5" columnClasses="optionsPanel, inputPanel">
 							<p:panel style="border-style:none;" />
 							<h:outputText value="Enter one protein sequence in FASTA format" />
-							<p:panel style="border-style:none;height:100%;" header="Options">
+							<p:panel style="border-style:none;height:100%;padding:0;" header="Options">
 								<h:panelGrid columns="2" style="margin:0 auto;width:100%;"
 									cellpadding="5">
-									<h:outputText value="Training Dataset"
-										style="text-align:center;"
+									<h:outputText value="Training Dataset:"
 										rendered="#{settingsCache.showTraining}" />
 									<p:selectOneButton value="#{indexView.trainOnDataset}"
 										rendered="#{settingsCache.showTraining}">
 										<f:selectItem itemLabel="Full" itemValue="True" />
 										<f:selectItem itemLabel="Training" itemValue="False" />
 									</p:selectOneButton>
+									<p:panel styleClass="no-border panel-no-padding">
+									<p:commandButton id="emailHelpBtn1" value="" styleClass="icon-only" icon="ui-icon-info" title="Help" type="button" />
+								    <p:overlayPanel for="emailHelpBtn1" hideEffect="fade" style="width:400px;text-align:left;">
+								        <p><b>Email address for result notification is optional.</b></p>
+								    	<p>If provided, an email will be sent once the task is complete. This email will include both the results and a link to a results page.</p>
+								    	<p>If an email is not provided, the link to the results page can be manually bookmarked. Keep in mind that the link to the result page will be <b>lost</b> if you have not saved it somewhere before your session expires.</p>
+								    </p:overlayPanel>
 									<h:outputText value="Email:" />
+									</p:panel>
 									<p:inplace editor="true" emptyLabel="Click To Set Email"
 										style="min-width:190px;">
 										<p:inputText value="#{indexView.email}" label="text">
 											<f:validateRegex pattern="^.+\@.+\..+$" />
 										</p:inputText>
+										<span class="ui-inplace-editor">
+										<button type="button"
+											class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only custom-ui-clear-inplace"
+											title="Clear" role="button" aria-disabled="false">
+											<span class="ui-button-icon-left ui-icon ui-c ui-icon-trash"></span><span
+												class="ui-button-text ui-c">ui-button</span>
+										</button>
+										</span>
 									</p:inplace>
 								</h:panelGrid>
 							</p:panel>
@@ -85,6 +100,12 @@
 									styleClass="ui-priority-primary"
 									actionListener="#{indexView.applyExampleInput}"
 									update=":inputForm" />
+									
+								<p:panel id="panelServerInfo" styleClass="no-padding" style="display:inline-block;float:right;position:relative;top:-4px;">
+								
+								<p style="margin:0;"><b>Server queue:</b> There are #{jobManager.jobsInQueue} jobs in the server queue with a total of #{jobManager.residuesInQueue} residues.</p>
+								
+								</p:panel>
 							</p:panel>
 
 						</h:panelGrid>
@@ -95,9 +116,8 @@
 					<h:form id="formJobs">
 						<p:dataTable id="tableJobs" var="job" value="#{userManager.jobs}"
 							rowStyleClass="#{job.complete eq true ? (job.failed eq true ? 'red-row': 'green-row') : 'yellow-row'}"
-							sortBy="#{job.submittedDate}" scrollable="true"
-							scrollHeight="350" resizableColumns="true"
-							emptyMessage="No Jobs Found.">
+							sortBy="#{job.submittedDate}" resizableColumns="true"
+							emptyMessage="No Jobs Found." style="min-height:350px;">
 							<f:facet name="header">
 					            Jobs
 					        </f:facet>
@@ -184,7 +204,7 @@
 
 						<p:dialog header="Job Info" widgetVar="jobDialog" modal="false"
 							showEffect="fade" hideEffect="fade" resizable="false"
-							dynamic="true" width="500px">
+							dynamic="true" width="400px">
 							<p:outputPanel id="jobDetail" style="text-align:center;width:100%">
 								<p:panelGrid style="width:100%;" styleClass="dialogPanelLabelColumn">
 									<p:row>
@@ -249,17 +269,29 @@
 									</p:row>
 									<p:row>
 										<p:column>
-											<h:outputText value="Email:" />
+									<p:commandButton id="emailHelpBtn2" value="" styleClass="icon-only" icon="ui-icon-info" title="Help" type="button" />
+								    <p:overlayPanel for="emailHelpBtn2" hideEffect="fade" style="width:400px;text-align:left;">
+								        <p><b>Email address for result notification is optional.</b></p>
+								    	<p>If provided, an email will be sent once the task is complete. This email will include both the results and a link to a results page.</p>
+								    	<p>If an email is not provided, the link to the results page can be manually bookmarked. Keep in mind that the link to the result page will be <b>lost</b> if you have not saved it somewhere before your session expires.</p>
+								    </p:overlayPanel>
+									<h:outputText value="Email:" />
 										</p:column>
 										<p:column>
-											<p:inplace editor="true" emptyLabel="Click To Set Email">
-												<p:inputText value="#{indexView.selectedJob.email}"
-													label="text"
-													rendered="#{not empty indexView.selectedJob.email}" />
-												<p:inputText value="#{indexView.selectedJob.email}"
-													label="text"
-													rendered="#{empty indexView.selectedJob.email}" />
-											</p:inplace>
+									<p:inplace editor="true" emptyLabel="Click To Set Email"
+										style="min-width:190px;">
+										<p:inputText value="#{indexView.selectedJob.email}" label="text">
+											<f:validateRegex pattern="^.+\@.+\..+$" />
+										</p:inputText>
+										<span class="ui-inplace-editor">
+										<button type="button"
+											class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only custom-ui-clear-inplace"
+											title="Clear" role="button" aria-disabled="false">
+											<span class="ui-button-icon-left ui-icon ui-c ui-icon-trash"></span><span
+												class="ui-button-text ui-c">ui-button</span>
+										</button>
+										</span>
+									</p:inplace>
 										</p:column>
 									</p:row>
 									<p:row>
@@ -289,7 +321,7 @@
 										</p:column>
 									</p:row>
 									<p:row>
-										<p:column colspan="2">
+										<p:column colspan="2" style="text-align:center;">
 											<p:panel style="border-style:none;">
 												<p:commandButton value="Download" ajax="false"
 													onclick="PrimeFaces.monitorDownload(start, stop);"
@@ -317,7 +349,7 @@
 
 						<p:socket onMessage="pushUpdateHandler" channel="/jobDone" />
 
-						<p:remoteCommand name="pushUpdate" update="tableJobs, jobDetail" />
+						<p:remoteCommand name="pushUpdate" update="tableJobs, jobDetail, :inputForm:panelServerInfo" />
 
 
 					</h:form>

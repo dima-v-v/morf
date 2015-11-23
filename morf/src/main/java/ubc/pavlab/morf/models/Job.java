@@ -248,8 +248,6 @@ public class Job implements Callable<String> {
         String scriptBasePath = trainOnFullData ? scriptBasePathA : scriptBasePathB;
         String pathToOutput = trainOnFullData ? pathToOutputA : pathToOutputB;
 
-        log.info( scriptName );
-
         // Write content to input
         File file = new File( pathToInput );
 

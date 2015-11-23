@@ -96,9 +96,10 @@ font-family: "Courier New", Courier, monospace
  }
  
  .optionsPanel {
- width:375px;
+ width:425px;
  text-align:left;
  vertical-align: top;
+ padding-left:0;
  }
  
   .optionsPanel td { 
@@ -107,6 +108,7 @@ font-family: "Courier New", Courier, monospace
   
   .optionsPanel tr td:first-child {
   	width:103px;
+  	text-align:right;
   }
  
 /*  div[id="formJobs\:stickyGrowl_container"] > div {
@@ -131,7 +133,12 @@ button.red span {
 }
 
 table.dialogPanelLabelColumn tr td:first-child {
-	width: 120px;
+	width: 70px;
+	text-align:right;
+}
+
+table.dialogPanelLabelColumn tr td:last-child {
+	text-align:left;
 }
 
 table.dialogPanelLabelColumn tr {
@@ -140,4 +147,27 @@ table.dialogPanelLabelColumn tr {
 
 table.dialogPanelLabelColumn tr td {
 	border:none !important;
+}
+
+div.ui-panel.panel-no-padding {
+	padding:0;
+}
+
+div.ui-panel.panel-no-padding div.ui-panel-content {
+	padding:0;
+}
+
+button.ui-button.icon-only {
+	background:none;
+	border:none;
+	width:16px;
+}
+
+button.ui-button.icon-only:focus {
+	outline:none;
+}
+
+button.ui-button.icon-only span {
+	left:0;
+	margin-top: -13px;
 }
