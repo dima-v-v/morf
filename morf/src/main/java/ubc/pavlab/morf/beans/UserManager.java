@@ -42,6 +42,8 @@ public class UserManager implements Serializable {
     private Boolean authenticated = true;
     private Integer jobIdIncrementer = 0;
 
+    private String sessionId;
+
     @ManagedProperty(value = "#{jobManager}")
     private JobManager jobManager;
 
@@ -99,9 +101,13 @@ public class UserManager implements Serializable {
     }
 
     String getSessionId() {
-        FacesContext fCtx = FacesContext.getCurrentInstance();
-        HttpSession session = ( HttpSession ) fCtx.getExternalContext().getSession( false );
-        return session.getId();
+        if ( StringUtils.isBlank( sessionId ) ) {
+            FacesContext fCtx = FacesContext.getCurrentInstance();
+            HttpSession session = ( HttpSession ) fCtx.getExternalContext().getSession( false );
+            sessionId = session.getId();
+        }
+        return sessionId;
+
     }
 
     void addFailedJob( Job job, String failedMessage ) {
