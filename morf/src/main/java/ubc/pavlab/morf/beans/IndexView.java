@@ -135,7 +135,7 @@ public class IndexView implements Serializable {
     }
 
     private ValidationResult validate( String content ) {
-        log.debug( "Validating: " + content );
+        // log.debug( "Validating: " + content );
         ProcessBuilder pb = new ProcessBuilder( settingsCache.getProperty( "morf.validate" ), "/dev/stdin",
                 "/dev/stdout" );
         pb.redirectErrorStream( true );
