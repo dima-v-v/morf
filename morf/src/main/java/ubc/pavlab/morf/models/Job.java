@@ -208,6 +208,26 @@ public class Job implements Callable<String> {
         }
     }
 
+    public String getFileString() {
+        if ( getComplete() ) {
+            try {
+                String res;
+                if ( !this.failed ) {
+                    res = this.future.get( 1, TimeUnit.SECONDS );
+                } else {
+                    res = this.status;
+                }
+
+                return res;
+            } catch ( InterruptedException | ExecutionException | TimeoutException e ) {
+                log.error( e );
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
     @Override
     public String toString() {
         return "Job [sessionId=" + sessionId + ", ipAddress=" + ipAddress + ", name=" + name + ", id=" + id

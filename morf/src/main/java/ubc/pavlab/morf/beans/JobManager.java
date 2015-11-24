@@ -191,7 +191,7 @@ public class JobManager {
         }
     }
 
-    public void emailJobCompletion( Job job, String attachment ) {
+    public boolean emailJobCompletion( Job job, String attachment ) {
         if ( job.getEmail() != null ) {
 
             String recipientEmail = job.getEmail();
@@ -211,8 +211,10 @@ public class JobManager {
             }
             String attachmentName = job.getName() + ".txt";
 
-            mailSender.sendMail( recipientEmail, subject, content.toString(), attachmentName, attachment );
+            return mailSender.sendMail( recipientEmail, subject, content.toString(), attachmentName, attachment );
         }
+
+        return false;
 
     }
 

@@ -93,20 +93,18 @@ public class MailSender {
     }
 
     public void sendMail( String recipientEmail, String subject, String content ) {
-        Session session = Session.getInstance( props,
-                new javax.mail.Authenticator() {
-                    @Override
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication( username, password );
-                    }
-                } );
-        //        Session session = Session.getInstance( props, null );
+        Session session = Session.getInstance( props, new javax.mail.Authenticator() {
+            @Override
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication( username, password );
+            }
+        } );
+        // Session session = Session.getInstance( props, null );
         try {
 
             Message message = new MimeMessage( session );
             message.setFrom( fromEmail );
-            message.setRecipients( Message.RecipientType.TO,
-                    InternetAddress.parse( recipientEmail ) );
+            message.setRecipients( Message.RecipientType.TO, InternetAddress.parse( recipientEmail ) );
             message.setSubject( subject );
             message.setContent( content, "text/html" );
 
@@ -119,22 +117,20 @@ public class MailSender {
         }
     }
 
-    public void sendMail( String recipientEmail, String subject, String content, String attachmentName,
+    public boolean sendMail( String recipientEmail, String subject, String content, String attachmentName,
             String attachment ) {
-        Session session = Session.getInstance( props,
-                new javax.mail.Authenticator() {
-                    @Override
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication( username, password );
-                    }
-                } );
-        //        Session session = Session.getInstance( props, null );
+        Session session = Session.getInstance( props, new javax.mail.Authenticator() {
+            @Override
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication( username, password );
+            }
+        } );
+        // Session session = Session.getInstance( props, null );
         try {
 
             Message message = new MimeMessage( session );
             message.setFrom( fromEmail );
-            message.setRecipients( Message.RecipientType.TO,
-                    InternetAddress.parse( recipientEmail ) );
+            message.setRecipients( Message.RecipientType.TO, InternetAddress.parse( recipientEmail ) );
             message.setSubject( subject );
 
             Multipart mp = new MimeMultipart();
@@ -150,7 +146,7 @@ public class MailSender {
             MimeBodyPart attachmentPart = new MimeBodyPart();
             attachmentPart.setFileName( attachmentName );
             attachmentPart.setDataHandler( new DataHandler( attachment, "text/html" ) );
-            //            attachmentPart.setContent( attachment, "text/plain" );
+            // attachmentPart.setContent( attachment, "text/plain" );
             mp.addBodyPart( attachmentPart );
 
             message.setContent( mp );
@@ -159,8 +155,11 @@ public class MailSender {
 
             log.info( "Email Sent To: " + recipientEmail );
 
+            return true;
+
         } catch ( MessagingException e ) {
             log.error( e );
+            return false;
         }
     }
 

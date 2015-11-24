@@ -52,6 +52,7 @@ public class IndexView implements Serializable {
     private Job submittedJob;
     private Job jobToRemove;
     private Job jobToSave;
+    private Job jobToRenew;
 
     private String label;
     private int sequenceSize;
@@ -66,6 +67,19 @@ public class IndexView implements Serializable {
     @PostConstruct
     public void init() {
         log.info( "IndexView init" );
+    }
+
+    public void resendEmailSelected() {
+        if ( userManager.resendEmail( selectedJob ) ) {
+            addMessage( "Job (" + selectedJob.getId() + ") successfully emailed.", FacesMessage.SEVERITY_INFO );
+        } else {
+            addMessage( "Job (" + selectedJob.getId() + ") FAILED to email.", FacesMessage.SEVERITY_WARN );
+        }
+    }
+
+    public void renewJob() {
+        log.info( "renew " + jobToRenew.getId() );
+        userManager.renewSaveJob( jobToRenew );
     }
 
     public void saveJob() {
@@ -268,7 +282,7 @@ public class IndexView implements Serializable {
                                     + ") <br/> The job will be available at the provided <a href='http://"
                                     + settingsCache.getBaseUrl() + "savedJob.xhtml?key=" + job.getSavedKey()
                                     + "' target='_blank'>link</a> for " + job.getSaveTimeLeft() + " hours.",
-                            FacesMessage.SEVERITY_WARN );
+                            FacesMessage.SEVERITY_INFO );
                 }
 
                 submittedJob = job;
@@ -350,6 +364,10 @@ public class IndexView implements Serializable {
 
     public void setJobToSave( Job jobToSave ) {
         this.jobToSave = jobToSave;
+    }
+
+    public void setJobToRenew( Job jobToRenew ) {
+        this.jobToRenew = jobToRenew;
     }
 
     public boolean isChartReady() {

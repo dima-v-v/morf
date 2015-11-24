@@ -1,4 +1,4 @@
-var MAXIMALLY_DISTINCT_COLORS = ["#2bce48", "#191919", "#0007dc", "#4c005c", "#993f00", "#005c31", "#f0a3ff", "#ffcc99", "#808080", "#94ffb5", "#8f7c00", "#9dcc00", "#c20088", "#003380", "#ffa405", "#ffa8bb", "#426600", "#ff0010", "#5ef1f2", "#00998f", "#e0ff66", "#740aff", "#990000", "#ffff80", "#ffff00", "#ff5005"];
+var MAXIMALLY_DISTINCT_COLORS = ["#990000", "#2bce48", "#808080", "#4c005c", "#0007dc", "#005c31", "#f0a3ff", "#ffcc99", "#993f00", "#94ffb5", "#8f7c00", "#9dcc00", "#c20088", "#003380", "#ffa405", "#ffa8bb", "#426600", "#ff0010", "#5ef1f2", "#00998f", "#e0ff66", "#740aff", "#191919", "#ffff80", "#ffff00", "#ff5005"];
 
 function isUndefined( variable ) {
    return ( typeof variable === 'undefined' );
@@ -107,7 +107,7 @@ function handleCreateChart(xhr, status, args){
         },
         yAxis: {
             title: {
-                text: 'MoRF Propensity'
+                text: 'Propensity'
             },
         },
         tooltip: {
@@ -138,7 +138,7 @@ function handleCreateChart(xhr, status, args){
 
                     var defaultBehaviour = event.browserEvent.metaKey || event.browserEvent.ctrlKey;
 
-                    if (!defaultBehaviour) {
+                    if (defaultBehaviour) {
 
                        var seriesIndex = this.index;
                        var series = this.chart.series;
@@ -190,12 +190,6 @@ function handleCreateChart(xhr, status, args){
                     	}
                     }
                 },
-                lineWidth: 1.5,
-                states: {
-                    hover: {
-                        lineWidth: 1.5
-                    }
-                },
                 threshold: null
             }
         },
@@ -205,9 +199,10 @@ function handleCreateChart(xhr, status, args){
            layout: 'vertical',
            y:20
         },
-        series: [{
+        series: []
+/*        	[{
         	type: 'line',
-            name: 'MCW',
+            name: seriesNames[0],
             visible: true,
             data: data[0],
             color: {
@@ -218,11 +213,11 @@ function handleCreateChart(xhr, status, args){
                ]
            },
            zIndex: data.length
-        }]
+        }]*/
     }
     
     // Add in additional series
-    for (var i = 1; i < data.length; i++) {
+    for (var i = 0; i < data.length; i++) {
 		var vals = data[i];
 	    options.series.push( {
 	           type: 'line',
@@ -230,19 +225,26 @@ function handleCreateChart(xhr, status, args){
 	              visible: false,
 	              isolated: false,
 	              data: vals,
-	              zIndex: data.length - i
+	              zIndex: data.length - i,
+	                lineWidth: 1.5,
+	                states: {
+	                    hover: {
+	                        lineWidth: 1.5
+	                    }
+	                }
 	          } );
 	}
+    
+    // Options for primary series
+    options.series[0].visible=true;
+    options.series[0].lineWidth=3;
+    options.series[0].states.hover.lineWidth=3;
     
 
     
     var a = new Highcharts.Chart(options, function(c) {
     	setResizer(c);
-    	for (var i = 0; i < c.series.length; i++) {
-			var s = c.series[i];
-			s.isolated = i == 0;
-			
-		}
+    	c.series[0].isolated = true;
     });
     
     
@@ -264,6 +266,8 @@ $(document).ready(function() {
    $('#inputForm\\:inputContent').attr('spellcheck',false);
    $('body').on('click', '.custom-ui-clear-inplace', function(e) {
 	   $(this).parent().siblings('.ui-inputfield').val('');
+	   $(this).parent().siblings('span.ui-inplace-editor').children('button.ui-inplace-save').click();
+	   
    });
 
    });

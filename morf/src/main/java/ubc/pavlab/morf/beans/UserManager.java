@@ -72,6 +72,22 @@ public class UserManager implements Serializable {
         jobManager.addSession( this.getSessionId(), this );
     }
 
+    public void keepAlive() {
+    }
+
+    public boolean resendEmail( Job job ) {
+        String results = job.getFileString();
+        if ( !StringUtils.isBlank( results ) ) {
+            return jobManager.emailJobCompletion( job, results );
+        }
+        return false;
+
+    }
+
+    public void renewSaveJob( Job job ) {
+        jobManager.renewSaveJob( job );
+    }
+
     public String saveJob( Job job ) {
         return jobManager.saveJob( job );
     }
@@ -103,7 +119,7 @@ public class UserManager implements Serializable {
         if ( !jobs.contains( job ) ) {
             jobs.add( job );
             jobQueue.add( job );
-            job.setStatus( "Submission Pending..." );
+            job.setStatus( "Pending..." );
         }
         submitJobFromQueue();
 
@@ -123,7 +139,7 @@ public class UserManager implements Serializable {
                     canceled = jobManager.removeJob( job );
                 } else if ( job.getRunning() ) {
                     canceled = false;
-                    //canceled = jobManager.cancelJob( job ); // Off for now because doesn't work if job is running
+                    // canceled = jobManager.cancelJob( job ); // Off for now because doesn't work if job is running
                 } else {
                     canceled = jobManager.cancelJob( job );
 
@@ -173,17 +189,17 @@ public class UserManager implements Serializable {
         for ( int i = 0; i < MAX_JOBS_IN_QUEUE; i++ ) {
             submitJobFromQueue();
         }
-        //        boolean somethingIsRunning = false;
-        //        for ( Job job : jobs ) {
-        //            if ( !job.getComplete() ) {
-        //                somethingIsRunning = true;
-        //            }
-        //        }
-        //        if ( !somethingIsRunning ) {
-        //            // log.info("Stopping polling");
-        //            // stopPolling = true;
-        //            RequestContext.getCurrentInstance().addCallbackParam( "stopPolling", true );
-        //        }
+        // boolean somethingIsRunning = false;
+        // for ( Job job : jobs ) {
+        // if ( !job.getComplete() ) {
+        // somethingIsRunning = true;
+        // }
+        // }
+        // if ( !somethingIsRunning ) {
+        // // log.info("Stopping polling");
+        // // stopPolling = true;
+        // RequestContext.getCurrentInstance().addCallbackParam( "stopPolling", true );
+        // }
     }
 
     public void authenticate( String password ) {
