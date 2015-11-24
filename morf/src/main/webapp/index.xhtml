@@ -15,7 +15,6 @@
 		</ui:define>
 		<ui:define name="content">
 			<p:outputPanel id="centerPanel" layout="block">
-				<p:commandButton actionListener="#{userManager.keepAlive()}" value="" styleClass="icon-only" icon="fa fa-refresh" title="Refresh Session" style="position:absolute;top:16px;right:0px;"/>
 				<p:outputPanel id="jobsPanel" layout="block"
 					rendered="#{userManager.authenticated}">
 					<div class="title">
@@ -26,6 +25,7 @@
 						
 					</div>
 					<h:form id="inputForm">
+					<p:commandButton actionListener="#{userManager.keepAlive()}" value="" styleClass="icon-only" icon="fa fa-refresh" title="Refresh Session" style="position:absolute;top:16px;right:0px;"/>
 						<p:growl id="growl" life="2000" globalOnly="true" severity="info" escape="false"/>
 						<p:growl id="stickyGrowl" sticky="true" globalOnly="true"
 							severity="error,fatal,warn" escape="false">
@@ -237,11 +237,11 @@
 											<h:outputText value="#{indexView.selectedJob.sequenceSize}" />
 										</p:column>
 									</p:row>
-									<p:row>
-										<p:column rendered="#{settingsCache.showTraining}">
+									<p:row rendered="#{settingsCache.showTraining}">
+										<p:column >
 											<h:outputText value="Training:" />
 										</p:column>
-										<p:column rendered="#{settingsCache.showTraining}">
+										<p:column>
 											<h:outputText
 												value="#{indexView.selectedJob.trainOnFullData ? 'Full' : 'Training'}" />
 										</p:column>
