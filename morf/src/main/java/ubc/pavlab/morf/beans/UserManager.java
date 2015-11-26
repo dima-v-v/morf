@@ -116,6 +116,7 @@ public class UserManager implements Serializable {
             job.setFailed( true );
             job.setStatus( failedMessage );
             jobs.add( job );
+            resendEmail( job );
         }
     }
 
@@ -125,7 +126,7 @@ public class UserManager implements Serializable {
         if ( !jobs.contains( job ) ) {
             jobs.add( job );
             jobQueue.add( job );
-            job.setStatus( "Pending..." );
+            job.setStatus( "Pending" );
         }
         submitJobFromQueue();
 

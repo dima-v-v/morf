@@ -93,7 +93,7 @@
 								<p:commandButton value="Clear" type="button"
 									icon="ui-icon-trash" styleClass="ui-priority-primary"
 									onclick="clearFastaInput()" style="margin-right:25px" />
-								<p:commandButton value="Example Input" icon="ui-icon-copy"
+								<p:commandButton value="Input Example" icon="ui-icon-copy"
 									styleClass="ui-priority-primary"
 									actionListener="#{indexView.applyExampleInput}"
 									update=":inputForm" />
@@ -104,7 +104,7 @@
 							
 							<p:panel id="panelServerInfo" styleClass="no-padding" style="width: 500px;">
 								
-								<p style="margin:0;"><b>Server queue:</b> There are #{jobManager.jobsInQueue} jobs in the server queue with a total of #{jobManager.residuesInQueue} residues.</p>
+								<p style="margin:0;"><b>Server queue:</b> There are #{jobManager.jobsInQueue} job(s) in the server queue with a total of #{jobManager.residuesInQueue} residues.</p>
 								
 							</p:panel>
 
@@ -127,8 +127,16 @@
 								<p:commandButton update=":inputForm:growl, :formJobs:tableJobs"
 									icon="fa fa-remove" title="Cancel"
 									action="#{indexView.cancelJob}" disabled="#{job.running}"
-									styleClass="red">
+									styleClass="red" rendered="#{!job.failed}">
 									<p:confirm header="Confirmation" message="Are you sure?" icon="ui-icon-alert" />
+									<f:setPropertyActionListener value="#{job}"
+										target="#{indexView.jobToRemove}" />
+								</p:commandButton>
+								
+								<p:commandButton update=":inputForm:growl, :formJobs:tableJobs"
+									icon="fa fa-remove" title="Cancel"
+									action="#{indexView.cancelJob}" disabled="#{job.running}"
+									styleClass="red" rendered="#{job.failed}">
 									<f:setPropertyActionListener value="#{job}"
 										target="#{indexView.jobToRemove}" />
 								</p:commandButton>
@@ -153,7 +161,36 @@
 								<h:outputText value="#{job.submittedDate}" />
 							</p:column>
 
-							<p:column headerText="Status" style="text-align: center;">
+							<p:column style="text-align: center;">
+							
+							<f:facet name="header">
+							<h:outputText value="Status &nbsp;" />
+							<p:commandButton id="statusBtn1" value="" styleClass="icon-only" icon="fa fa-question-circle" title="Help" type="button" />
+						    <p:overlayPanel for="statusBtn1" hideEffect="fade" style="width:400px;text-align:left;" appendToBody="true">
+								<p>Status can have one of following five values:</p>
+								<ul>
+								<li>
+									<b>&lt;Processing&gt;</b> The sequence is currently been processed.
+								</li>
+								<li>
+									<b>&lt;Position: x&gt;</b> The job is in the server queue at position x.
+								</li>
+								<li>
+									<b>&lt;Pending&gt;</b> The job is in the private user queue.
+								</li>
+								<li>
+									<b>&lt;Completed in Xs&gt;</b> The job has completed in X seconds.
+								</li>
+								<li>
+									<b>&lt;Failed&gt;</b> Error Message.
+								</li>
+								</ul>
+						    </p:overlayPanel>
+							</f:facet>
+							
+
+							
+							
 								<h:outputText value="#{job.status}" />
 							</p:column>
 
@@ -179,8 +216,17 @@
 								</p:commandButton> -->
 							</p:column>
 
-							<p:column headerText="Saved For"
-								style="width:96px;text-align: center">
+							<p:column style="width:96px;text-align: center">
+								
+							<f:facet name="header">
+							<h:outputText value="Saved For &nbsp;" />
+							<p:commandButton id="savedBtn1" value="" styleClass="icon-only" icon="fa fa-question-circle" title="Help" type="button" />
+						    <p:overlayPanel for="savedBtn1" hideEffect="fade" style="width:400px;text-align:left;" appendToBody="true">
+								<p>The time until results page expiry for this job. Page life can be renewed manually by clicking the renew button &nbsp;<i class="fa fa-refresh"/></p> 
+						    </p:overlayPanel>
+						    </f:facet>
+								
+								
 								<h:outputText value="&nbsp;#{job.saveTimeLeft} hrs &nbsp;"
 									rendered="#{job.saved}" />
 								<p:commandButton icon="fa fa-refresh" title="Renew" styleClass="icon-only"
@@ -201,7 +247,7 @@
 								<p:commandButton icon="fa fa-heart"
 									action="#{indexView.saveJob}"
 									update=":inputForm:stickyGrowl, tableJobs"
-									rendered="#{!job.saved}">
+									rendered="#{!job.saved and !job.failed}">
 									<f:setPropertyActionListener value="#{job}"
 										target="#{indexView.jobToSave}" />
 								</p:commandButton>
@@ -325,7 +371,7 @@
 											<p:commandButton icon="fa fa-heart"
 												action="#{indexView.saveJob}"
 												update=":inputForm:stickyGrowl, :formJobs:jobDetail"
-												rendered="#{!indexView.selectedJob.saved}">
+												rendered="#{!indexView.selectedJob.saved and !indexView.selectedJob.failed}">
 												<f:setPropertyActionListener
 													value="#{indexView.selectedJob}"
 													target="#{indexView.jobToSave}" />
@@ -338,7 +384,7 @@
 												<p:commandButton value="Download" ajax="false"
 													onclick="PrimeFaces.monitorDownload(start, stop);"
 													icon="ui-icon-arrowthick-1-s"
-													disabled="#{!indexView.selectedJob.complete or indexView.selectedJob.failed}">
+													disabled="#{!indexView.selectedJob.complete}">
 													<p:fileDownload value="#{indexView.selectedJob.file}" />
 												</p:commandButton>
 												<p:commandButton value="Graph" icon="fa fa-area-chart"
@@ -398,11 +444,39 @@
 		<ui:define name="dialogs">
 		
 		<h:form id="formEmailDlg" >
-				<p:dialog id="noEmailDlg" header="No Email Provided"
+				<p:dialog id="noEmailDlg" header="A Reminder"
 					widgetVar="noEmailDlg" showEffect="fade"
 					style="min-width:349px;" closeOnEscape="true" resizable="false" rendered="#{userManager.authenticated}">
-					<p:panel id="panelEmailDlg">
-						<p style="width: 349px; font-style: italic;">No email was provided, you can set one below to receive notice and results of job completion by email.</p>
+					<p:panel id="panelEmailDlg" styleClass="no-border">
+						<p style="width: 349px; font-style: italic;">In the case of your browser session being lost or expiring, the links to all result pages will also be lost!</p>
+						<p style="width: 349px; font-style: italic;">It is strongly recommended that links to result pages be secured by either:</p>
+						
+								<ul>
+								<li>
+									<p style="width: 349px; font-style: italic;"><b>Bookmarking</b> the following 	<p:link outcome="savedJob" value="LINK"
+										target="_blank" rendered="#{indexView.submittedJob.saved}">
+									    <f:param name="key" value="#{indexView.submittedJob.savedKey}" />
+									</p:link>, which will be available for the next #{settingsCache.jobPurgeTime} hours.</p>
+								</li>
+								<li>
+									<p style="width: 349px; font-style: italic;"><b>Providing an email</b> so that a notification with attached results and <p:link outcome="savedJob" value="LINK"
+										target="_blank" rendered="#{indexView.submittedJob.saved}">
+									    <f:param name="key" value="#{indexView.submittedJob.savedKey}" />
+									</p:link> can be sent upon job completion. </p>
+								</li>
+								</ul>
+								
+								<p:separator/>
+								
+								<p:panel styleClass="no-border" style="text-align:center;">
+								
+											<p:inplace editor="true" emptyLabel="Click To Set Email">
+												<p:inputText value="#{indexView.submittedJob.email}"
+													label="text"/>
+											</p:inplace>
+								</p:panel>
+						
+<!-- 						<p style="width: 349px; font-style: italic;">No email was provided, you can set one below to receive notice and results of job completion by email.</p>
 						<p style="width: 349px; font-style: italic;">Otherwise, your job will available at this 
 									<p:link outcome="savedJob" value="LINK"
 										target="_blank" rendered="#{indexView.submittedJob.saved}">
@@ -422,8 +496,8 @@
 												<p:inputText value="#{indexView.submittedJob.email}"
 													label="text"/>
 											</p:inplace>
-						</h:panelGrid>
-						</p:panel>
+						</h:panelGrid>-->
+						</p:panel> 
 				</p:dialog>
 				</h:form>
 		

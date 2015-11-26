@@ -195,9 +195,8 @@ function handleCreateChart(xhr, status, args){
         },
         legend : {
            align : 'right',
-           verticalAlign: 'top',
+           verticalAlign: 'middle',
            layout: 'vertical',
-           y:20
         },
         series: []
 /*        	[{

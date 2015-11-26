@@ -171,3 +171,17 @@ button.ui-button.icon-only span {
 	left:0;
 	margin-top: -13px;
 }
+
+sub.text {
+	 font: normal 65% sans-serif;
+}
+
+div.scrollspy {
+	position:fixed;
+	left:0px;
+	padding:20px;
+	background: #dfeffc url("/morf/javax.faces.resource/images/ui-bg_glass_85_dfeffc_1x400.png?ln=primefaces-redmond") 50% 50% repeat-x;
+	border-radius: 5px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+}

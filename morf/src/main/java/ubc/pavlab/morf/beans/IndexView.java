@@ -290,7 +290,7 @@ public class IndexView implements Serializable {
             }
         } else {
             Job job = new Job( userManager.getSessionId(), label, id, content, 0, ipAddress,
-                    trainOnDataset.equals( "True" ), null );
+                    trainOnDataset.equals( "True" ), StringUtils.isBlank( email ) ? null : email );
             userManager.addFailedJob( job, vr.getContent() );
             addMessage( "Malformed FASTA Format!", FacesMessage.SEVERITY_ERROR );
 

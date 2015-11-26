@@ -157,7 +157,7 @@ public class JobManager {
                 Job job = iterator.next();
 
                 if ( job.getRunning() ) {
-                    job.setStatus( "Running..." );
+                    job.setStatus( "Processing" );
                     idx++;
                     residues += job.getSequenceSize();
                 } else if ( job.getComplete() ) {

@@ -261,7 +261,7 @@ public class Job implements Callable<String> {
         log.info( "Starting job (" + name + ") for session: (" + sessionId + ") and IP: (" + ipAddress + ")" );
 
         this.running = true;
-        this.status = "Running...";
+        this.status = "Processing";
 
         String pathToInput = trainOnFullData ? pathToInputA : pathToInputB;
         String scriptName = trainOnFullData ? scriptNameA : scriptNameB;
