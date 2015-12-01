@@ -20,11 +20,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.primefaces.context.RequestContext;
 
+import com.google.gson.Gson;
+
 import ubc.pavlab.morf.models.Chart;
 import ubc.pavlab.morf.models.Job;
 import ubc.pavlab.morf.models.ValidationResult;
-
-import com.google.gson.Gson;
 
 @ManagedBean
 @ViewScoped
@@ -94,7 +94,8 @@ public class IndexView implements Serializable {
                 addMessage(
                         "Job (" + job.getId()
                                 + ") successfully saved. The job will be available at the provided link for "
-                                + job.getSaveTimeLeft() + " hours.", FacesMessage.SEVERITY_WARN );
+                                + job.getSaveTimeLeft() + " hours.",
+                        FacesMessage.SEVERITY_WARN );
             }
         }
 
@@ -292,7 +293,7 @@ public class IndexView implements Serializable {
             Job job = new Job( userManager.getSessionId(), label, id, content, 0, ipAddress,
                     trainOnDataset.equals( "True" ), StringUtils.isBlank( email ) ? null : email );
             userManager.addFailedJob( job, vr.getContent() );
-            addMessage( "Malformed FASTA Format!", FacesMessage.SEVERITY_ERROR );
+            addMessage( "Malformed FASTA Format!", FacesMessage.SEVERITY_INFO );
 
         }
 

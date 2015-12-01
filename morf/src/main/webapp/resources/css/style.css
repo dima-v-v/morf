@@ -185,3 +185,20 @@ div.scrollspy {
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
 }
+
+button.smallIcon span.ui-icon{
+	font-size: 14px;
+}
+
+table.simple-table td {
+	  padding-left: 10px;
+	  padding-top: 10px;
+}
+
+table.simple-table tr td:first-child {
+	  padding-left: 0px;
+}
+
+table.simple-table tr:first-child td {
+	  padding-top: 0px;
+}

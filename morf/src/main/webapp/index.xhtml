@@ -104,7 +104,7 @@
 							
 							<p:panel id="panelServerInfo" styleClass="no-padding" style="width: 500px;">
 								
-								<p style="margin:0;"><b>Server queue:</b> There are #{jobManager.jobsInQueue} job(s) in the server queue with a total of #{jobManager.residuesInQueue} residues.</p>
+								<p style="margin:0;"><b>Server queue:</b> #{jobManager.jobsInQueue} job(s) in the server queue with a total of #{jobManager.residuesInQueue} residues.</p>
 								
 							</p:panel>
 
@@ -127,7 +127,7 @@
 								<p:commandButton update=":inputForm:growl, :formJobs:tableJobs"
 									icon="fa fa-remove" title="Cancel"
 									action="#{indexView.cancelJob}" disabled="#{job.running}"
-									styleClass="red" rendered="#{!job.failed}">
+									styleClass="red smallIcon" rendered="#{!job.failed}">
 									<p:confirm header="Confirmation" message="Are you sure?" icon="ui-icon-alert" />
 									<f:setPropertyActionListener value="#{job}"
 										target="#{indexView.jobToRemove}" />
@@ -136,7 +136,7 @@
 								<p:commandButton update=":inputForm:growl, :formJobs:tableJobs"
 									icon="fa fa-remove" title="Cancel"
 									action="#{indexView.cancelJob}" disabled="#{job.running}"
-									styleClass="red" rendered="#{job.failed}">
+									styleClass="red smallIcon" rendered="#{job.failed}">
 									<f:setPropertyActionListener value="#{job}"
 										target="#{indexView.jobToRemove}" />
 								</p:commandButton>
@@ -197,7 +197,7 @@
 							<p:column headerText="Results" style="text-align: center">
 								<p:commandButton update=":formJobs:jobDetail"
 									oncomplete="PF('jobDialog').show()" icon="ui-icon-search"
-									title="View" value="#{job.complete ? 'Ready' : 'Not Ready'}">
+									title="View" value="#{job.failed ? 'Error' : (job.complete ? 'Ready' : 'Not Ready')}">
 									<f:setPropertyActionListener value="#{job}"
 										target="#{indexView.selectedJob}" />
 								</p:commandButton>
@@ -466,14 +466,18 @@
 								</li>
 								</ul>
 								
-								<p:separator/>
-								
 								<p:panel styleClass="no-border" style="text-align:center;">
 								
 											<p:inplace editor="true" emptyLabel="Click To Set Email">
 												<p:inputText value="#{indexView.submittedJob.email}"
 													label="text"/>
 											</p:inplace>
+								</p:panel>
+								
+								<p:separator/>
+								
+								<p:panel styleClass="no-border" style="text-align:center;">
+									<p:commandButton value="Ignore" icon="fa fa-close" title="Ignore" type="button" onclick="PF('noEmailDlg').hide();"/>
 								</p:panel>
 						
 <!-- 						<p style="width: 349px; font-style: italic;">No email was provided, you can set one below to receive notice and results of job completion by email.</p>
