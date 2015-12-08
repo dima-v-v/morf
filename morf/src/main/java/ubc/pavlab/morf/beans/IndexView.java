@@ -46,7 +46,6 @@ public class IndexView implements Serializable {
     // private String currentSelectedName;
     private String content;
     private String trainOnDataset = "True";
-    private String email;
 
     private Job selectedJob;
     private Job submittedJob;
@@ -223,6 +222,8 @@ public class IndexView implements Serializable {
 
         }
 
+        String email = userManager.getEmail();
+
         log.info( email );
 
         if ( StringUtils.isBlank( email ) ) {
@@ -246,6 +247,8 @@ public class IndexView implements Serializable {
         sequenceSize = 0;
 
         int id = userManager.getNewJobId();
+
+        String email = userManager.getEmail();
 
         if ( vr.isSuccess() ) {
             // TODO
@@ -325,14 +328,6 @@ public class IndexView implements Serializable {
 
     public void setTrainOnDataset( String trainOnDataset ) {
         this.trainOnDataset = trainOnDataset;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail( String email ) {
-        this.email = email;
     }
 
     public Job getSelectedJob() {

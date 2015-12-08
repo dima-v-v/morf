@@ -42,6 +42,8 @@ public class UserManager implements Serializable {
     private Boolean authenticated = true;
     private Integer jobIdIncrementer = 0;
 
+    private String email;
+
     private String sessionId;
 
     @ManagedProperty(value = "#{jobManager}")
@@ -252,6 +254,14 @@ public class UserManager implements Serializable {
 
     public Boolean getAuthenticated() {
         return authenticated;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail( String email ) {
+        this.email = email;
     }
 
 }
