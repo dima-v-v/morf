@@ -24,9 +24,9 @@ import java.util.Properties;
 import javax.activation.DataHandler;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
@@ -47,13 +47,13 @@ import org.apache.log4j.Logger;
  * @author mjacobson
  * @version $Id$
  */
-@ManagedBean
+@Named
 @ApplicationScoped
 public class MailSender {
 
     private static final Logger log = Logger.getLogger( MailSender.class );
 
-    @ManagedProperty(value = "#{settingsCache}")
+    @Inject
     private SettingsCache settingsCache;
 
     private Properties props;
@@ -161,11 +161,6 @@ public class MailSender {
             log.error( e );
             return false;
         }
-    }
-
-    public void setSettingsCache( SettingsCache settingsCache ) {
-        this.settingsCache = settingsCache;
-
     }
 
 }

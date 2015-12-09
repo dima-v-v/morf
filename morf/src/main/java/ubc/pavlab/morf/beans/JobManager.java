@@ -32,11 +32,12 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.log4j.Logger;
+import org.omnifaces.cdi.Eager;
 import org.primefaces.push.EventBus;
 import org.primefaces.push.EventBusFactory;
 
@@ -50,16 +51,17 @@ import ubc.pavlab.morf.service.SessionIdentifierGenerator;
  * @author mjacobson
  * @version $Id$
  */
-@ManagedBean(eager = true)
+@Named
+@Eager
 @ApplicationScoped
 public class JobManager {
 
     private static final Logger log = Logger.getLogger( JobManager.class );
 
-    @ManagedProperty(value = "#{mailSender}")
+    @Inject
     private MailSender mailSender;
 
-    @ManagedProperty(value = "#{settingsCache}")
+    @Inject
     private SettingsCache settingsCache;
 
     // Contains map of random token to saved job for future viewing
@@ -264,15 +266,6 @@ public class JobManager {
 
     public void removeSession( String sessionId ) {
         allUserManagers.remove( sessionId );
-    }
-
-    public void setMailSender( MailSender mailSender ) {
-        this.mailSender = mailSender;
-    }
-
-    public void setSettingsCache( SettingsCache settingsCache ) {
-        this.settingsCache = settingsCache;
-
     }
 
 }

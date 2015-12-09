@@ -12,11 +12,11 @@ import java.util.Queue;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
@@ -27,7 +27,7 @@ import ubc.pavlab.morf.models.Job;
 /**
  * @author mjacobson
  */
-@ManagedBean
+@Named
 @SessionScoped
 public class UserManager implements Serializable {
 
@@ -46,13 +46,13 @@ public class UserManager implements Serializable {
 
     private String sessionId;
 
-    @ManagedProperty(value = "#{jobManager}")
+    @Inject
     private JobManager jobManager;
 
-    @ManagedProperty(value = "#{settingsCache}")
+    @Inject
     private SettingsCache settingsCache;
 
-    @ManagedProperty(value = "#{security}")
+    @Inject
     private Security security;
 
     // private Map<String, Job> results = new HashMap<String, Job>();
@@ -234,18 +234,6 @@ public class UserManager implements Serializable {
 
     boolean jobExists( Job job ) {
         return this.jobs.contains( job );
-    }
-
-    public void setJobManager( JobManager jobManager ) {
-        this.jobManager = jobManager;
-    }
-
-    public void setSettingsCache( SettingsCache settingsCache ) {
-        this.settingsCache = settingsCache;
-    }
-
-    public void setSecurity( Security security ) {
-        this.security = security;
     }
 
     public Boolean getStopPolling() {
