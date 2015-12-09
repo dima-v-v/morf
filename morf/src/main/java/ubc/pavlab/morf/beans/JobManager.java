@@ -19,10 +19,12 @@
 
 package ubc.pavlab.morf.beans;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -38,8 +40,6 @@ import javax.inject.Named;
 
 import org.apache.log4j.Logger;
 import org.omnifaces.cdi.Eager;
-import org.primefaces.push.EventBus;
-import org.primefaces.push.EventBusFactory;
 
 import ubc.pavlab.morf.models.Job;
 import ubc.pavlab.morf.models.PurgeOldJobs;
@@ -75,14 +75,15 @@ public class JobManager {
     public static long PURGE_AFTER = 86400000;
 
     // Contains a representation of the internal queue of jobs
-    private LinkedList<Job> jobs = new LinkedList<Job>();
+    private LinkedList<Job> jobQueueMirror = new LinkedList<Job>();
 
     // private ExecutorService processJob;
     // private ThreadPoolExecutor executor;
     private ExecutorService executor;
 
-    // private ScheduledExecutorService produceJobScheduler;
-    private Map<String, UserManager> allUserManagers = new ConcurrentHashMap<>();
+    private Map<String, Queue<Job>> waitingList = new ConcurrentHashMap<>();
+
+    private static int MAX_JOBS_IN_QUEUE = 2;
 
     // Job Queue info;
     private int residuesInQueue = 0;
@@ -105,14 +106,122 @@ public class JobManager {
         scheduler.shutdownNow();
     }
 
-    public boolean cancelJob( Job job ) {
-        boolean canceled = false;
+    public void submitToWaitingList( Job job ) {
+        log.info( "Submitting job (" + job.getId() + ") for session: (" + job.getSessionId() + ") and IP: ("
+                + job.getIpAddress() + ")" );
+
+        Queue<Job> jobs = waitingList.get( job.getSessionId() );
+
+        if ( jobs == null ) {
+            jobs = new LinkedList<Job>();
+            waitingList.put( job.getSessionId(), jobs );
+            log.info( "new session" );
+        }
+
         synchronized ( jobs ) {
+
+            if ( !jobs.contains( job ) ) {
+                jobs.add( job );
+                job.setStatus( "Pending" );
+                saveJob( job );
+                log.info( job.getSavedKey() );
+                submitJobsFromWaitingList( job.getSessionId(), jobs );
+            }
+        }
+
+    }
+
+    private void submitJobsFromWaitingList( String session ) {
+
+        Queue<Job> jobs = waitingList.get( session );
+
+        if ( jobs != null ) {
+            submitJobsFromWaitingList( session, jobs );
+        }
+
+    }
+
+    private void submitJobsFromWaitingList( String session, Queue<Job> jobs ) {
+        int cnt = 0;
+        synchronized ( jobQueueMirror ) {
+
+            for ( Job job : jobQueueMirror ) {
+                if ( job.getSessionId().equals( session ) ) cnt++;
+            }
+        }
+
+        if ( cnt < MAX_JOBS_IN_QUEUE ) {
+            Job job;
+            synchronized ( jobs ) {
+                job = jobs.poll();
+            }
+            if ( job != null ) {
+                job.setSubmittedDate( new Date() );
+                submit( job );
+            }
+        }
+
+    }
+
+    private void submit( Job job ) {
+        // TODO is synchronized necessary?
+        synchronized ( jobQueueMirror ) {
+            log.info( "Submitting job (" + job.getId() + ") for session: (" + job.getSessionId() + ") and IP: ("
+                    + job.getIpAddress() + ")" );
+            job.setJobManager( this );
+            Future<String> future = executor.submit( job );
+            job.setFuture( future );
+            jobQueueMirror.add( job );
+            job.setStatus( "Position: " + Integer.toString( jobQueueMirror.size() ) );
+            residuesInQueue += job.getSequenceSize();
+        }
+    }
+
+    public boolean requestStopJob( Job job ) {
+
+        boolean canceled = false;
+
+        Queue<Job> jobs = waitingList.get( job.getSessionId() );
+
+        synchronized ( jobs ) {
+            if ( jobs.contains( job ) ) {
+                // Not yet submitted, just remove it from waiting list
+                jobs.remove( job );
+                submitJobsFromWaitingList( job.getSessionId(), jobs );
+                return true;
+            }
+        }
+        synchronized ( jobQueueMirror ) {
+            if ( jobQueueMirror.contains( job ) ) {
+                if ( job.getComplete() ) {
+                    canceled = removeJob( job );
+                } else if ( job.getRunning() ) {
+                    canceled = false;
+                    // canceled = jobManager.cancelJob( job ); // Off for now because doesn't work if job is running
+                } else {
+                    canceled = cancelJob( job );
+
+                }
+            }
+
+        }
+        if ( canceled ) {
+            jobs.remove( job );
+            submitJobsFromWaitingList( job.getSessionId(), jobs );
+        }
+
+        return canceled;
+
+    }
+
+    private boolean cancelJob( Job job ) {
+        boolean canceled = false;
+        synchronized ( jobQueueMirror ) {
             Future<String> future = job.getFuture();
             canceled = future.cancel( true );
 
             if ( canceled ) {
-                jobs.remove( job );
+                jobQueueMirror.remove( job );
             }
         }
         return canceled;
@@ -124,38 +233,25 @@ public class JobManager {
      * @param job
      * @return True if job is removed
      */
-    public boolean removeJob( Job job ) {
+    private boolean removeJob( Job job ) {
         boolean removed = false;
         if ( job.getComplete() ) {
-            synchronized ( jobs ) {
-                jobs.remove( job );
+            synchronized ( jobQueueMirror ) {
+                jobQueueMirror.remove( job );
                 removed = true;
             }
         }
         return removed;
     }
 
-    public Job submit( Job job ) {
-        // TODO is synchronized necessary?
-        synchronized ( jobs ) {
-            log.info( "Submitting job (" + job.getId() + ") for session: (" + job.getSessionId() + ") and IP: ("
-                    + job.getIpAddress() + ")" );
-            job.setJobManager( this );
-            Future<String> future = executor.submit( job );
-            job.setFuture( future );
-            jobs.add( job );
-            job.setStatus( "Position: " + Integer.toString( jobs.size() ) );
-            residuesInQueue += job.getSequenceSize();
-        }
-        return job;
-    }
+    // RIght HERE
 
     public void updatePositions( String sessionId ) {
-        synchronized ( jobs ) {
+        synchronized ( jobQueueMirror ) {
             int idx = 1;
             int residues = 0;
 
-            for ( Iterator<Job> iterator = jobs.iterator(); iterator.hasNext(); ) {
+            for ( Iterator<Job> iterator = jobQueueMirror.iterator(); iterator.hasNext(); ) {
                 Job job = iterator.next();
 
                 if ( job.getRunning() ) {
@@ -172,25 +268,15 @@ public class JobManager {
                 }
 
             }
-            log.info( String.format( "Jobs in queue: %d", jobs.size() ) );
 
             // This happens before force submit so that we can add the residues of the new jobs
             residuesInQueue = residues;
-
-            // Add new job for given session
-            forceSubmitJobs( sessionId );
-
-            EventBus eventBus = EventBusFactory.getDefault().eventBus();
-            eventBus.publish( "/jobDone", String.valueOf( jobs.size() ) );
         }
-    }
 
-    private void forceSubmitJobs( String sessionId ) {
-        UserManager um = allUserManagers.get( sessionId );
+        // Add new job for given session
+        submitJobsFromWaitingList( sessionId );
+        log.info( String.format( "Jobs in queue: %d", jobQueueMirror.size() ) );
 
-        if ( um != null ) {
-            um.updateQueuePositions();
-        }
     }
 
     public boolean emailJobCompletion( Job job, String attachment ) {
@@ -230,7 +316,7 @@ public class JobManager {
         }
     }
 
-    public String saveJob( Job job ) {
+    private String saveJob( Job job ) {
         synchronized ( savedJobs ) {
             String key = sig.nextSessionId();
             job.setSavedKey( key );
@@ -253,19 +339,11 @@ public class JobManager {
     }
 
     public int getJobsInQueue() {
-        return jobs.size();
+        return jobQueueMirror.size();
     }
 
     public int getResiduesInQueue() {
         return residuesInQueue;
-    }
-
-    public void addSession( String sessionId, UserManager um ) {
-        allUserManagers.put( sessionId, um );
-    }
-
-    public void removeSession( String sessionId ) {
-        allUserManagers.remove( sessionId );
     }
 
 }
