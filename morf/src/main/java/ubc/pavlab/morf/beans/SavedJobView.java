@@ -5,21 +5,21 @@ package ubc.pavlab.morf.beans;
 
 import java.io.Serializable;
 
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.log4j.Logger;
 import org.primefaces.context.RequestContext;
 import org.primefaces.model.chart.LineChartModel;
 
+import com.google.gson.Gson;
+
 import ubc.pavlab.morf.models.Chart;
 import ubc.pavlab.morf.models.Job;
 
-import com.google.gson.Gson;
-
-@ManagedBean
+@Named
 @ViewScoped
 public class SavedJobView implements Serializable {
 
@@ -30,7 +30,7 @@ public class SavedJobView implements Serializable {
 
     private static final Logger log = Logger.getLogger( SavedJobView.class );
 
-    @ManagedProperty(value = "#{jobManager}")
+    @Inject
     private JobManager jobManager;
 
     private String key;
@@ -93,10 +93,6 @@ public class SavedJobView implements Serializable {
 
     public LineChartModel getChart() {
         return chart;
-    }
-
-    public void setJobManager( JobManager jobManager ) {
-        this.jobManager = jobManager;
     }
 
 }

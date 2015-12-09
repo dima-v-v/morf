@@ -9,11 +9,11 @@ import java.io.Serializable;
 
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
@@ -26,7 +26,7 @@ import ubc.pavlab.morf.models.Chart;
 import ubc.pavlab.morf.models.Job;
 import ubc.pavlab.morf.models.ValidationResult;
 
-@ManagedBean
+@Named
 @ViewScoped
 public class IndexView implements Serializable {
 
@@ -37,10 +37,10 @@ public class IndexView implements Serializable {
 
     private static final Logger log = Logger.getLogger( IndexView.class );
 
-    @ManagedProperty(value = "#{userManager}")
+    @Inject
     private UserManager userManager;
 
-    @ManagedProperty(value = "#{settingsCache}")
+    @Inject
     private SettingsCache settingsCache;
 
     // private String currentSelectedName;
@@ -381,13 +381,4 @@ public class IndexView implements Serializable {
     public int getSequenceSize() {
         return sequenceSize;
     }
-
-    public void setUserManager( UserManager userManager ) {
-        this.userManager = userManager;
-    }
-
-    public void setSettingsCache( SettingsCache settingsCache ) {
-        this.settingsCache = settingsCache;
-    }
-
 }
