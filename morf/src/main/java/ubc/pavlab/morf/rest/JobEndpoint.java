@@ -19,17 +19,7 @@
 
 package ubc.pavlab.morf.rest;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
-
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -37,6 +27,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -44,9 +35,8 @@ import org.primefaces.json.JSONException;
 import org.primefaces.json.JSONObject;
 
 import ubc.pavlab.morf.beans.JobManager;
-import ubc.pavlab.morf.beans.SettingsCache;
+import ubc.pavlab.morf.models.Chart;
 import ubc.pavlab.morf.models.Job;
-import ubc.pavlab.morf.models.ValidationResult;
 
 /**
  * TODO Document Me
@@ -55,30 +45,18 @@ import ubc.pavlab.morf.models.ValidationResult;
  * @version $Id$
  */
 @Path("/job")
-@Singleton
 public class JobEndpoint {
 
     private static final Logger log = Logger.getLogger( JobEndpoint.class );
 
-    private int MAX_JOBS_IN_QUEUE = 2;
-
     @Inject
     private JobManager jobManager;
 
-    @Inject
-    private SettingsCache settingsCache;
-
-    private Integer jobIdIncrementer = 0;
-    private Map<String, Queue<Job>> outerJobQueue = new ConcurrentHashMap<>();
+    @Context
+    UriInfo uri;
 
     public JobEndpoint() {
         log.info( "Job REST created" );
-    }
-
-    public int getNewJobId() {
-        synchronized ( jobIdIncrementer ) {
-            return jobIdIncrementer++;
-        }
     }
 
     @GET
@@ -93,33 +71,59 @@ public class JobEndpoint {
 
     @GET
     @Path("/{param}")
-    public Response getMsg( @PathParam("param" ) String msg) {
+    public Response getMsg( @Context HttpServletRequest request, @PathParam("param" ) String msg) {
 
-        Job savedJob = jobManager.fetchSavedJob( msg, false );
+        Job job = jobManager.fetchSavedJob( msg, false );
 
-        String output = savedJob == null ? "Job not Found" : String.valueOf( savedJob.getStatus() );
+        if ( job == null ) {
+            return Response.status( 404 ).entity( fail( 404, "Job Not Found" ).toString() ).build();
+        }
 
-        return Response.status( 200 ).entity( output ).build();
+        JSONObject response = new JSONObject();
+        try {
+            response.put( "httpstatus", 200 );
+            response.put( "name", job.getName() );
+            response.put( "size", job.getSequenceSize() );
+            response.put( "status", job.getStatus() );
+            response.put( "jobsInQueue", jobManager.getJobsInQueue() );
+            response.put( "residuesInQueue", jobManager.getResiduesInQueue() );
+            response.put( "submitted", job.getSubmittedDate() );
+
+            // Race condition reasons
+            boolean complete = job.getComplete();
+
+            response.put( "complete", complete );
+            if ( complete ) {
+                Chart chart = new Chart( job );
+                response.put( "labels", chart.getSeriesLabels() );
+                response.put( "results", chart.getSeriesValues() );
+                response.put( "seriesNames", chart.getSeriesNames() );
+            } else {
+                response.put( "eta", "Unknown" );
+            }
+        } catch ( JSONException e1 ) {
+            log.error( "Malformed JSON", e1 );
+        }
+        return Response.status( 200 ).entity( response.toString() ).build();
 
     }
 
     @POST
     @Path("/post")
-    //@Consumes(MediaType.TEXT_XML)
     public Response postStrMsg( @Context HttpServletRequest request, String msg ) {
-
-        JSONObject json;
+        log.info( msg );
         String content;
         try {
-            json = new JSONObject( msg );
+            JSONObject json = new JSONObject( msg );
             content = json.getString( "fasta" );
+            log.info( content );
         } catch ( JSONException e ) {
-            log.warn( "Malformed JSON", e );
-            return Response.status( 200 ).entity( "Malformed JSON" ).build();
+            //log.warn( "Malformed JSON", e );
+            return Response.status( 400 ).entity( fail( 400, "Malformed JSON" ).toString() ).build();
         }
 
         if ( StringUtils.isBlank( content ) ) {
-            return Response.status( 200 ).entity( "Blank FASTA" ).build();
+            return Response.status( 400 ).entity( fail( 400, "Blank FASTA" ).toString() ).build();
         }
 
         String ipAddress = request.getHeader( "X-FORWARDED-FOR" );
@@ -127,116 +131,42 @@ public class JobEndpoint {
             ipAddress = request.getRemoteAddr();
         }
 
-        if ( StringUtils.isBlank( ipAddress ) ) {
-            return Response.status( 200 ).entity( "Could not parse remote address" ).build();
-        }
+        String sessionId = request.getSession( true ).getId();
 
-        ValidationResult vr = validate( content );
+        Job job = jobManager.createJob( sessionId, ipAddress, content, true, null );
 
-        String label = "unknown";
-        int sequenceSize = 0;
-
-        int id = getNewJobId();
-
-        if ( vr.isSuccess() ) {
-            // TODO
-            String textStr[] = content.split( "\\r?\\n" );
-
-            if ( textStr.length > 1 ) {
-                label = textStr[0];
-                // if ( label.startsWith( ">" ) ) {
-                // label = label.substring( 1 );
-                // }
-
-                for ( int i = 1; i < textStr.length; i++ ) {
-                    sequenceSize += textStr[i].length();
-                }
-
+        if ( !job.getFailed() ) {
+            JSONObject response = new JSONObject();
+            try {
+                response.put( "httpstatus", 202 );
+                response.put( "success", true );
+                response.put( "message", "Job Accepted" );
+                response.put( "name", job.getName() );
+                response.put( "size", job.getSequenceSize() );
+                response.put( "status", job.getStatus() );
+                response.put( "jobsInQueue", jobManager.getJobsInQueue() );
+                response.put( "residuesInQueue", jobManager.getResiduesInQueue() );
+                response.put( "location", uri.getBaseUri() + "job/" + job.getSavedKey() );
+            } catch ( JSONException e1 ) {
+                log.error( "Malformed JSON", e1 );
             }
-
-            // Using ipAddress as session Id
-
-            Job job = new Job( ipAddress, label, id, content, sequenceSize, ipAddress, true, null );
-
-            jobManager.submitToWaitingList( job );
-
-            //            userManager.submitJob( job );
-            //            saveJob( job, false );
-
-            return Response.status( 200 ).entity( job.getSavedKey() ).build();
-
+            return Response.status( 202 ).entity( response.toString() ).build();
         } else {
-            return Response.status( 200 ).entity( "Malformed FASTA Format" ).build();
-
+            return Response.status( 400 ).entity( fail( 400, "Malformed FASTA Format" ).toString() ).build();
         }
+
     }
 
-    private ValidationResult validate( String content ) {
-        // log.debug( "Validating: " + content );
-        ProcessBuilder pb = new ProcessBuilder( settingsCache.getProperty( "morf.validate" ), "/dev/stdin",
-                "/dev/stdout" );
-        pb.redirectErrorStream( true );
-
-        Process process = null;
+    private static JSONObject fail( int httpStatus, String message ) {
+        JSONObject response = new JSONObject();
         try {
-            process = pb.start();
-        } catch ( IOException e ) {
-            log.error( "Couldn't start the validation process.", e );
-            return new ValidationResult( false, "ERROR: Something went wrong!" );
+            response.put( "httpstatus", httpStatus );
+            response.put( "success", false );
+            response.put( "message", message );
+        } catch ( JSONException e1 ) {
+            log.error( "Malformed JSON", e1 );
         }
-
-        try {
-            if ( process != null ) {
-                BufferedWriter bw = new BufferedWriter( new OutputStreamWriter( process.getOutputStream() ) );
-
-                // BufferedReader inputFile = new BufferedReader(new InputStreamReader(new FileInputStream(
-                // "/home/mjacobson/morf/input.txt")));
-                //
-                // String currInputLine = null;
-                // while ((currInputLine = inputFile.readLine()) != null) {
-                // bw.write(currInputLine);
-                // bw.newLine();
-                // }
-                // bw.close();
-                // inputFile.close();
-                bw.write( content );
-                bw.close();
-            }
-        } catch ( IOException e ) {
-            log.error( "Either couldn't read from the input file or couldn't write to the OutputStream.", e );
-            return new ValidationResult( false, "ERROR: Something went wrong!" );
-        }
-
-        BufferedReader br = new BufferedReader( new InputStreamReader( process.getInputStream() ) );
-
-        String currLine = null;
-        boolean res = false;
-        StringBuilder resultContent = new StringBuilder();
-        try {
-            currLine = br.readLine();
-            if ( currLine != null ) {
-                if ( currLine.startsWith( ">" ) ) {
-                    res = true;
-                } else {
-                    res = false;
-                }
-
-                resultContent.append( currLine );
-                resultContent.append( System.lineSeparator() );
-
-                while ( ( currLine = br.readLine() ) != null ) {
-                    resultContent.append( currLine );
-                    resultContent.append( System.lineSeparator() );
-                }
-
-            }
-
-            br.close();
-        } catch ( IOException e ) {
-            log.error( "Couldn't read the output.", e );
-            return new ValidationResult( false, "ERROR: Something went wrong!" );
-        }
-
-        return new ValidationResult( res, resultContent.toString() );
+        return response;
     }
+
 }

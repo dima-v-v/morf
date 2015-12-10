@@ -19,6 +19,11 @@
 
 package ubc.pavlab.morf.beans;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -43,6 +48,7 @@ import org.omnifaces.cdi.Eager;
 
 import ubc.pavlab.morf.models.Job;
 import ubc.pavlab.morf.models.PurgeOldJobs;
+import ubc.pavlab.morf.models.ValidationResult;
 import ubc.pavlab.morf.service.SessionIdentifierGenerator;
 
 /**
@@ -85,8 +91,19 @@ public class JobManager {
 
     private static int MAX_JOBS_IN_QUEUE = 2;
 
+    // File used to validate fasta content
+    private String ffile;
+
     // Job Queue info;
     private int residuesInQueue = 0;
+
+    private Integer jobIdIncrementer = 0;
+
+    public int getNewJobId() {
+        synchronized ( jobIdIncrementer ) {
+            return jobIdIncrementer++;
+        }
+    }
 
     @PostConstruct
     public void init() {
@@ -95,6 +112,8 @@ public class JobManager {
         scheduler = Executors.newSingleThreadScheduledExecutor();
         // old after 1 day, checks every hour
         scheduler.scheduleAtFixedRate( new PurgeOldJobs( savedJobs ), 0, 1, TimeUnit.HOURS );
+
+        ffile = settingsCache.getProperty( "morf.validate" );
         // executor = (ThreadPoolExecutor) Executors.newSingleThreadExecutor();
     }
 
@@ -106,7 +125,46 @@ public class JobManager {
         scheduler.shutdownNow();
     }
 
-    public void submitToWaitingList( Job job ) {
+    public Job createJob( String sessionId, String ipAddress, String content, boolean trainOnFullData,
+            String email ) {
+
+        ValidationResult vr = validate( content );
+
+        String textStr[] = content.split( "\\r?\\n" );
+
+        String label = "unknown";
+        int sequenceSize = 0;
+
+        Job job;
+
+        if ( vr.isSuccess() ) {
+
+            if ( textStr.length > 1 ) {
+                label = textStr[0];
+                // if ( label.startsWith( ">" ) ) {
+                // label = label.substring( 1 );
+                // }
+
+                for ( int i = 1; i < textStr.length; i++ ) {
+                    sequenceSize += textStr[i].length();
+                }
+
+            }
+
+            job = new Job( sessionId, label, getNewJobId(), content, sequenceSize, ipAddress, trainOnFullData, email );
+            submitToWaitingList( job );
+        } else {
+            job = new Job( sessionId, label, getNewJobId(), content, 0, ipAddress, trainOnFullData, email );
+            job.setComplete( true );
+            job.setFailed( true );
+            job.setStatus( vr.getContent() );
+        }
+
+        return job;
+
+    }
+
+    private void submitToWaitingList( Job job ) {
         log.info( "Submitting job (" + job.getId() + ") for session: (" + job.getSessionId() + ") and IP: ("
                 + job.getIpAddress() + ")" );
 
@@ -336,6 +394,74 @@ public class JobManager {
             }
 
         }
+    }
+
+    private synchronized ValidationResult validate( String content ) {
+
+        ProcessBuilder pb = new ProcessBuilder( ffile, "/dev/stdin", "/dev/stdout" );
+        pb.redirectErrorStream( true );
+
+        Process process = null;
+        try {
+            process = pb.start();
+        } catch ( IOException e ) {
+            log.error( "Couldn't start the validation process.", e );
+            return new ValidationResult( false, "ERROR: Something went wrong!" );
+        }
+
+        try {
+            if ( process != null ) {
+                BufferedWriter bw = new BufferedWriter( new OutputStreamWriter( process.getOutputStream() ) );
+
+                // BufferedReader inputFile = new BufferedReader(new InputStreamReader(new FileInputStream(
+                // "/home/mjacobson/morf/input.txt")));
+                //
+                // String currInputLine = null;
+                // while ((currInputLine = inputFile.readLine()) != null) {
+                // bw.write(currInputLine);
+                // bw.newLine();
+                // }
+                // bw.close();
+                // inputFile.close();
+                bw.write( content );
+                bw.close();
+            }
+        } catch ( IOException e ) {
+            log.error( "Either couldn't read from the input file or couldn't write to the OutputStream.", e );
+            return new ValidationResult( false, "ERROR: Something went wrong!" );
+        }
+
+        BufferedReader br = new BufferedReader( new InputStreamReader( process.getInputStream() ) );
+
+        String currLine = null;
+        boolean res = false;
+        StringBuilder resultContent = new StringBuilder();
+        try {
+            currLine = br.readLine();
+            if ( currLine != null ) {
+                if ( currLine.startsWith( ">" ) ) {
+                    res = true;
+                } else {
+                    res = false;
+                }
+
+                resultContent.append( currLine );
+                resultContent.append( System.lineSeparator() );
+
+                while ( ( currLine = br.readLine() ) != null ) {
+                    resultContent.append( currLine );
+                    resultContent.append( System.lineSeparator() );
+                }
+
+            }
+
+            br.close();
+        } catch ( IOException e ) {
+            log.error( "Couldn't read the output.", e );
+            return new ValidationResult( false, "ERROR: Something went wrong!" );
+        }
+
+        return new ValidationResult( res, resultContent.toString() );
     }
 
     public int getJobsInQueue() {
