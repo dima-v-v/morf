@@ -30,7 +30,7 @@ import time
 log = logging.getLogger(__name__)
 # log.addHandler(logging.NullHandler())
 
-BASE_URL = "http://localhost:8080/morf/rest/job/post"
+BASE_URL = "http://morfw.chibi.ubc.ca:8080/morf/rest/job/post"
 
 
 class Job:
