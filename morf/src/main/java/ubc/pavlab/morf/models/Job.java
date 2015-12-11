@@ -280,10 +280,13 @@ public class Job implements Callable<String> {
 
             BufferedWriter writer = new BufferedWriter( new OutputStreamWriter( fop ) );
             writer.write( content );
+            writer.newLine();
+            writer.flush();
             writer.close();
 
         } catch ( IOException e ) {
-            e.printStackTrace();
+            log.error( e );
+
         }
 
         // Execute script
