@@ -85,11 +85,6 @@
 									actionListener="#{indexView.submitJob}"
 									styleClass="ui-priority-primary" style="margin-right:25px"
 									oncomplete="handleValidateJobSubmitComplete(xhr, status, args)" />
-<!-- 								<p:commandButton value="Submit Job" icon="ui-icon-disk"
-									update=":formConfirm:confirmDialog, :inputForm:stickyGrowl, :inputForm:growl,:formJobs:tableJobs"
-									actionListener="#{indexView.validateJob}"
-									styleClass="ui-priority-primary" style="margin-right:25px"
-									oncomplete="handleValidateJobSubmitComplete(xhr, status, args)" /> -->
 								<p:commandButton value="Clear" type="button"
 									icon="ui-icon-trash" styleClass="ui-priority-primary"
 									onclick="clearFastaInput()" style="margin-right:25px" />
@@ -105,6 +100,7 @@
 							<p:panel id="panelServerInfo" styleClass="no-padding" style="width: 500px;">
 								
 								<p style="margin:0;"><b>Server queue:</b> #{jobManager.jobsInQueue} job(s) in the server queue with a total of #{jobManager.residuesInQueue} residues.</p>
+								<p style="margin:3px 0 0 0;"><b>Total Jobs Submitted:</b> #{jobManager.jobsSubmitted} since #{jobManager.startupDate}</p>
 								
 							</p:panel>
 
@@ -124,11 +120,8 @@
 					        </f:facet>
 
 							<p:column style="width:32px;">
-								<p:commandButton update=":inputForm:growl, :formJobs:tableJobs"
-									icon="fa fa-remove" title="Cancel"
-									action="#{indexView.cancelJob}" disabled="#{job.running}"
-									styleClass="red smallIcon" rendered="#{!job.failed}">
-									<p:confirm header="Confirmation" message="Are you sure?" icon="ui-icon-alert" />
+								<p:commandButton icon="fa fa-remove" title="Cancel" disabled="#{job.running}" update=":formConfirmDeleteDlg:confirmDeleteDlg"
+									styleClass="red smallIcon" rendered="#{!job.failed}" oncomplete="PF('confirmDeleteWdg').show()">
 									<f:setPropertyActionListener value="#{job}"
 										target="#{indexView.jobToRemove}" />
 								</p:commandButton>
@@ -235,14 +228,6 @@
 										target="#{indexView.jobToRenew}" />
 								</p:commandButton>
 
-								<!-- 								<p:link outcome="savedJob"
-									target="_blank" rendered="#{job.saved}">
-									<span class="fa fa-external-link" style="display:inline-block;" >
-									<h:outputText value="&nbsp;#{job.saveTimeLeft} hrs" />
-									</span>
-								    <f:param name="key" value="#{job.savedKey}" />
-								</p:link> -->
-
 
 								<p:commandButton icon="fa fa-heart"
 									action="#{indexView.saveJob}"
@@ -253,9 +238,9 @@
 								</p:commandButton>
 							</p:column>
 						</p:dataTable>
-
+							
 						<p:dialog header="Job Info" widgetVar="jobDialog" modal="false"
-							showEffect="fade" hideEffect="fade" resizable="false"
+							showEffect="fade"  resizable="false"
 							dynamic="true" width="400px">
 							<p:outputPanel id="jobDetail" style="text-align:center;width:100%">
 								<p:panelGrid style="width:100%;" styleClass="dialogPanelLabelColumn">
@@ -292,7 +277,7 @@
 												value="#{indexView.selectedJob.trainOnFullData ? 'Full' : 'Training'}" />
 										</p:column>
 									</p:row>
-									<p:row>
+									<p:row rendered="#{!indexView.selectedJob.failed}">
 										<p:column>
 											<h:outputText value="Content:" />
 										</p:column>
@@ -302,7 +287,7 @@
 										</p:column>
 
 									</p:row>
-									<p:row>
+									<p:row rendered="#{!indexView.selectedJob.failed}">
 										<p:column>
 											<h:outputText value="Submitted:" />
 										</p:column>
@@ -316,7 +301,8 @@
 											<h:outputText value="Status:" />
 										</p:column>
 										<p:column>
-											<h:outputText value="#{indexView.selectedJob.status}" />
+											<h:outputText value="#{of:abbreviate(indexView.selectedJob.status, 70)}" rendered="#{indexView.selectedJob.failed}"/>
+											<h:outputText value="#{indexView.selectedJob.status}" rendered="#{!indexView.selectedJob.failed}"/>
 										</p:column>
 									</p:row>
 									<p:row>
@@ -352,7 +338,7 @@
 									
 										</p:column>
 									</p:row>
-									<p:row>
+									<p:row rendered="#{!indexView.selectedJob.failed}">
 										<p:column>
 											<h:outputText value="Saved For:" />
 										</p:column>
@@ -361,13 +347,6 @@
 												value="&nbsp;#{indexView.selectedJob.saveTimeLeft} hrs"
 												rendered="#{indexView.selectedJob.saved}" />
 
-											<!-- 									<p:link outcome="savedJob"
-										target="_blank" rendered="#{indexView.selectedJob.saved}">
-										<span class="fa fa-external-link" style="display:inline-block;" >
-										<h:outputText value="&nbsp;#{indexView.selectedJob.saveTimeLeft} hrs left" />
-										</span>
-									    <f:param name="key" value="#{indexView.selectedJob.savedKey}" />
-									</p:link>	 -->
 											<p:commandButton icon="fa fa-heart"
 												action="#{indexView.saveJob}"
 												update=":inputForm:stickyGrowl, :formJobs:jobDetail"
@@ -381,7 +360,7 @@
 									<p:row>
 										<p:column colspan="2" style="text-align:center;">
 											<p:panel style="border-style:none;">
-												<p:commandButton value="Download" ajax="false"
+												<p:commandButton value="#{indexView.selectedJob.failed ? 'Download Error Report' : 'Download'}" ajax="false"
 													onclick="PrimeFaces.monitorDownload(start, stop);"
 													icon="ui-icon-arrowthick-1-s"
 													disabled="#{!indexView.selectedJob.complete}">
@@ -390,7 +369,8 @@
 												<p:commandButton value="Graph" icon="fa fa-area-chart"
 													action="#{indexView.createChart}"
 													oncomplete="handleCreateChart(xhr, status, args);PF('chartDlgWdg').show()"
-													disabled="#{!indexView.selectedJob.complete or indexView.selectedJob.failed}"/>
+													disabled="#{!indexView.selectedJob.complete}"
+													rendered="#{!indexView.selectedJob.failed}"/>
 												<p:button value="Link" icon="fa fa-external-link"
 													outcome="savedJob" target="_blank"
 													rendered="#{indexView.selectedJob.saved}" >
@@ -402,6 +382,9 @@
 									</p:row>
 
 								</p:panelGrid>
+							<p:panel styleClass="no-border" style="text-align:center;">
+									<p:commandButton value="Close" icon="fa fa-close" type="button" onclick="PF('jobDialog').hide();"/>
+								</p:panel>
 							</p:outputPanel>
 						</p:dialog>
 
@@ -442,30 +425,27 @@
 			</p:outputPanel>
 		</ui:define>
 		<ui:define name="dialogs">
+		<h:form id="formConfirmDeleteDlg" style="text-align:center;">
+				<p:confirmDialog id="confirmDeleteDlg" widgetVar="confirmDeleteWdg" header="Confirmation" message="Delete Job #{indexView.jobToRemove.id}?">
+					<p:panel styleClass="no-border" style="text-align:center;">
+					<p:commandButton value="Delete" actionListener="#{indexView.cancelJob}" update=":inputForm:growl, :formJobs:tableJobs" oncomplete="PF('confirmDeleteWdg').hide()"/>
+					<p:commandButton value="Cancel" type="button" onclick="PF('confirmDeleteWdg').hide()"/>
+					</p:panel>
+				</p:confirmDialog>
+		</h:form>
 		
 		<h:form id="formEmailDlg" >
 				<p:dialog id="noEmailDlg" header="A Reminder"
 					widgetVar="noEmailDlg" showEffect="fade"
 					style="min-width:349px;" closeOnEscape="true" resizable="false" rendered="#{userManager.authenticated}">
-					<p:panel id="panelEmailDlg" styleClass="no-border">
-						<p style="width: 349px; font-style: italic;">In the case of your browser session being lost or expiring, the links to all result pages will also be lost!</p>
-						<p style="width: 349px; font-style: italic;">It is strongly recommended that links to result pages be secured by either:</p>
-						
-								<ul>
-								<li>
-									<p style="width: 349px; font-style: italic;"><b>Bookmarking</b> the following 	<p:link outcome="savedJob" value="LINK"
-										target="_blank" rendered="#{indexView.submittedJob.saved}">
+					<p:panel id="panelEmailDlg" styleClass="no-border" style="text-align:center;">
+						<p style="width: 349px; font-style: italic;">Query results are stored at the server for #{settingsCache.jobPurgeTime} hours. However, in case of the browser session being lost or expired, links to all results will also be lost.</p>
+						<p style="width: 349px; font-style: italic;"><b>Thus, it is strongly recommended that the link to the result page be secured by either providing an email so that a notification with the link can be sent upon job completion or by directly bookmarking the link below.</b></p>
+							<p:panel styleClass="no-border" style="text-align:center;">
+								<p:link outcome="savedJob" value="LINK" target="_blank" rendered="#{indexView.submittedJob.saved}">
 									    <f:param name="key" value="#{indexView.submittedJob.savedKey}" />
-									</p:link>, which will be available for the next #{settingsCache.jobPurgeTime} hours.</p>
-								</li>
-								<li>
-									<p style="width: 349px; font-style: italic;"><b>Providing an email</b> so that a notification with attached results and <p:link outcome="savedJob" value="LINK"
-										target="_blank" rendered="#{indexView.submittedJob.saved}">
-									    <f:param name="key" value="#{indexView.submittedJob.savedKey}" />
-									</p:link> can be sent upon job completion. </p>
-								</li>
-								</ul>
-								
+								</p:link>	
+							</p:panel>							
 								<p:panel styleClass="no-border" style="text-align:center;">
 								
 											<p:inplace editor="true" emptyLabel="Click To Set Email">
@@ -477,30 +457,9 @@
 								<p:separator/>
 								
 								<p:panel styleClass="no-border" style="text-align:center;">
-									<p:commandButton value="Ignore" icon="fa fa-close" title="Ignore" type="button" onclick="PF('noEmailDlg').hide();"/>
+									<p:commandButton value="Close" icon="fa fa-close" type="button" onclick="PF('noEmailDlg').hide();"/>
 								</p:panel>
 						
-<!-- 						<p style="width: 349px; font-style: italic;">No email was provided, you can set one below to receive notice and results of job completion by email.</p>
-						<p style="width: 349px; font-style: italic;">Otherwise, your job will available at this 
-									<p:link outcome="savedJob" value="LINK"
-										target="_blank" rendered="#{indexView.submittedJob.saved}">
-									    <f:param name="key" value="#{indexView.submittedJob.savedKey}" />
-									</p:link> for the next #{settingsCache.jobPurgeTime} hours.</p>
-						<p:separator />
-						<h:panelGrid columns="2" style="margin:0 auto;width:100%;"
-							cellpadding="5">
-							<h:outputText value="Label:" />
-							<h:outputText value="#{indexView.submittedJob.name}" />
-							<h:outputText value="Sequence Size:" />
-							<h:outputText value="#{indexView.submittedJob.sequenceSize}" />
-								<h:outputText value="Training:" rendered="#{settingsCache.showTraining}"/>
-								<h:outputText value="#{indexView.submittedJob.trainOnFullData ? 'Full' : 'Training'}" rendered="#{settingsCache.showTraining}"/>
-							<h:outputText value="Email:" />
-											<p:inplace editor="true" emptyLabel="Click To Set Email">
-												<p:inputText value="#{indexView.submittedJob.email}"
-													label="text"/>
-											</p:inplace>
-						</h:panelGrid>-->
 						</p:panel> 
 				</p:dialog>
 				</h:form>

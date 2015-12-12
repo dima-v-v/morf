@@ -19,6 +19,7 @@
 
 package ubc.pavlab.morf.beans;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -87,6 +88,9 @@ public class JobManager {
     // Job Queue info;
     private int residuesInQueue = 0;
 
+    private int jobCnt = 0;
+    private Date startupDate = new Date();
+
     @PostConstruct
     public void init() {
         PURGE_AFTER = settingsCache.getJobPurgeTime() * 60 * 60 * 1000;
@@ -146,6 +150,7 @@ public class JobManager {
             jobs.add( job );
             job.setStatus( "Position: " + Integer.toString( jobs.size() ) );
             residuesInQueue += job.getSequenceSize();
+            jobCnt += 1;
         }
         return job;
     }
@@ -266,6 +271,14 @@ public class JobManager {
 
     public void removeSession( String sessionId ) {
         allUserManagers.remove( sessionId );
+    }
+
+    public int getJobsSubmitted() {
+        return jobCnt;
+    }
+
+    public Date getStartupDate() {
+        return startupDate;
     }
 
 }

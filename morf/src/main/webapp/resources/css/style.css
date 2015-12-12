@@ -43,6 +43,10 @@ div.button-block {
 	border-style: none;
 }
 
+table.no-border, table.no-border > tbody > tr, table.no-border > tbody > tr > td {
+	border: none !important;
+}
+
 table tbody tr.yellow-row {
 	background-color: #f4edb1;
 	background: #f4edb1;
@@ -119,11 +123,11 @@ span.ui-inplace-display {
 	text-decoration: underline;
 }
 
-.ui-icon.ui-confirm-dialog-severity {
+/* .ui-icon.ui-confirm-dialog-severity {
     background-position: 0 0 !important; 
     background-image: none !important;
 }
-
+ */
 a {
 	text-decoration: underline !important;
 }
@@ -201,4 +205,8 @@ table.simple-table tr td:first-child {
 
 table.simple-table tr:first-child td {
 	  padding-top: 0px;
+}
+
+div.ui-confirm-dialog > div.ui-dialog-buttonpane {
+	  padding: .3em .4em .5em .4em; 
 }
