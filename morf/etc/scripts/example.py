@@ -18,10 +18,11 @@ def callback(job):
     log.info("Size: {0}".format(job.size))
     log.info("Status: {0}".format(job.status))
     log.info("Results Size: {0}".format(len(job.results)))
+    log.info("Results: {0}...".format(job.results))
 
 
 def main():
-    job = process_fasta(">Example\nSGGPMGGRPGGRGAPAVQQNIPSTL", callback, 10, True)
+    job = process_fasta(">Example2\nMKEFYLTVEQIGDSIFERYIDSNGRERTREVEYKPSLFAHCPESQATKYFDIYGKPCTRKLFANMRDASQWIKRMEDIGLEALGMDDFKLAYLSDTYNYEIKYDHTKIRVANFDIEVTSPDGFPE", callback, 10, True)
 
 if __name__ == '__main__':
     main()

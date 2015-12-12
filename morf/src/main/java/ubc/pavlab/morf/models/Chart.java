@@ -21,9 +21,7 @@ package ubc.pavlab.morf.models;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -40,11 +38,12 @@ public class Chart {
 
     private static final Logger log = Logger.getLogger( Chart.class );
 
-    private final Map<Integer, double[]> seriesValues = new LinkedHashMap<>();
-    private final Map<Integer, String> seriesLabels = new LinkedHashMap<>();
-    private final List<String> seriesNames = new ArrayList<String>();
     private final String name;
     private final boolean ready;
+
+    private final List<double[]> values = new ArrayList<>();
+    private final List<String> labels = new ArrayList<>();
+    private final List<String> titles = new ArrayList<>();
 
     public Chart( Job job ) {
 
@@ -85,9 +84,9 @@ public class Chart {
                                     // This should contain a column
                                     try {
                                         String columnName = split[1].trim();
-                                        seriesNames.add( columnName );
+                                        titles.add( columnName );
                                     } catch ( IndexOutOfBoundsException | NullPointerException e ) {
-                                        seriesNames.add( "Unknown" );
+                                        titles.add( "Unknown" );
                                         log.warn( "Malformed Output Syntax: " + Arrays.toString( split ) );
                                     }
 
@@ -108,15 +107,15 @@ public class Chart {
                         try {
                             int pos = Integer.valueOf( split[0] );
 
-                            seriesLabels.put( pos, split[1] );
+                            labels.add( split[1] );
 
-                            double[] vals = new double[seriesNames.size() - 2];
+                            double[] vals = new double[titles.size() - 2];
 
                             for ( int j = 0; j < vals.length; j++ ) {
                                 vals[j] = Double.valueOf( split[j + 2] );
                             }
 
-                            seriesValues.put( pos, vals );
+                            values.add( vals );
 
                         } catch ( IndexOutOfBoundsException | NumberFormatException e ) {
                             log.error( e );
@@ -125,7 +124,7 @@ public class Chart {
 
                 }
 
-                if ( seriesValues.size() > 0 ) {
+                if ( values.size() > 0 ) {
                     ready = true;
                 } else {
                     ready = false;
@@ -142,24 +141,24 @@ public class Chart {
 
     }
 
-    public Map<Integer, double[]> getSeriesValues() {
-        return seriesValues;
-    }
-
-    public Map<Integer, String> getSeriesLabels() {
-        return seriesLabels;
-    }
-
-    public List<String> getSeriesNames() {
-        return seriesNames;
-    }
-
     public String getName() {
         return name;
     }
 
     public boolean isReady() {
         return ready;
+    }
+
+    public List<double[]> getValues() {
+        return values;
+    }
+
+    public List<String> getLabels() {
+        return labels;
+    }
+
+    public List<String> getTitles() {
+        return titles;
     }
 
 }

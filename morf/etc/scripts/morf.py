@@ -52,7 +52,7 @@ class Job:
         self.eta = None
         self.labels = None
         self.results = None
-        self.seriesName = None
+        self.titles = None
 
     def _populate(self, response_json):
         """For use by morf library"""
@@ -63,7 +63,7 @@ class Job:
         self.eta = response_json.setdefault('eta', None)
         self.labels = response_json.setdefault('labels', None)
         self.results = response_json.setdefault('results', None)
-        self.seriesName = response_json.setdefault('seriesNames', None)
+        self.titles = response_json.setdefault('titles', None)
 
 
 def process_fasta(content, callback, max_polling_time=10, verbose=False):
@@ -84,18 +84,30 @@ def process_fasta(content, callback, max_polling_time=10, verbose=False):
         log.info("Size: {0}".format(job.size))
 
     data = {"fasta": job.content}
-
     response = __send_request(BASE_URL, data)
 
-    location = response['location']
+    try:
+        success = response['success']
+
+        if not success:
+            log.warn("Job Creation Failed: {0}".format(response['message']))
+            return
+
+        location = response['location']
+
+    except KeyError, e:
+        log.error(e)
+        log.error(response)
+        return
 
     if verbose:
         log.info("Job Status available at {0}".format(location))
 
     thr = threading.Thread(target=__wait_for_job, args=(location, max_polling_time, job, callback, verbose), kwargs={})
+    thr.daemon = True
     thr.start()
 
-    return job
+    return job, thr
 
 
 def __wait_for_job(location, max_polling_time, job, callback, verbose=False):

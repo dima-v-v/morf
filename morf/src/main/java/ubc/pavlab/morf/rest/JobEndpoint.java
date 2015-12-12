@@ -95,9 +95,9 @@ public class JobEndpoint {
             response.put( "complete", complete );
             if ( complete ) {
                 Chart chart = new Chart( job );
-                response.put( "labels", chart.getSeriesLabels() );
-                response.put( "results", chart.getSeriesValues() );
-                response.put( "seriesNames", chart.getSeriesNames() );
+                response.put( "labels", chart.getLabels() );
+                response.put( "results", chart.getValues() );
+                response.put( "titles", chart.getTitles() );
             } else {
                 response.put( "eta", "Unknown" );
             }
