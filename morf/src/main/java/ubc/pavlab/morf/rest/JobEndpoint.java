@@ -76,7 +76,13 @@ public class JobEndpoint {
         Job job = jobManager.fetchSavedJob( msg, false );
 
         if ( job == null ) {
-            return Response.status( 404 ).entity( fail( 404, "Job Not Found" ).toString() ).build();
+            JSONObject deleted = fail( 404, "Job Not Found" );
+            try {
+                deleted.put( "complete", true );
+            } catch ( JSONException e ) {
+                log.error( e );
+            }
+            return Response.status( 404 ).entity( deleted.toString() ).build();
         }
 
         JSONObject response = new JSONObject();
@@ -88,6 +94,7 @@ public class JobEndpoint {
             response.put( "jobsInQueue", jobManager.getJobsInQueue() );
             response.put( "residuesInQueue", jobManager.getResiduesInQueue() );
             response.put( "submitted", job.getSubmittedDate() );
+            response.put( "success", true );
 
             // Race condition reasons
             boolean complete = job.getComplete();
@@ -101,6 +108,27 @@ public class JobEndpoint {
             } else {
                 response.put( "eta", "Unknown" );
             }
+        } catch ( JSONException e1 ) {
+            log.error( "Malformed JSON", e1 );
+        }
+        return Response.status( 200 ).entity( response.toString() ).build();
+
+    }
+
+    @GET
+    @Path("/delete/{param}")
+    public Response deleteStrMsg( @Context HttpServletRequest request, @PathParam("param" ) String msg) {
+        Job job = jobManager.fetchSavedJob( msg, false );
+        if ( job == null ) {
+            return Response.status( 404 ).entity( fail( 404, "Job Not Found" ).toString() ).build();
+        }
+        JSONObject response = new JSONObject();
+        try {
+            boolean success = jobManager.requestStopJob( job );
+            response.put( "httpstatus", 200 );
+            response.put( "message", success ? "Job Deleted" : "Failed To Delete Job" );
+            response.put( "sucess", success );
+
         } catch ( JSONException e1 ) {
             log.error( "Malformed JSON", e1 );
         }
@@ -131,9 +159,14 @@ public class JobEndpoint {
             ipAddress = request.getRemoteAddr();
         }
 
-        String sessionId = request.getSession( true ).getId();
+        //String sessionId = request.getSession( true ).getId();
+        String sessionId = ipAddress;
 
         Job job = jobManager.createJob( sessionId, ipAddress, content, true, null );
+
+        if ( job == null ) {
+            return Response.status( 429 ).entity( fail( 400, "Too Many Jobs In Queue" ).toString() ).build();
+        }
 
         if ( !job.getFailed() ) {
             JSONObject response = new JSONObject();

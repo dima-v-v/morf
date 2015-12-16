@@ -44,6 +44,7 @@ class Job:
         self.name = rows[0]
         self.fasta = "".join(rows[1:])
         self.size = len(self.fasta)
+        self.location = ""
 
         self.http_status = ""
         self.status = ""
@@ -94,6 +95,7 @@ def process_fasta(content, callback, max_polling_time=10, verbose=False):
             return
 
         location = response['location']
+        job.location = location
 
     except KeyError, e:
         log.error(e)
@@ -116,6 +118,11 @@ def __wait_for_job(location, max_polling_time, job, callback, verbose=False):
     polling_time = 1
     while True:
         complete, res = __is_job_complete(location)
+
+        if not res['success']:
+            log.warn(res['message'])
+            break
+
         job._populate(res)
         if verbose:
             log.info(job.status)

@@ -91,6 +91,8 @@ public class JobManager {
 
     private static int MAX_JOBS_IN_QUEUE = 2;
 
+    private static final int SESSION_MAX_JOBS = 200;
+
     // File used to validate fasta content
     private String ffile;
 
@@ -152,7 +154,12 @@ public class JobManager {
             }
 
             job = new Job( sessionId, label, getNewJobId(), content, sequenceSize, ipAddress, trainOnFullData, email );
-            submitToWaitingList( job );
+            boolean success = submitToWaitingList( job );
+
+            if ( !success ) {
+                return null;
+            }
+
         } else {
             job = new Job( sessionId, label, getNewJobId(), content, 0, ipAddress, trainOnFullData, email );
             job.setComplete( true );
@@ -164,7 +171,7 @@ public class JobManager {
 
     }
 
-    private void submitToWaitingList( Job job ) {
+    private boolean submitToWaitingList( Job job ) {
         log.info( "Submitting job (" + job.getId() + ") for session: (" + job.getSessionId() + ") and IP: ("
                 + job.getIpAddress() + ")" );
 
@@ -174,6 +181,12 @@ public class JobManager {
             jobs = new LinkedList<Job>();
             waitingList.put( job.getSessionId(), jobs );
             log.info( "new session" );
+        }
+
+        if ( jobs.size() > SESSION_MAX_JOBS ) {
+            log.info( "Too many jobs (" + job.getId() + ") for session: (" + job.getSessionId() + ") and IP: ("
+                    + job.getIpAddress() + ")" );
+            return false;
         }
 
         synchronized ( jobs ) {
@@ -186,6 +199,7 @@ public class JobManager {
                 submitJobsFromWaitingList( job.getSessionId(), jobs );
             }
         }
+        return true;
 
     }
 
@@ -238,13 +252,14 @@ public class JobManager {
     public boolean requestStopJob( Job job ) {
 
         boolean canceled = false;
-
+        removeSaveJob( job );
         Queue<Job> jobs = waitingList.get( job.getSessionId() );
 
         synchronized ( jobs ) {
             if ( jobs.contains( job ) ) {
                 // Not yet submitted, just remove it from waiting list
                 jobs.remove( job );
+                removeSaveJob( job );
                 submitJobsFromWaitingList( job.getSessionId(), jobs );
                 return true;
             }
@@ -267,7 +282,6 @@ public class JobManager {
             jobs.remove( job );
             submitJobsFromWaitingList( job.getSessionId(), jobs );
         }
-
         return canceled;
 
     }
@@ -393,6 +407,16 @@ public class JobManager {
 
             }
 
+        }
+    }
+
+    private void removeSaveJob( Job job ) {
+        synchronized ( savedJobs ) {
+            savedJobs.remove( job.getSavedKey() );
+        }
+        if ( job.isSaved() ) {
+            job.setSaveExpiredDate( System.currentTimeMillis() );
+            job.setSaved( false );
         }
     }
 
