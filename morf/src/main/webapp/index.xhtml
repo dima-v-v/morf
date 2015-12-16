@@ -442,13 +442,13 @@
 						<p style="width: 349px; font-style: italic;">Query results are stored at the server for #{settingsCache.jobPurgeTime} hours. However, in case of the browser session being lost or expired, links to all results will also be lost.</p>
 						<p style="width: 349px; font-style: italic;"><b>Thus, it is strongly recommended that the link to the result page be secured by either providing an email so that a notification with the link can be sent upon job completion or by directly bookmarking the link below.</b></p>
 							<p:panel styleClass="no-border" style="text-align:center;">
-								<p:link outcome="savedJob" value="LINK" target="_blank" rendered="#{indexView.submittedJob.saved}">
+								<p:link outcome="savedJob" value="Link" target="_blank" rendered="#{indexView.submittedJob.saved}">
 									    <f:param name="key" value="#{indexView.submittedJob.savedKey}" />
 								</p:link>	
 							</p:panel>							
 								<p:panel styleClass="no-border" style="text-align:center;">
 								
-											<p:inplace editor="true" emptyLabel="Click To Set Email">
+											<p:inplace editor="true" emptyLabel="Email">
 												<p:inputText value="#{indexView.submittedJob.email}"
 													label="text"/>
 											</p:inplace>

@@ -1,4 +1,4 @@
-var MAXIMALLY_DISTINCT_COLORS = ["#990000", "#2bce48", "#808080", "#4c005c", "#0007dc", "#005c31", "#f0a3ff", "#ffcc99", "#993f00", "#94ffb5", "#8f7c00", "#9dcc00", "#c20088", "#003380", "#ffa405", "#ffa8bb", "#426600", "#ff0010", "#5ef1f2", "#00998f", "#e0ff66", "#740aff", "#191919", "#ffff80", "#ffff00", "#ff5005"];
+var MAXIMALLY_DISTINCT_COLORS = ["#990000", "#2bce48", "#005c31", "#4c005c", "#0007dc", "#808080", "#f0a3ff", "#ffcc99", "#993f00", "#94ffb5", "#8f7c00", "#9dcc00", "#c20088", "#003380", "#ffa405", "#ffa8bb", "#426600", "#ff0010", "#5ef1f2", "#00998f", "#e0ff66", "#740aff", "#191919", "#ffff80", "#ffff00", "#ff5005"];
 
 function isUndefined( variable ) {
    return ( typeof variable === 'undefined' );
@@ -36,7 +36,7 @@ function handleCreateChart(xhr, status, args){
 	
 	var seriesNames = JSON.parse(args.hc_names).slice(OFFSET);
 		
-	var tooltips = [];
+//	var tooltips = [];
 	
 	var tooltipCreator = function(idx, rowData) { // Purely for speed
       var s = '<b>Position: ' + idx + ", " + labels[idx] + '</b>';
@@ -60,7 +60,7 @@ function handleCreateChart(xhr, status, args){
    for (pos in values) {
 	   var vals = values[pos];
 	   var posInt = parseInt(pos,10);
-	   tooltips[idx] = tooltipCreator(idx, vals)
+//	   tooltips[idx] = tooltipCreator(idx, vals)
 	   idx+=1
 	   for (var i = 0; i < vals.length; i++) {
          var val = vals[i];
@@ -119,15 +119,15 @@ function handleCreateChart(xhr, status, args){
             pointFormat: 'x = {point.x}, y = {point.y}',
             formatter:function(){
 //               console.log(this)
-//               var s = '<b>Position: ' + this.x + ", " + labels[this.x] + '</b>';
-//
-//               $.each(this.points, function () {
-//                   s += '<br/>' + this.series.name + ': ' +
-//                       this.y.toFixed(3);
-//               });
-//               return s;
-               return tooltips[this.x]
-               //return '<b>'+this.series.name+'</b><br/> Position: ' + this.x + ", " + labels[this.x] + "<br/> Probability: " + this.y.toFixed(3);
+               var s = '<b>Position: ' + this.x + ", " + labels[this.x] + '</b>';
+
+               $.each(this.points, function () {
+                   s += '<br/>' + this.series.name + ': ' +
+                       this.y.toFixed(3);
+               });
+               return s;
+//               return tooltips[this.x]
+               return '<b>'+this.series.name+'</b><br/> Position: ' + this.x + ", " + labels[this.x] + "<br/> Probability: " + this.y.toFixed(3);
             },
             shared: true
         },
