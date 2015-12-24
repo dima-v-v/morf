@@ -185,7 +185,7 @@ public class JobEndpoint {
             }
             return Response.status( 202 ).entity( response.toString() ).build();
         } else {
-            return Response.status( 400 ).entity( fail( 400, "Malformed FASTA Format" ).toString() ).build();
+            return Response.status( 400 ).entity( fail( 400, job.getStatus() ).toString() ).build();
         }
 
     }
