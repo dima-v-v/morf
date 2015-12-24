@@ -99,6 +99,20 @@ public class JobManager {
         // old after 1 day, checks every hour
         scheduler.scheduleAtFixedRate( new PurgeOldJobs( savedJobs ), 0, 1, TimeUnit.HOURS );
         // executor = (ThreadPoolExecutor) Executors.newSingleThreadExecutor();
+	String input = settingsCache.getProperty("morf.helpInput");
+	log.info(input);
+	String textStr[] = input.split( "\\r?\\n" );
+
+	String label = textStr[0];
+	Job exampleJob = new Job( "example", label, 0, input, 393, "127.0.0.1", true, null );
+
+        String key = "example";
+        exampleJob.setSavedKey( key );
+        exampleJob.setSaved( true );
+	//10years should be enough, will fix later	
+        exampleJob.setSaveExpiredDate( System.currentTimeMillis() + 315360000000L );
+        savedJobs.put( key, exampleJob );
+	submit(exampleJob);
     }
 
     @PreDestroy
