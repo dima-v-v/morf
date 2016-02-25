@@ -23,7 +23,11 @@
     	    	<h:outputScript library="js" name="highcharts.js" />
 	    		<h:outputScript>
 		    		$(document).ready(function() {
+		    		try {
 						createChart();
+					}
+					catch(err) {
+				    }
 					});
 				</h:outputScript>
     	</ui:define>
