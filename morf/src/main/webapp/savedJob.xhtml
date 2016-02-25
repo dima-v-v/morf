@@ -34,7 +34,7 @@
 				<p:outputPanel id="jobDetail" style="text-align:center;"
 					rendered="#{savedJobView.savedJob != null}">
 					<h3>#{savedJobView.savedJob.name}</h3>
-					<h:outputText value="This link will remain active for another #{savedJobView.savedJob.saveTimeLeft} hours &nbsp;" rendered="#{savedJobView.savedJob.savedKey!='example'}"/>
+					<h:outputText value="This link will remain active for another #{savedJobView.savedJob.saveTimeLeft} hours &nbsp;" rendered="#{savedJobView.savedJob.saveTimeLeft != null}"/>
 					<p:commandButton value="" icon="fa fa-refresh" actionListener="#{savedJobView.renewSaveJob()}" styleClass="icon-only"
 					title="Renew Job Expiration Time" rendered="#{savedJobView.savedJob.savedKey!='example'}"/>
 					<p:separator style="margin-top:15px;margin-bottom:25px;"/>

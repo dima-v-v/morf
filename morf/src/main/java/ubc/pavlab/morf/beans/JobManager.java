@@ -99,20 +99,19 @@ public class JobManager {
         // old after 1 day, checks every hour
         scheduler.scheduleAtFixedRate( new PurgeOldJobs( savedJobs ), 0, 1, TimeUnit.HOURS );
         // executor = (ThreadPoolExecutor) Executors.newSingleThreadExecutor();
-	String input = settingsCache.getProperty("morf.helpInput");
-	log.info(input);
-	String textStr[] = input.split( "\\r?\\n" );
+        String input = settingsCache.getProperty( "morf.helpInput" );
+        log.info( input );
+        String textStr[] = input.split( "\\r?\\n" );
 
-	String label = textStr[0];
-	Job exampleJob = new Job( "example", label, 0, input, 393, "127.0.0.1", true, null );
+        String label = textStr[0];
+        Job exampleJob = new Job( "example", label, 0, input, 393, "127.0.0.1", true, null );
 
         String key = "example";
         exampleJob.setSavedKey( key );
         exampleJob.setSaved( true );
-	//10years should be enough, will fix later	
-        exampleJob.setSaveExpiredDate( System.currentTimeMillis() + 315360000000L );
+        exampleJob.setPermanent( true );
         savedJobs.put( key, exampleJob );
-	submit(exampleJob);
+        submit( exampleJob );
     }
 
     @PreDestroy
@@ -254,8 +253,10 @@ public class JobManager {
             String key = sig.nextSessionId();
             job.setSavedKey( key );
             job.setSaved( true );
-            job.setSaveExpiredDate( System.currentTimeMillis() + JobManager.PURGE_AFTER );
             savedJobs.put( key, job );
+            if ( job.getComplete() ) {
+                job.renewSave();
+            }
             return key;
         }
     }
@@ -263,7 +264,7 @@ public class JobManager {
     public void renewSaveJob( Job job ) {
         synchronized ( savedJobs ) {
             if ( job.isSaved() ) {
-                job.setSaveExpiredDate( System.currentTimeMillis() + JobManager.PURGE_AFTER );
+                job.renewSave();
             } else {
 
             }

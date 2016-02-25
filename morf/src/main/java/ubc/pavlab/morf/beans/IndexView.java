@@ -20,11 +20,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.primefaces.context.RequestContext;
 
-import com.google.gson.Gson;
-
 import ubc.pavlab.morf.models.Chart;
 import ubc.pavlab.morf.models.Job;
 import ubc.pavlab.morf.models.ValidationResult;
+
+import com.google.gson.Gson;
 
 @Named
 @ViewScoped
@@ -90,11 +90,9 @@ public class IndexView implements Serializable {
             log.info( "saved" );
             userManager.saveJob( job );
             if ( message ) {
-                addMessage(
-                        "Job (" + job.getId()
-                                + ") successfully saved. The job will be available at the provided link for "
-                                + job.getSaveTimeLeft() + " hours.",
-                        FacesMessage.SEVERITY_WARN );
+                addMessage( "Job (" + job.getId()
+                        + ") successfully saved. The job will be available at the provided link for "
+                        + JobManager.PURGE_AFTER / 60 / 60 / 1000 + " hours.", FacesMessage.SEVERITY_WARN );
             }
         }
 
@@ -285,8 +283,8 @@ public class IndexView implements Serializable {
                             "Job (" + id + ") submitted for (" + label
                                     + ") <br/> The job will be available at the provided <a href='http://"
                                     + settingsCache.getBaseUrl() + "savedJob.xhtml?key=" + job.getSavedKey()
-                                    + "' target='_blank'>link</a> for " + job.getSaveTimeLeft() + " hours.",
-                            FacesMessage.SEVERITY_INFO );
+                                    + "' target='_blank'>link</a> for " + JobManager.PURGE_AFTER / 60 / 60 / 1000
+                                    + " hours.", FacesMessage.SEVERITY_INFO );
                 }
 
                 submittedJob = job;

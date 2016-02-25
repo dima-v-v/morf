@@ -91,6 +91,7 @@ public class Job implements Callable<String> {
     private boolean saved = false;
     private String savedKey;
     private Long saveExpiredDate;
+    private boolean permanent = false;
 
     private JobManager jobManager;
 
@@ -300,6 +301,7 @@ public class Job implements Callable<String> {
         IOUtils.copy( resultFile, writer, "UTF-8" );
         log.info( "Finished job (" + name + ") for session: (" + sessionId + ") and IP: (" + ipAddress + ")" );
         this.running = false;
+        this.saveExpiredDate = System.currentTimeMillis() + JobManager.PURGE_AFTER; // Begin save timer
         this.complete = true;
         jobManager.updatePositions( this.sessionId );
         jobManager.emailJobCompletion( this, writer.toString() );
@@ -410,15 +412,35 @@ public class Job implements Callable<String> {
     }
 
     public Long getSaveExpiredDate() {
+        if ( !saved ) {
+            return null;
+        }
         return saveExpiredDate;
     }
 
-    public void setSaveExpiredDate( Long savedDate ) {
-        this.saveExpiredDate = savedDate;
+    public void renewSave() {
+        this.saveExpiredDate = System.currentTimeMillis() + JobManager.PURGE_AFTER;
+    }
+
+    public void purgeSaveInfo() {
+        this.saveExpiredDate = null;
+        this.saved = false;
+        this.savedKey = null;
     }
 
     public Long getSaveTimeLeft() {
-        return ( ( saveExpiredDate - System.currentTimeMillis() ) ) / 1000 / 60 / 60;
+        if ( !saved || permanent ) {
+            return null;
+        }
+        return complete ? ( ( saveExpiredDate - System.currentTimeMillis() ) ) / 1000 / 60 / 60 : null;
+    }
+
+    public boolean isPermanent() {
+        return permanent;
+    }
+
+    public void setPermanent( boolean permanent ) {
+        this.permanent = permanent;
     }
 
     public void setJobManager( JobManager jobManager ) {

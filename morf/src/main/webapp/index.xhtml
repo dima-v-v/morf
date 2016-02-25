@@ -221,9 +221,9 @@
 								
 								
 								<h:outputText value="&nbsp;#{job.saveTimeLeft} hrs &nbsp;"
-									rendered="#{job.saved}" />
+									rendered="#{job.saved and job.saveTimeLeft != null}" />
 								<p:commandButton icon="fa fa-refresh" title="Renew" styleClass="icon-only"
-									action="#{indexView.renewJob}" rendered="#{job.saved}" oncomplete="pushUpdate();" style="margin-left:5px;">
+									action="#{indexView.renewJob}" rendered="#{job.saved and job.saveTimeLeft != null}" oncomplete="pushUpdate();" style="margin-left:5px;">
 									<f:setPropertyActionListener value="#{job}"
 										target="#{indexView.jobToRenew}" />
 								</p:commandButton>
@@ -345,7 +345,7 @@
 										<p:column>
 											<h:outputText
 												value="&nbsp;#{indexView.selectedJob.saveTimeLeft} hrs"
-												rendered="#{indexView.selectedJob.saved}" />
+												rendered="#{indexView.selectedJob.saved and indexView.selectedJob.saveTimeLeft != null}" />
 
 											<p:commandButton icon="fa fa-heart"
 												action="#{indexView.saveJob}"
