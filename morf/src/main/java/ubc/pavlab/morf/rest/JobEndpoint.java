@@ -60,12 +60,26 @@ public class JobEndpoint {
     }
 
     @GET
-    @Path("/total")
-    public Response getMsg() {
+    @Path("/loadInfo")
+    public Response getLoadInfo( @Context HttpServletRequest request ) {
 
-        String output = "Total Jobs in Queue: " + jobManager.getJobsInQueue();
+        String ipAddress = request.getHeader( "X-FORWARDED-FOR" );
+        if ( ipAddress == null ) {
+            ipAddress = request.getRemoteAddr();
+        }
 
-        return Response.status( 200 ).entity( output ).build();
+        JSONObject response = new JSONObject();
+        try {
+            response.put( "httpstatus", 200 );
+            response.put( "jobsInQueue", jobManager.getJobsInQueue() );
+            response.put( "residuesInQueue", jobManager.getResiduesInQueue() );
+            response.put( "jobsinClientQueue", jobManager.getJobsInClientQueue( ipAddress ) );
+            response.put( "residuesInClientQueue", jobManager.getResiduesInClientQueue( ipAddress ) );
+
+        } catch ( JSONException e1 ) {
+            log.error( "Malformed JSON", e1 );
+        }
+        return Response.status( 200 ).entity( response.toString() ).build();
 
     }
 
@@ -85,6 +99,11 @@ public class JobEndpoint {
             return Response.status( 404 ).entity( deleted.toString() ).build();
         }
 
+        String ipAddress = request.getHeader( "X-FORWARDED-FOR" );
+        if ( ipAddress == null ) {
+            ipAddress = request.getRemoteAddr();
+        }
+
         JSONObject response = new JSONObject();
         try {
             response.put( "httpstatus", 200 );
@@ -93,6 +112,8 @@ public class JobEndpoint {
             response.put( "status", job.getStatus() );
             response.put( "jobsInQueue", jobManager.getJobsInQueue() );
             response.put( "residuesInQueue", jobManager.getResiduesInQueue() );
+            response.put( "jobsinClientQueue", jobManager.getJobsInClientQueue( ipAddress ) );
+            response.put( "residuesInClientQueue", jobManager.getResiduesInClientQueue( ipAddress ) );
             response.put( "submitted", job.getSubmittedDate() );
             response.put( "success", true );
 
@@ -179,6 +200,8 @@ public class JobEndpoint {
                 response.put( "status", job.getStatus() );
                 response.put( "jobsInQueue", jobManager.getJobsInQueue() );
                 response.put( "residuesInQueue", jobManager.getResiduesInQueue() );
+                response.put( "jobsInClientQueue", jobManager.getJobsInClientQueue( sessionId ) );
+                response.put( "residuesInClientQueue", jobManager.getResiduesInClientQueue( sessionId ) );
                 response.put( "location", uri.getBaseUri() + "job/" + job.getSavedKey() );
             } catch ( JSONException e1 ) {
                 log.error( "Malformed JSON", e1 );

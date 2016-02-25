@@ -99,6 +99,9 @@ public class JobManager {
     // Job Queue info;
     private int residuesInQueue = 0;
 
+    private Object clientResiduesLock = new Object();
+    private Map<String, Integer> clientResidues = new ConcurrentHashMap<>();
+
     private Integer jobIdIncrementer = 0;
 
     public int getNewJobId() {
@@ -196,6 +199,14 @@ public class JobManager {
                 job.setStatus( "Pending" );
                 saveJob( job );
                 log.info( job.getSavedKey() );
+                synchronized ( clientResiduesLock ) {
+                    Integer clientResidue = clientResidues.get( job.getSessionId() );
+                    if ( clientResidue == null ) {
+                        clientResidue = 0;
+                    }
+                    clientResidue += job.getSequenceSize();
+                    clientResidues.put( job.getSessionId(), clientResidue );
+                }
                 submitJobsFromWaitingList( job.getSessionId(), jobs );
             }
         }
@@ -246,6 +257,18 @@ public class JobManager {
             jobQueueMirror.add( job );
             job.setStatus( "Position: " + Integer.toString( jobQueueMirror.size() ) );
             residuesInQueue += job.getSequenceSize();
+            synchronized ( clientResiduesLock ) {
+                Integer clientResidue = clientResidues.get( job.getSessionId() );
+                if ( clientResidue == null ) {
+                    // This shouldn't happen
+                    clientResidue = 0;
+                    log.error( "Somehow, we are submitting a job who's residues were never counted towards the total Client Queue residues." );
+                } else {
+                    clientResidue -= job.getSequenceSize();
+                }
+                clientResidues.put( job.getSessionId(), clientResidue );
+
+            }
         }
     }
 
@@ -494,6 +517,17 @@ public class JobManager {
 
     public int getResiduesInQueue() {
         return residuesInQueue;
+    }
+
+    public int getJobsInClientQueue( String sessionId ) {
+        return waitingList.get( sessionId ).size();
+    }
+
+    public int getResiduesInClientQueue( String sessionId ) {
+        synchronized ( clientResiduesLock ) {
+            Integer clientResidue = clientResidues.get( sessionId );
+            return clientResidue == null ? 0 : clientResidue;
+        }
     }
 
 }
