@@ -50,7 +50,7 @@
 				<li><h:link value="Results Page" fragment="results" /></li>
 				<li><h:link value="Notification Email" fragment="notification" /></li>
 				<li><h:link value="Input Example" fragment="input" /></li>
-				<li><h:link value="Output Example" fragment="output" /></li>
+				<li><h:link value="Output Text Example" fragment="output" /></li>
 				<li><h:link value="Jobs Table" fragment="jobs" /></li>
 				<li><h:link value="Graphs" fragment="graph" /></li>
 				<li><h:link value="The Queue Structure" fragment="queue" /></li>
@@ -101,11 +101,15 @@
 				   <f:facet name="legend">
 				     Results Page <h:link fragment="scrolltop" ><i class="fa fa-caret-square-o-up"/></h:link>
 				   </f:facet>
-<p:link value="Live Results Page for P53" icon="fa fa-external-link" outcome="savedJob" target="_blank">
-                                                <f:param name="key" value="example"/>
-                                        </p:link>
 
-				<p>Each page holds the outcome of processing one query sequence and is saved in the server for #{settingsCache.jobPurgeTime} hours. Page life can be renewed manually by clicking the renew button &nbsp;<i class="fa fa-refresh"/> &nbsp;in the results page, or in the 'Saved For' column of the Jobs table.</p>
+					<p:button value="Live Results Page Sample Output for P04637 (P53)"
+						icon="fa fa-external-link" outcome="savedJob" target="_blank">
+						<f:param name="key" value="example" />
+					</p:button>
+
+
+
+					<p>Each page holds the outcome of processing one query sequence and is saved in the server for #{settingsCache.jobPurgeTime} hours. Page life can be renewed manually by clicking the renew button &nbsp;<i class="fa fa-refresh"/> &nbsp;in the results page, or in the 'Saved For' column of the Jobs table.</p>
 				<p>The link to the results page is available through the [Ready/Not Ready] button in the 'Results' column of the Jobs table.</p>
 				<p>Note that in the case of losing the browser session, links to all results pages will also be lost. If an email address is provided, notification emails are sent upon job completion with an attached copy of the results file and a link to the results page. Otherwise, it is strongly recommended that links to result pages be saved manually or bookmarked.</p>
 				</p:fieldset>
@@ -126,11 +130,8 @@
 				
 				<p:fieldset id="output" style="margin-bottom:20px">
 				   <f:facet name="legend">
-				     Output Example <h:link fragment="scrolltop" ><i class="fa fa-caret-square-o-up"/></h:link>
+				     Output Text Example <h:link fragment="scrolltop" ><i class="fa fa-caret-square-o-up"/></h:link>
 				   </f:facet>
-					<p:link value="Live Example for P53" icon="fa fa-external-link" outcome="savedJob" target="_blank">
-						<f:param name="key" value="example"/>
-					</p:link>
 					<div style="font-family:'Courier New';line-height:0.2;margin-top:15px;">
 <p><font color="grey">01</font> #</p>
 <p><font color="grey">02</font> # MoRFchibi SYSTEM &lt;Release 1.0 Dec. 15 2015&gt;</p>
@@ -220,9 +221,6 @@
 				   <f:facet name="legend">
 				     Graphs <h:link fragment="scrolltop" ><i class="fa fa-caret-square-o-up"/></h:link>
 				   </f:facet>
-<p:link value="Live Graph Example for P53" icon="fa fa-external-link" outcome="savedJob" target="_blank">
-                                                <f:param name="key" value="example"/>
-                                        </p:link>
 				<p>By default, graphs will display only the general MoRF propensity score for the full sequence. Other values can be displayed by clicking on the appropriate label. The vertical Propensity scale is adjusted automatically to best fit the data. One can select an area using the mouse to zoom-in.</p>
 				</p:fieldset>
 				
