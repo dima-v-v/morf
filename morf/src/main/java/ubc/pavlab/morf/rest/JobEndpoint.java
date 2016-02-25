@@ -114,6 +114,7 @@ public class JobEndpoint {
             response.put( "residuesInQueue", jobManager.getResiduesInQueue() );
             response.put( "jobsinClientQueue", jobManager.getJobsInClientQueue( ipAddress ) );
             response.put( "residuesInClientQueue", jobManager.getResiduesInClientQueue( ipAddress ) );
+            response.put( "savedTimeLeft", job.getSaveTimeLeft() );
             response.put( "submitted", job.getSubmittedDate() );
             response.put( "success", true );
 

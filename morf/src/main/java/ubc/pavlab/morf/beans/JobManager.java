@@ -416,7 +416,6 @@ public class JobManager {
             String key = sig.nextSessionId();
             job.setSavedKey( key );
             job.setSaved( true );
-            job.setSaveExpiredDate( System.currentTimeMillis() + JobManager.PURGE_AFTER );
             savedJobs.put( key, job );
             return key;
         }
@@ -425,9 +424,7 @@ public class JobManager {
     public void renewSaveJob( Job job ) {
         synchronized ( savedJobs ) {
             if ( job.isSaved() ) {
-                job.setSaveExpiredDate( System.currentTimeMillis() + JobManager.PURGE_AFTER );
-            } else {
-
+                job.renewSave();
             }
 
         }
@@ -438,8 +435,7 @@ public class JobManager {
             savedJobs.remove( job.getSavedKey() );
         }
         if ( job.isSaved() ) {
-            job.setSaveExpiredDate( System.currentTimeMillis() );
-            job.setSaved( false );
+            job.purgeSaveInfo();
         }
     }
 

@@ -303,6 +303,7 @@ public class Job implements Callable<String> {
         IOUtils.copy( resultFile, writer, "UTF-8" );
         log.info( "Finished job (" + name + ") for session: (" + sessionId + ") and IP: (" + ipAddress + ")" );
         this.running = false;
+        this.saveExpiredDate = System.currentTimeMillis() + JobManager.PURGE_AFTER; // Begin save timer
         this.complete = true;
         jobManager.updatePositions( this.sessionId );
         jobManager.emailJobCompletion( this, writer.toString() );
@@ -413,15 +414,29 @@ public class Job implements Callable<String> {
     }
 
     public Long getSaveExpiredDate() {
+        if ( !saved ) {
+            return null;
+        }
         return saveExpiredDate;
     }
 
-    public void setSaveExpiredDate( Long savedDate ) {
-        this.saveExpiredDate = savedDate;
+    public void renewSave() {
+        if ( complete ) {
+            this.saveExpiredDate = System.currentTimeMillis() + JobManager.PURGE_AFTER;
+        }
+    }
+
+    public void purgeSaveInfo() {
+        this.saveExpiredDate = null;
+        this.saved = false;
+        this.savedKey = null;
     }
 
     public Long getSaveTimeLeft() {
-        return ( ( saveExpiredDate - System.currentTimeMillis() ) ) / 1000 / 60 / 60;
+        if ( !saved ) {
+            return null;
+        }
+        return complete ? ( ( saveExpiredDate - System.currentTimeMillis() ) ) / 1000 / 60 / 60 : null;
     }
 
     public void setJobManager( JobManager jobManager ) {
