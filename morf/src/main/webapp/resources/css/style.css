@@ -211,15 +211,16 @@ div.ui-confirm-dialog > div.ui-dialog-buttonpane {
 	  padding: .3em .4em .5em .4em; 
 }
 
-div.ui-dialog.dlg-right-header {
+/* div.ui-dialog.dlg-right-header {
 	text-align:right;
 }
 
-div.ui-dialog-titlebar > span.ui-dialog-title, div.ui-dialog-titlebar > a.ui-dialog-titlebar-close {
+div.ui-dialog.dlg-right-header > div.ui-dialog-titlebar > span.ui-dialog-title, 
+div.ui-dialog.dlg-right-header > div.ui-dialog-titlebar > a.ui-dialog-titlebar-close {
 	display:inline-block;
 	float:none;
 }
 
-div.ui-dialog-titlebar > span.ui-dialog-title {
+div.ui-dialog.dlg-right-header > div.ui-dialog-titlebar > span.ui-dialog-title {
 	vertical-align:top;
-}
+} */
