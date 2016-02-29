@@ -92,6 +92,7 @@ public class JobManager {
     private static int MAX_JOBS_IN_QUEUE = 2;
 
     private static final int SESSION_MAX_JOBS = 200;
+    private static final int MINIMUM_SEQUENCE_SIZE = 26;
 
     // File used to validate fasta content
     private String ffile;
@@ -144,23 +145,39 @@ public class JobManager {
 
         if ( vr.isSuccess() ) {
 
+            String newContent = "";
+
             if ( textStr.length > 1 ) {
                 label = textStr[0];
+                newContent += label + "\r\n";
                 // if ( label.startsWith( ">" ) ) {
                 // label = label.substring( 1 );
                 // }
 
                 for ( int i = 1; i < textStr.length; i++ ) {
-                    sequenceSize += textStr[i].length();
+                    String line = textStr[i].replaceAll( "\\s+", "" );
+                    sequenceSize += line.length();
+                    newContent += line + "\r\n";
+
                 }
 
             }
 
-            job = new Job( sessionId, label, getNewJobId(), content, sequenceSize, ipAddress, trainOnFullData, email );
-            boolean success = submitToWaitingList( job );
+            if ( sequenceSize < MINIMUM_SEQUENCE_SIZE ) {
+                job = new Job( sessionId, label, getNewJobId(), content, 0, ipAddress, trainOnFullData, email );
+                job.setComplete( true );
+                job.setFailed( true );
+                job.setStatus( "Error report:\nError(s) found\n" + label + "\nError : "
+                        + "Sequence too small; must be at least " + MINIMUM_SEQUENCE_SIZE + " residues" );
+            } else {
 
-            if ( !success ) {
-                return null;
+                job = new Job( sessionId, label, getNewJobId(), newContent, sequenceSize, ipAddress, trainOnFullData,
+                        email );
+                boolean success = submitToWaitingList( job );
+
+                if ( !success ) {
+                    return null;
+                }
             }
 
         } else {
@@ -262,7 +279,8 @@ public class JobManager {
                 if ( clientResidue == null ) {
                     // This shouldn't happen
                     clientResidue = 0;
-                    log.error( "Somehow, we are submitting a job who's residues were never counted towards the total Client Queue residues." );
+                    log.error(
+                            "Somehow, we are submitting a job who's residues were never counted towards the total Client Queue residues." );
                 } else {
                     clientResidue -= job.getSequenceSize();
                 }
