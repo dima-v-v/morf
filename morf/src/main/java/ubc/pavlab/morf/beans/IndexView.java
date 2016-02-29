@@ -20,11 +20,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.primefaces.context.RequestContext;
 
+import com.google.gson.Gson;
+
 import ubc.pavlab.morf.models.Chart;
 import ubc.pavlab.morf.models.Job;
 import ubc.pavlab.morf.models.ValidationResult;
-
-import com.google.gson.Gson;
 
 @Named
 @ViewScoped
@@ -36,6 +36,8 @@ public class IndexView implements Serializable {
     private static final long serialVersionUID = 2438909388677798292L;
 
     private static final Logger log = Logger.getLogger( IndexView.class );
+
+    private static final int MINIMUM_SEQUENCE_SIZE = 26;
 
     @Inject
     private UserManager userManager;
@@ -249,19 +251,35 @@ public class IndexView implements Serializable {
         String email = userManager.getEmail();
 
         if ( vr.isSuccess() ) {
+            String newContent = "";
             // TODO
             String textStr[] = content.split( "\\r?\\n" );
 
             if ( textStr.length > 1 ) {
                 label = textStr[0];
+                newContent += label + "\r\n";
                 // if ( label.startsWith( ">" ) ) {
                 // label = label.substring( 1 );
                 // }
 
                 for ( int i = 1; i < textStr.length; i++ ) {
-                    sequenceSize += textStr[i].length();
+                    String line = textStr[i].replaceAll( "\\s+", "" );
+                    sequenceSize += line.length();
+                    newContent += line + "\r\n";
                 }
 
+                content = newContent;
+
+            }
+
+            if ( sequenceSize < MINIMUM_SEQUENCE_SIZE ) {
+                Job job = new Job( userManager.getSessionId(), label, id, content, 0, ipAddress,
+                        trainOnDataset.equals( "True" ), StringUtils.isBlank( email ) ? null : email );
+                userManager.addFailedJob( job, "Error report:\nError(s) found\n" + label + "\nError : "
+                        + "Sequence too small; must be at least " + MINIMUM_SEQUENCE_SIZE + " residues" );
+                addMessage( "Sequence too small; must be at least " + MINIMUM_SEQUENCE_SIZE + " residues",
+                        FacesMessage.SEVERITY_INFO );
+                return;
             }
 
             Job job = new Job( userManager.getSessionId(), label, id, content, sequenceSize, ipAddress,
@@ -284,7 +302,8 @@ public class IndexView implements Serializable {
                                     + ") <br/> The job will be available at the provided <a href='http://"
                                     + settingsCache.getBaseUrl() + "savedJob.xhtml?key=" + job.getSavedKey()
                                     + "' target='_blank'>link</a> for " + JobManager.PURGE_AFTER / 60 / 60 / 1000
-                                    + " hours.", FacesMessage.SEVERITY_INFO );
+                                    + " hours.",
+                            FacesMessage.SEVERITY_INFO );
                 }
 
                 submittedJob = job;
