@@ -149,7 +149,7 @@ public class JobEndpoint {
             boolean success = jobManager.requestStopJob( job );
             response.put( "httpstatus", 200 );
             response.put( "message", success ? "Job Deleted" : "Failed To Delete Job" );
-            response.put( "sucess", success );
+            response.put( "success", success );
 
         } catch ( JSONException e1 ) {
             log.error( "Malformed JSON", e1 );
