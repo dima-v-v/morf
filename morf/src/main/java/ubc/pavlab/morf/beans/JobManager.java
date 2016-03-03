@@ -291,9 +291,10 @@ public class JobManager {
     }
 
     public boolean requestStopJob( Job job ) {
-
+        log.info( "Requesting job stop (" + job.getId() + ") for session: (" + job.getSessionId() + ") and IP: ("
+                + job.getIpAddress() + ")" );
         boolean canceled = false;
-        removeSaveJob( job );
+
         Queue<Job> jobs = waitingList.get( job.getSessionId() );
 
         synchronized ( jobs ) {
@@ -316,11 +317,15 @@ public class JobManager {
                     canceled = cancelJob( job );
 
                 }
+            } else if ( job.getComplete() ) {
+                // Job complete and already removed from jobQueueMirror
+                canceled = true;
             }
 
         }
         if ( canceled ) {
             jobs.remove( job );
+            removeSaveJob( job );
             submitJobsFromWaitingList( job.getSessionId(), jobs );
         }
         return canceled;
