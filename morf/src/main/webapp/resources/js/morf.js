@@ -57,11 +57,37 @@ function handleCreateChart(xhr, status, args){
 	var dataMin = 1;
 	var dataMax = 0;
 	var idx = 0;
+	
+	var morfRegions = [];
+	var regionStart = null;
+	var inRegion = false;
+	
    for (pos in values) {
 	   var vals = values[pos];
 	   var posInt = parseInt(pos,10);
 //	   tooltips[idx] = tooltipCreator(idx, vals)
 	   idx+=1
+	   var mcwVal = vals[0];
+	   if ( mcwVal > 0.7 ) {
+	      if (inRegion) {
+	         // do nothing
+	      } else {
+	         // start region
+	         inRegion = true;
+	         regionStart = posInt;
+	      }
+	   } else {
+        if (inRegion) {
+            // end region
+           inRegion = false;
+           morfRegions.push([regionStart, posInt - 1]);
+           regionStart = null;
+         } else {
+            // do nothing
+         }
+	   }
+	   
+	   
 	   for (var i = 0; i < vals.length; i++) {
          var val = vals[i];
          if (val > dataMax) dataMax = val;
@@ -71,6 +97,19 @@ function handleCreateChart(xhr, status, args){
 	   
 
    }
+   
+   if (inRegion) {
+      // end region
+     inRegion = false;
+     morfRegions.push([regionStart, posInt]);
+     regionStart = null;
+   } else {
+      // do nothing
+   }
+   
+   console.log(morfRegions);
+   
+   
    //console.log(data);
 	
     var options = {
@@ -104,6 +143,7 @@ function handleCreateChart(xhr, status, args){
                 text: 'Position',
                 min:0
             },
+            plotBands: [],
         },
         yAxis: {
             title: {
@@ -198,6 +238,40 @@ function handleCreateChart(xhr, status, args){
            verticalAlign: 'middle',
            layout: 'vertical',
         },
+        exporting: {
+           enabled: true,
+           sourceWidth  : 1600,
+           sourceHeight : 900,
+           buttons: {
+               customButton: {
+                   align: 'left',
+                   x: 62,
+                   onclick: function () {
+                      if (!this.hasPlotBands) {
+                         for (var i = 0; i < morfRegions.length; i++) {
+                            var region = morfRegions[i];
+                            a.xAxis[0].addPlotBand({
+                             from: region[0],
+                             to: region[1],
+                             color: 'rgba(68, 170, 213, .2)',
+                             id: 'MoRF-plot-bands'
+                           });
+   //                         options.xAxis.plotBands.push({
+   //                            from: region[0],
+   //                            to: region[1],
+   //                            color: 'rgba(68, 170, 213, .2)'
+   //                         });
+                         }
+                      } else {
+                         this.xAxis[0].removePlotBand('MoRF-plot-bands');
+                      }
+                      this.hasPlotBands = !this.hasPlotBands;
+                   },
+                   symbol: 'circle',
+                   _titleKey: "myButtonTitle"
+               }
+           }
+       },
         series: []
 /*        	[{
         	type: 'line',
@@ -214,6 +288,18 @@ function handleCreateChart(xhr, status, args){
            zIndex: data.length
         }]*/
     }
+    
+    // Add in plot bands
+    for (var i = 0; i < morfRegions.length; i++) {
+       var region = morfRegions[i];
+       options.xAxis.plotBands.push({
+          from: region[0],
+          to: region[1],
+          color: 'rgba(68, 170, 213, .2)',
+          id: 'MoRF-plot-bands'
+       });
+    }
+   
     
     // Add in additional series
     for (var i = 0; i < data.length; i++) {
@@ -244,9 +330,9 @@ function handleCreateChart(xhr, status, args){
     var a = new Highcharts.Chart(options, function(c) {
     	setResizer(c);
     	c.series[0].isolated = true;
+    	c.hasPlotBands = true;
     });
-    
-    
+
 	
 }
 
@@ -268,5 +354,11 @@ $(document).ready(function() {
 	   $(this).parent().siblings('span.ui-inplace-editor').children('button.ui-inplace-save').click();
 	   
    });
+   
+   Highcharts.setOptions({
+      lang: {
+          myButtonTitle: "Toggle MoRF Bands"
+      }
+  });
 
    });
