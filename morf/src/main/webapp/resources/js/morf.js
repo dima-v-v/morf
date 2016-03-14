@@ -149,6 +149,23 @@ function handleCreateChart(xhr, status, args){
             title: {
                 text: 'Propensity'
             },
+            plotLines: [{
+               value: 0.7,
+               color: 'red',
+               dashStyle: 'shortdash',
+               width: 2,
+//               label: {
+//                   text: 'Last quarter minimum'
+//               }
+           }, {
+               value: 0.75,
+               color: 'green',
+               dashStyle: 'shortdash',
+               width: 2,
+//               label: {
+//                   text: 'Last quarter maximum'
+//               }
+           }]
         },
         tooltip: {
         	crosshairs:true,
@@ -355,10 +372,15 @@ $(document).ready(function() {
 	   
    });
    
+   try {
+   
    Highcharts.setOptions({
       lang: {
           myButtonTitle: "Toggle MoRF Bands"
       }
   });
+   } catch(err) {
+      
+   }
 
    });
