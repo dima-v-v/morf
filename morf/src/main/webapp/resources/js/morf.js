@@ -68,7 +68,7 @@ function handleCreateChart(xhr, status, args){
 //	   tooltips[idx] = tooltipCreator(idx, vals)
 	   idx+=1
 	   var mcwVal = vals[0];
-	   if ( mcwVal > 0.7 ) {
+	   if ( mcwVal >= 0.725 ) {
 	      if (inRegion) {
 	         // do nothing
 	      } else {
@@ -154,22 +154,13 @@ function handleCreateChart(xhr, status, args){
             },
             startOnTick: false,
             plotLines: [{
-               value: 0.7,
-               color: 'red',
+               value: 0.725,
+               color: 'blue',
                dashStyle: 'shortdash',
                width: 2,
                id: 'thresholds'
 //               label: {
 //                   text: 'Last quarter minimum'
-//               }
-           }, {
-               value: 0.75,
-               color: 'green',
-               dashStyle: 'shortdash',
-               width: 2,
-               id: 'thresholds'
-//               label: {
-//                   text: 'Last quarter maximum'
 //               }
            }]
         },
@@ -282,23 +273,13 @@ function handleCreateChart(xhr, status, args){
                              id: 'MoRF-plot-bands'
                            });
                             a.yAxis[0].addPlotLine({
-                               value: 0.7,
-                               color: 'red',
+                               value: 0.725,
+                               color: 'blue',
                                dashStyle: 'shortdash',
                                width: 2,
                                id: 'thresholds'
 //                               label: {
 //                                   text: 'Last quarter minimum'
-//                               }
-                           });
-                            a.yAxis[0].addPlotLine({
-                               value: 0.75,
-                               color: 'green',
-                               dashStyle: 'shortdash',
-                               width: 2,
-                               id: 'thresholds'
-//                               label: {
-//                                   text: 'Last quarter maximum'
 //                               }
                            });
    //                         options.xAxis.plotBands.push({
