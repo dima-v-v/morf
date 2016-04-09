@@ -80,7 +80,10 @@ function handleCreateChart(xhr, status, args){
         if (inRegion) {
             // end region
            inRegion = false;
-           morfRegions.push([regionStart, posInt - 1]);
+           if ( ( posInt - 1) - regionStart >= 4 )  {
+              morfRegions.push([regionStart, posInt - 1]);
+           }
+           
            regionStart = null;
          } else {
             // do nothing
@@ -115,13 +118,13 @@ function handleCreateChart(xhr, status, args){
     var options = {
     	chart : {
     			renderTo: 'hc_container',
-                zoomType: 'xy',
+                zoomType: 'x',
                 resetZoomButton: {
                    position: {
-                      // align: 'right', // by default
-                      // verticalAlign: 'top', // by default
-                      x: -200,
-                      y: -40
+                       align: 'right', // by default
+                       verticalAlign: 'bottom', // by default
+                      x: 0,
+                      y: 26
                    }
                 }
              },
@@ -149,11 +152,13 @@ function handleCreateChart(xhr, status, args){
             title: {
                 text: 'Propensity'
             },
+            startOnTick: false,
             plotLines: [{
                value: 0.7,
                color: 'red',
                dashStyle: 'shortdash',
                width: 2,
+               id: 'thresholds'
 //               label: {
 //                   text: 'Last quarter minimum'
 //               }
@@ -162,6 +167,7 @@ function handleCreateChart(xhr, status, args){
                color: 'green',
                dashStyle: 'shortdash',
                width: 2,
+               id: 'thresholds'
 //               label: {
 //                   text: 'Last quarter maximum'
 //               }
@@ -262,7 +268,9 @@ function handleCreateChart(xhr, status, args){
            buttons: {
                customButton: {
                    align: 'left',
+                   verticalAlign: "bottom",
                    x: 62,
+                   y: 10,
                    onclick: function () {
                       if (!this.hasPlotBands) {
                          for (var i = 0; i < morfRegions.length; i++) {
@@ -273,20 +281,62 @@ function handleCreateChart(xhr, status, args){
                              color: 'rgba(68, 170, 213, .2)',
                              id: 'MoRF-plot-bands'
                            });
+                            a.yAxis[0].addPlotLine({
+                               value: 0.7,
+                               color: 'red',
+                               dashStyle: 'shortdash',
+                               width: 2,
+                               id: 'thresholds'
+//                               label: {
+//                                   text: 'Last quarter minimum'
+//                               }
+                           });
+                            a.yAxis[0].addPlotLine({
+                               value: 0.75,
+                               color: 'green',
+                               dashStyle: 'shortdash',
+                               width: 2,
+                               id: 'thresholds'
+//                               label: {
+//                                   text: 'Last quarter maximum'
+//                               }
+                           });
    //                         options.xAxis.plotBands.push({
    //                            from: region[0],
    //                            to: region[1],
    //                            color: 'rgba(68, 170, 213, .2)'
    //                         });
                          }
+//                         this.exportSVGElements[3].element.nextSibling.innerHTML = "Remove MoRF Regions";
                       } else {
                          this.xAxis[0].removePlotBand('MoRF-plot-bands');
+                         this.yAxis[0].removePlotLine('thresholds');
+//                         this.exportSVGElements[3].element.nextSibling.innerHTML = "Add MoRF Regions";
                       }
                       this.hasPlotBands = !this.hasPlotBands;
                    },
                    symbol: 'circle',
-                   _titleKey: "myButtonTitle"
-               }
+                   _titleKey: "myButtonTitle",
+                   text: 'Toggle MoRF Bands'
+               },
+               yAxisSetButton: {
+                  align: 'left',
+                  verticalAlign: "bottom",
+                  x: 225,
+                  y: 10,
+                  onclick: function () {
+                     if (!this.yAxisBounds) {
+                        this.yAxis[0].update({min:0, max:1});
+                     } else {
+                        this.yAxis[0].update({min:null, max:null});
+                     }
+                     this.yAxisBounds = !this.yAxisBounds;
+                  },
+                  symbol: 'circle',
+                  _titleKey: "yAxisSetBoundsTitle",
+                  text: 'Toggle Y-Axis Bounds'
+              }
+        
            }
        },
         series: []
@@ -348,6 +398,7 @@ function handleCreateChart(xhr, status, args){
     	setResizer(c);
     	c.series[0].isolated = true;
     	c.hasPlotBands = true;
+    	c.yAxisBounds = false;
     });
 
 	
@@ -371,16 +422,17 @@ $(document).ready(function() {
 	   $(this).parent().siblings('span.ui-inplace-editor').children('button.ui-inplace-save').click();
 	   
    });
-   
+
    try {
-   
-   Highcharts.setOptions({
-      lang: {
-          myButtonTitle: "Toggle MoRF Bands"
-      }
-  });
+
+      Highcharts.setOptions({
+         lang: {
+            myButtonTitle: "Toggle MoRF Bands",
+            yAxisSetBoundsTitle: "Set Y-Axis Bounds to [0,1]"
+         }
+      });
    } catch(err) {
-      
+
    }
 
    });
