@@ -153,16 +153,16 @@ function handleCreateChart(xhr, status, args){
                 text: 'Propensity'
             },
             startOnTick: false,
-            plotLines: [{
-               value: 0.725,
-               color: 'blue',
-               dashStyle: 'shortdash',
-               width: 2,
-               id: 'thresholds'
-//               label: {
-//                   text: 'Last quarter minimum'
-//               }
-           }]
+//            plotLines: [{
+//               value: 0.725,
+//               color: 'blue',
+//               dashStyle: 'shortdash',
+//               width: 2,
+//               id: 'thresholds'
+////               label: {
+////                   text: 'Last quarter minimum'
+////               }
+//           }]
         },
         tooltip: {
         	crosshairs:true,
@@ -338,15 +338,15 @@ function handleCreateChart(xhr, status, args){
     }
     
     // Add in plot bands
-    for (var i = 0; i < morfRegions.length; i++) {
-       var region = morfRegions[i];
-       options.xAxis.plotBands.push({
-          from: region[0],
-          to: region[1],
-          color: 'rgba(68, 170, 213, .2)',
-          id: 'MoRF-plot-bands'
-       });
-    }
+//    for (var i = 0; i < morfRegions.length; i++) {
+//       var region = morfRegions[i];
+//       options.xAxis.plotBands.push({
+//          from: region[0],
+//          to: region[1],
+//          color: 'rgba(68, 170, 213, .2)',
+//          id: 'MoRF-plot-bands'
+//       });
+//    }
    
     
     // Add in additional series
@@ -378,7 +378,7 @@ function handleCreateChart(xhr, status, args){
     var a = new Highcharts.Chart(options, function(c) {
     	setResizer(c);
     	c.series[0].isolated = true;
-    	c.hasPlotBands = true;
+    	c.hasPlotBands = false;
     	c.yAxisBounds = false;
     });
 
