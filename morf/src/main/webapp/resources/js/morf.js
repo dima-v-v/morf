@@ -276,7 +276,7 @@ function handleCreateChart(xhr, status, args){
                                value: 0.725,
                                color: 'blue',
                                dashStyle: 'shortdash',
-                               width: 2,
+                               width: 1,
                                id: 'thresholds'
 //                               label: {
 //                                   text: 'Last quarter minimum'
