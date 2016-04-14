@@ -48,6 +48,7 @@ public class IndexView implements Serializable {
     // private String currentSelectedName;
     private String content;
     private String trainOnDataset = "True";
+    private boolean convertCase = false;
 
     private Job selectedJob;
     private Job submittedJob;
@@ -235,6 +236,10 @@ public class IndexView implements Serializable {
     }
 
     public void submitJob( ActionEvent actionEvent ) {
+        if ( convertCase ) {
+            content = content.toUpperCase();
+        }
+
         ValidationResult vr = validate( content );
 
         HttpServletRequest request = ( HttpServletRequest ) FacesContext.getCurrentInstance().getExternalContext()
@@ -345,6 +350,14 @@ public class IndexView implements Serializable {
 
     public void setTrainOnDataset( String trainOnDataset ) {
         this.trainOnDataset = trainOnDataset;
+    }
+
+    public boolean isConvertCase() {
+        return convertCase;
+    }
+
+    public void setConvertCase( boolean convertCase ) {
+        this.convertCase = convertCase;
     }
 
     public Job getSelectedJob() {
