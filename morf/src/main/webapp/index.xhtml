@@ -73,8 +73,17 @@
 										</button>
 										</span>
 									</p:inplace>
-									<h:outputText value="Convert Case:" title="Convert lower case amino acids to upper case"/>
-									<p:selectBooleanCheckbox value="#{indexView.convertCase}" />
+                                                                        <p:panel styleClass="no-border panel-no-padding">
+                                                                        <h:outputText value="Case Sensitive "/>
+                                                                        <p:commandButton id="caseHelpBtn1" value="" styleClass="icon-only" icon="fa fa-question-circle" title="Help" type="button" />
+                                                                        <p:overlayPanel for="caseHelpBtn1" hideEffect="fade" style="width:400px;text-align:left;">
+                                                                                <p><b>Do not accept lower case amino acids in the input sequence.</b></p>
+                                                                                <p>When this option is selected, amino acids can only be represented with uppercase characters, lowercase characters will generate an error.</p>
+                                                                                <p>Additionally, when <b>not selected</b>, numbers will be ignored and removed from the input sequence.</p>
+                                                                        </p:overlayPanel>
+                                                                        <h:outputText value=":" />
+                                                                        </p:panel>
+                                                                        <p:selectBooleanCheckbox value="#{indexView.caseSensitive}" />
 								</h:panelGrid>
 							</p:panel>
 							<p:inputTextarea id="inputContent" value="#{indexView.content}"
