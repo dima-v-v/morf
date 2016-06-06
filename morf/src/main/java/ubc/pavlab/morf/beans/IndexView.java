@@ -239,10 +239,10 @@ public class IndexView implements Serializable {
         String verifyContent;
         if ( !caseSensitive ) {
             verifyContent = content.toUpperCase();
-	    verifyContent = verifyContent.replaceAll("\\d","");
+            verifyContent = verifyContent.replaceAll( "\\d", "" );
         } else {
-	    verifyContent = content;
-	}
+            verifyContent = content;
+        }
         ValidationResult vr = validate( verifyContent );
 
         HttpServletRequest request = ( HttpServletRequest ) FacesContext.getCurrentInstance().getExternalContext()
@@ -272,10 +272,10 @@ public class IndexView implements Serializable {
 
                 for ( int i = 1; i < textStr.length; i++ ) {
                     String line = textStr[i].replaceAll( "\\s+", "" );
-		    if ( !caseSensitive ) {
-			line = line.toUpperCase();
-			line = line.replaceAll("\\d","");
-		    }
+                    if ( !caseSensitive ) {
+                        line = line.toUpperCase();
+                        line = line.replaceAll( "\\d", "" );
+                    }
                     sequenceSize += line.length();
                     newContent += line + "\r\n";
                 }
@@ -294,7 +294,7 @@ public class IndexView implements Serializable {
                 return;
             }
 
-	    if ( caseSensitive && content.matches("(?s).*\\d.*") ) { // Need this because the validate executable isn't checking numbers
+            if ( caseSensitive && content.substring( content.indexOf( '\n' ) + 1 ).matches( "(?s).*\\d.*" ) ) { // Need this because the validate executable isn't checking numbers
                 Job job = new Job( userManager.getSessionId(), label, id, content, 0, ipAddress,
                         trainOnDataset.equals( "True" ), StringUtils.isBlank( email ) ? null : email );
                 userManager.addFailedJob( job, "Error report:\nError(s) found\n" + label + "\nError : "
@@ -302,7 +302,7 @@ public class IndexView implements Serializable {
                 addMessage( "Sequence contains numbers",
                         FacesMessage.SEVERITY_INFO );
                 return;
-	    }
+            }
 
             Job job = new Job( userManager.getSessionId(), label, id, content, sequenceSize, ipAddress,
                     trainOnDataset.equals( "True" ), StringUtils.isBlank( email ) ? null : email );
