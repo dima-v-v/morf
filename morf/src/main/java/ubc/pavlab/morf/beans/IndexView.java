@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
@@ -20,10 +22,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.primefaces.context.RequestContext;
 
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 
 import ubc.pavlab.morf.models.Chart;
 import ubc.pavlab.morf.models.Job;
+import ubc.pavlab.morf.models.Sequence;
 import ubc.pavlab.morf.models.ValidationResult;
 
 @Named
@@ -55,9 +59,6 @@ public class IndexView implements Serializable {
     private Job jobToRemove;
     private Job jobToSave;
     private Job jobToRenew;
-
-    private String label;
-    private int sequenceSize;
 
     // Chart Stuff
     private boolean chartReady = false;
@@ -204,46 +205,58 @@ public class IndexView implements Serializable {
         return new ValidationResult( res, resultContent.toString() );
     }
 
-    @Deprecated
-    public void validateJob( ActionEvent actionEvent ) {
-        label = "unknown";
-        sequenceSize = 0;
+    public Collection<Sequence> parseContent( String content ) {
+        List<Sequence> sequences = Lists.newArrayList();
 
         String textStr[] = content.split( "\\r?\\n" );
 
-        if ( textStr.length > 1 ) {
-            label = textStr[0];
-            // if ( label.startsWith( ">" ) ) {
-            // label = label.substring( 1 );
-            // }
+        String currentSequenceContent = "";
+        String currentSequenceLabel = "";
+        int currentSequenceSize = 0;
+        for ( int i = 0; i < textStr.length; i++ ) {
+            String line = textStr[i];
+            if ( line.startsWith( ">" ) ) {
+                // Save previous sequence if exists
+                if ( !StringUtils.isEmpty( currentSequenceContent ) ) {
+                    sequences.add(
+                            new Sequence( currentSequenceLabel, currentSequenceContent, currentSequenceSize ) );
+                }
+                // Start new sequence
+                currentSequenceLabel = line;
+                currentSequenceContent = "";
+                currentSequenceSize = 0;
+            } else {
 
-            for ( int i = 1; i < textStr.length; i++ ) {
-                sequenceSize += textStr[i].length();
+                // If we don't have a label, skip
+                if ( !StringUtils.isEmpty( currentSequenceLabel ) ) {
+                    line = line.replaceAll( "\\s+", "" );
+
+                    if ( !caseSensitive ) {
+                        line = line.toUpperCase();
+                        line = line.replaceAll( "\\d", "" );
+                    }
+                    // Skip empty lines
+                    if ( !StringUtils.isEmpty( line ) ) {
+                        currentSequenceSize += line.length();
+                        currentSequenceContent += line + "\r\n";
+                    }
+                }
+
             }
 
         }
 
-        String email = userManager.getEmail();
-
-        log.info( email );
-
-        if ( StringUtils.isBlank( email ) ) {
-            RequestContext.getCurrentInstance().addCallbackParam( "confirm", true );
-        } else {
-            RequestContext.getCurrentInstance().addCallbackParam( "confirm", false );
-            submitJob( null );
+        // Last sequence
+        if ( !StringUtils.isEmpty( currentSequenceContent ) ) {
+            sequences.add(
+                    new Sequence( currentSequenceLabel, currentSequenceContent, currentSequenceSize ) );
         }
+
+        return sequences;
+
     }
 
     public void submitJob( ActionEvent actionEvent ) {
-        String verifyContent;
-        if ( !caseSensitive ) {
-            verifyContent = content.toUpperCase();
-            verifyContent = verifyContent.replaceAll( "\\d", "" );
-        } else {
-            verifyContent = content;
-        }
-        ValidationResult vr = validate( verifyContent );
 
         HttpServletRequest request = ( HttpServletRequest ) FacesContext.getCurrentInstance().getExternalContext()
                 .getRequest();
@@ -251,91 +264,74 @@ public class IndexView implements Serializable {
         if ( ipAddress == null ) {
             ipAddress = request.getRemoteAddr();
         }
-        label = "unknown";
-        sequenceSize = 0;
 
-        int id = userManager.getNewJobId();
+        Collection<Sequence> sequences = parseContent( content );
 
-        String email = userManager.getEmail();
+        for ( Sequence sequence : sequences ) {
+            ValidationResult vr = validate( sequence.getFASTA() );
 
-        if ( vr.isSuccess() ) {
-            String newContent = "";
-            // TODO
-            String textStr[] = content.split( "\\r?\\n" );
+            int id = userManager.getNewJobId();
+            String email = userManager.getEmail();
 
-            if ( textStr.length > 1 ) {
-                label = textStr[0];
-                newContent += label + "\r\n";
-                // if ( label.startsWith( ">" ) ) {
-                // label = label.substring( 1 );
-                // }
+            if ( vr.isSuccess() ) {
 
-                for ( int i = 1; i < textStr.length; i++ ) {
-                    String line = textStr[i].replaceAll( "\\s+", "" );
-                    if ( !caseSensitive ) {
-                        line = line.toUpperCase();
-                        line = line.replaceAll( "\\d", "" );
-                    }
-                    sequenceSize += line.length();
-                    newContent += line + "\r\n";
-                }
-
-                content = newContent;
-
-            }
-
-            if ( sequenceSize < MINIMUM_SEQUENCE_SIZE ) {
-                Job job = new Job( userManager.getSessionId(), label, id, content, 0, ipAddress,
-                        trainOnDataset.equals( "True" ), StringUtils.isBlank( email ) ? null : email );
-                userManager.addFailedJob( job, "Error report:\nError(s) found\n" + label + "\nError : "
-                        + "Sequence too small; must be at least " + MINIMUM_SEQUENCE_SIZE + " residues" );
-                addMessage( "Sequence too small; must be at least " + MINIMUM_SEQUENCE_SIZE + " residues",
-                        FacesMessage.SEVERITY_INFO );
-                return;
-            }
-
-            if ( caseSensitive && content.substring( content.indexOf( '\n' ) + 1 ).matches( "(?s).*\\d.*" ) ) { // Need this because the validate executable isn't checking numbers
-                Job job = new Job( userManager.getSessionId(), label, id, content, 0, ipAddress,
-                        trainOnDataset.equals( "True" ), StringUtils.isBlank( email ) ? null : email );
-                userManager.addFailedJob( job, "Error report:\nError(s) found\n" + label + "\nError : "
-                        + "Sequence contains numbers" );
-                addMessage( "Sequence contains numbers",
-                        FacesMessage.SEVERITY_INFO );
-                return;
-            }
-
-            Job job = new Job( userManager.getSessionId(), label, id, content, sequenceSize, ipAddress,
-                    trainOnDataset.equals( "True" ), StringUtils.isBlank( email ) ? null : email );
-
-            if ( userManager.jobExists( job ) ) {
-                addMessage( "Job already exists under id (" + id + ")", FacesMessage.SEVERITY_WARN );
-            } else {
-                userManager.submitJob( job );
-                saveJob( job, false );
-
-                // RequestContext.getCurrentInstance().addCallbackParam("stopPolling", false);
-
-                if ( StringUtils.isBlank( email ) ) {
-                    RequestContext.getCurrentInstance().addCallbackParam( "confirm", true );
-                } else {
-                    RequestContext.getCurrentInstance().addCallbackParam( "confirm", false );
-                    addMessage(
-                            "Job (" + id + ") submitted for (" + label
-                                    + ") <br/> The job will be available at the provided <a href='http://"
-                                    + settingsCache.getBaseUrl() + "savedJob.xhtml?key=" + job.getSavedKey()
-                                    + "' target='_blank'>link</a> for " + JobManager.PURGE_AFTER / 60 / 60 / 1000
-                                    + " hours.",
+                if ( sequence.getSize() < MINIMUM_SEQUENCE_SIZE ) {
+                    Job job = new Job( userManager.getSessionId(), sequence.getLabel(), id, sequence.getFASTA(), 0,
+                            ipAddress, trainOnDataset.equals( "True" ), StringUtils.isBlank( email ) ? null : email );
+                    userManager.addFailedJob( job,
+                            "Error report:\nError(s) found\n" + sequence.getLabel() + "\nError : "
+                                    + "Sequence too small; must be at least " + MINIMUM_SEQUENCE_SIZE + " residues" );
+                    addMessage( "Sequence too small; must be at least " + MINIMUM_SEQUENCE_SIZE + " residues",
                             FacesMessage.SEVERITY_INFO );
+                    return;
                 }
 
-                submittedJob = job;
+                if ( caseSensitive && sequence.getContent().matches( "(?s).*\\d.*" ) ) { // Need this because the validate executable isn't checking numbers
+                    Job job = new Job( userManager.getSessionId(), sequence.getLabel(), id, sequence.getFASTA(), 0,
+                            ipAddress, trainOnDataset.equals( "True" ), StringUtils.isBlank( email ) ? null : email );
+                    userManager.addFailedJob( job,
+                            "Error report:\nError(s) found\n" + sequence.getLabel() + "\nError : "
+                                    + "Sequence contains numbers" );
+                    addMessage( "Sequence contains numbers",
+                            FacesMessage.SEVERITY_INFO );
+                    return;
+                }
+
+                Job job = new Job( userManager.getSessionId(), sequence.getLabel(), id, sequence.getFASTA(),
+                        sequence.getSize(), ipAddress, trainOnDataset.equals( "True" ),
+                        StringUtils.isBlank( email ) ? null : email );
+
+                if ( userManager.jobExists( job ) ) {
+                    addMessage( "Job already exists under id (" + id + ")", FacesMessage.SEVERITY_WARN );
+                } else {
+                    userManager.submitJob( job );
+                    saveJob( job, false );
+
+                    // RequestContext.getCurrentInstance().addCallbackParam("stopPolling", false);
+
+                    if ( StringUtils.isBlank( email ) ) {
+                        RequestContext.getCurrentInstance().addCallbackParam( "confirm", true );
+                    } else {
+                        RequestContext.getCurrentInstance().addCallbackParam( "confirm", false );
+                        addMessage(
+                                "Job (" + id + ") submitted for (" + sequence.getLabel()
+                                        + ") <br/> The job will be available at the provided <a href='http://"
+                                        + settingsCache.getBaseUrl() + "savedJob.xhtml?key=" + job.getSavedKey()
+                                        + "' target='_blank'>link</a> for " + JobManager.PURGE_AFTER / 60 / 60 / 1000
+                                        + " hours.",
+                                FacesMessage.SEVERITY_INFO );
+                    }
+
+                    submittedJob = job;
+
+                }
+            } else {
+                Job job = new Job( userManager.getSessionId(), sequence.getLabel(), id, sequence.getFASTA(), 0,
+                        ipAddress, trainOnDataset.equals( "True" ), StringUtils.isBlank( email ) ? null : email );
+                userManager.addFailedJob( job, vr.getContent() );
+                addMessage( "Malformed FASTA Format!", FacesMessage.SEVERITY_INFO );
 
             }
-        } else {
-            Job job = new Job( userManager.getSessionId(), label, id, content, 0, ipAddress,
-                    trainOnDataset.equals( "True" ), StringUtils.isBlank( email ) ? null : email );
-            userManager.addFailedJob( job, vr.getContent() );
-            addMessage( "Malformed FASTA Format!", FacesMessage.SEVERITY_INFO );
 
         }
 
@@ -417,15 +413,4 @@ public class IndexView implements Serializable {
         return chartReady;
     }
 
-    public String getLabel() {
-        return label;
-    }
-
-    public void setLabel( String label ) {
-        this.label = label;
-    }
-
-    public int getSequenceSize() {
-        return sequenceSize;
-    }
 }
