@@ -93,8 +93,7 @@
 				   <f:facet name="legend">
 				     Submitting A Job <h:link fragment="scrolltop" ><i class="fa fa-caret-square-o-up"/></h:link>
 				   </f:facet>
-				<p>To process an amino acid sequence, enter (paste) the sequence in FASTA format into the input box and click 'Submit Job'. When a job is submitted, first it is scanned for input errors and then entered into the queue structure and a job record is inserted into the 'Jobs' table. Once the sequence is processed, results are made available through the results page.</p>
-				
+				<p>To process amino acid sequences, enter (paste) sequences in FASTA format into the input box and click 'Submit Job'. When a job is submitted, each sequence is scanned for input errors and then entered into the queue structure and a job record is inserted into the 'Jobs' table for each sequence. Once a sequence is processed, results are made available through the results page.</p>	
 				</p:fieldset>
 				
 				<p:fieldset id="results" style="margin-bottom:20px">
@@ -118,7 +117,7 @@
 				   <f:facet name="legend">
 				     Input <h:link fragment="scrolltop" ><i class="fa fa-caret-square-o-up"/></h:link>
 				   </f:facet>
-				<p>The HTML server process sequences in standard fasta format one sequence per submission. Spaces in the input sequence are ignored. When the Case Sensitive option is selected (default case), amino acids can only be represented with uppercase letters, lowercase letters will generate an error. When not selected, both lower and upper case letters can be used, and numbers are ignored and removed from the input sequence.</p>
+				<p>The HTML server process sequences in standard fasta format. Spaces in the input sequence are ignored. When the Case Sensitive option is selected (default case), amino acids can only be represented with uppercase letters, lowercase letters will generate an error. When not selected, both lower and upper case letters can be used, and numbers are ignored and removed from the input sequence.</p>
 <p>An example sequence is available by clicking 'Input Example'. To clear the input box, click 'Clear'.</p>
 				</p:fieldset>
 			
