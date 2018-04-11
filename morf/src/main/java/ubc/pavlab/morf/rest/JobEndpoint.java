@@ -26,6 +26,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
@@ -35,6 +36,7 @@ import org.primefaces.json.JSONException;
 import org.primefaces.json.JSONObject;
 
 import ubc.pavlab.morf.beans.JobManager;
+import ubc.pavlab.morf.beans.SettingsCache;
 import ubc.pavlab.morf.models.Chart;
 import ubc.pavlab.morf.models.Job;
 
@@ -52,8 +54,8 @@ public class JobEndpoint {
     @Inject
     private JobManager jobManager;
 
-    @Context
-    UriInfo uri;
+    @Inject
+    private SettingsCache settingsCache;
 
     public JobEndpoint() {
         log.info( "Job REST created" );
@@ -79,7 +81,7 @@ public class JobEndpoint {
         } catch ( JSONException e1 ) {
             log.error( "Malformed JSON", e1 );
         }
-        return Response.status( 200 ).entity( response.toString() ).build();
+        return Response.ok( response.toString(), MediaType.APPLICATION_JSON ).build();
 
     }
 
@@ -96,7 +98,7 @@ public class JobEndpoint {
             } catch ( JSONException e ) {
                 log.error( e );
             }
-            return Response.status( 404 ).entity( deleted.toString() ).build();
+            return Response.status( 404 ).entity( deleted.toString() ).type( MediaType.APPLICATION_JSON ).build();
         }
 
         String ipAddress = request.getHeader( "X-FORWARDED-FOR" );
@@ -133,7 +135,7 @@ public class JobEndpoint {
         } catch ( JSONException e1 ) {
             log.error( "Malformed JSON", e1 );
         }
-        return Response.status( 200 ).entity( response.toString() ).build();
+        return Response.ok( response.toString(), MediaType.APPLICATION_JSON ).build();
 
     }
 
@@ -142,7 +144,7 @@ public class JobEndpoint {
     public Response deleteStrMsg( @Context HttpServletRequest request, @PathParam("param" ) String msg) {
         Job job = jobManager.fetchSavedJob( msg, false );
         if ( job == null ) {
-            return Response.status( 404 ).entity( fail( 404, "Job Not Found" ).toString() ).build();
+            return Response.status( 404 ).entity( fail( 404, "Job Not Found" ).toString() ).type( MediaType.APPLICATION_JSON ).build();
         }
         JSONObject response = new JSONObject();
         try {
@@ -154,7 +156,7 @@ public class JobEndpoint {
         } catch ( JSONException e1 ) {
             log.error( "Malformed JSON", e1 );
         }
-        return Response.status( 200 ).entity( response.toString() ).build();
+        return Response.ok( response.toString(), MediaType.APPLICATION_JSON ).build();
 
     }
 
@@ -169,11 +171,11 @@ public class JobEndpoint {
             log.info( content );
         } catch ( JSONException e ) {
             //log.warn( "Malformed JSON", e );
-            return Response.status( 400 ).entity( fail( 400, "Malformed JSON" ).toString() ).build();
+            return Response.status( 400 ).entity( fail( 400, "Malformed JSON" ).toString() ).type( MediaType.APPLICATION_JSON ).build();
         }
 
         if ( StringUtils.isBlank( content ) ) {
-            return Response.status( 400 ).entity( fail( 400, "Blank FASTA" ).toString() ).build();
+            return Response.status( 400 ).entity( fail( 400, "Blank FASTA" ).toString() ).type( MediaType.APPLICATION_JSON ).build();
         }
 
         String ipAddress = request.getHeader( "X-FORWARDED-FOR" );
@@ -187,7 +189,7 @@ public class JobEndpoint {
         Job job = jobManager.createJob( sessionId, ipAddress, content, true, null );
 
         if ( job == null ) {
-            return Response.status( 429 ).entity( fail( 400, "Too Many Jobs In Queue" ).toString() ).build();
+            return Response.status( 429 ).entity( fail( 400, "Too Many Jobs In Queue" ).toString() ).type( MediaType.APPLICATION_JSON ).build();
         }
 
         if ( !job.getFailed() ) {
@@ -203,13 +205,13 @@ public class JobEndpoint {
                 response.put( "residuesInQueue", jobManager.getResiduesInQueue() );
                 response.put( "jobsInClientQueue", jobManager.getJobsInClientQueue( sessionId ) );
                 response.put( "residuesInClientQueue", jobManager.getResiduesInClientQueue( sessionId ) );
-                response.put( "location", uri.getBaseUri() + "job/" + job.getSavedKey() );
+                response.put( "location", settingsCache.getBaseUrl() + "rest/job/" + job.getSavedKey() );
             } catch ( JSONException e1 ) {
                 log.error( "Malformed JSON", e1 );
             }
-            return Response.status( 202 ).entity( response.toString() ).build();
+            return Response.status( 202 ).entity( response.toString() ).type( MediaType.APPLICATION_JSON ).build();
         } else {
-            return Response.status( 400 ).entity( fail( 400, job.getStatus() ).toString() ).build();
+            return Response.status( 400 ).entity( fail( 400, job.getStatus() ).toString() ).type( MediaType.APPLICATION_JSON ).build();
         }
 
     }

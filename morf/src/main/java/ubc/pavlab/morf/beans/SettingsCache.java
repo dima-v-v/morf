@@ -53,7 +53,7 @@ public class SettingsCache implements Serializable {
 
     private static final Logger log = Logger.getLogger( SettingsCache.class );
 
-    private static final String PROPERTIES_PATH = "/home/nmalhis/MCW2/";
+    private static final String PROPERTIES_PATH = "/opt/morf/";
     private static final String PROPERTIES_BACKUP_PATH = System.getProperty( "user.dir" );
     private static final String PROPERTIES_FILE = "morf.properties";
 
@@ -92,7 +92,7 @@ public class SettingsCache implements Serializable {
     public String getBaseUrl() {
         String base = prop.getProperty( "morf.baseURL" );
         if ( StringUtils.isBlank( base ) ) {
-            return "http://www.chibi.ubc.ca/morf/";
+            return "http://morfw.msl.ubc.ca/";
         } else {
             return base;
         }
