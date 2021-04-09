@@ -409,7 +409,7 @@
 					<h:form id="chartForm">
 						<p:dialog id="chartDlg" fitViewport="true" modal="false"
 							widgetVar="chartDlgWdg" resizable="false" height="500px"
-							width="80%" styleClass="dlg-right-header">
+							width="80%" styleClass="dlg-right-header" onShow="window.modalChart.reflow();">
 							<f:facet name="header">
 							<h:outputText value="Help &nbsp;"/>
                                                         <p:commandButton id="chartHelpBtn" value="" styleClass="icon-only" icon="fa fa-question-circle" title="Help" type="button" />

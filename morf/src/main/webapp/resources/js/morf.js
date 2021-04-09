@@ -376,6 +376,7 @@ function handleCreateChart(xhr, status, args){
 
     
     var a = new Highcharts.Chart(options, function(c) {
+      window.modalChart = c;
     	setResizer(c);
     	c.series[0].isolated = true;
     	c.hasPlotBands = false;
