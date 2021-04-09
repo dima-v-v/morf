@@ -26,8 +26,9 @@ import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.Properties;
 
-import org.apache.log4j.Logger;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ubc.pavlab.morf.exceptions.ConfigurationException;
 
 /**
@@ -42,7 +43,7 @@ public class PropertiesFile extends Properties {
 
     private static final long serialVersionUID = -7155218450625381016L;
 
-    private static final Logger log = Logger.getLogger( PropertiesFile.class );
+    private static final Logger log = LogManager.getLogger( PropertiesFile.class );
 
     public PropertiesFile() {
         super();

@@ -27,8 +27,9 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import org.apache.log4j.Logger;
 
 /**
  * Handles collecting and formatting data from the results of a job to be handled in the front-end by HighCharts
@@ -38,7 +39,7 @@ import org.apache.log4j.Logger;
  */
 public class Chart {
 
-    private static final Logger log = Logger.getLogger( Chart.class );
+    private static final Logger log = LogManager.getLogger( Chart.class );
 
     private final Map<Integer, double[]> seriesValues = new LinkedHashMap<>();
     private final Map<Integer, String> seriesLabels = new LinkedHashMap<>();

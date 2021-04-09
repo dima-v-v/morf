@@ -38,8 +38,9 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import org.apache.log4j.Logger;
 
 /**
  * TODO Document Me
@@ -51,7 +52,7 @@ import org.apache.log4j.Logger;
 @ApplicationScoped
 public class MailSender {
 
-    private static final Logger log = Logger.getLogger( MailSender.class );
+    private static final Logger log = LogManager.getLogger( MailSender.class );
 
     @Inject
     private SettingsCache settingsCache;

@@ -19,7 +19,9 @@ import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.primefaces.context.RequestContext;
 
 import com.google.common.collect.Lists;
@@ -39,7 +41,7 @@ public class IndexView implements Serializable {
      */
     private static final long serialVersionUID = 2438909388677798292L;
 
-    private static final Logger log = Logger.getLogger( IndexView.class );
+    private static final Logger log = LogManager.getLogger( IndexView.class );
 
     private static final int MINIMUM_SEQUENCE_SIZE = 26;
 

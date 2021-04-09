@@ -10,7 +10,9 @@ import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.log4j.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.primefaces.context.RequestContext;
 import org.primefaces.model.chart.LineChartModel;
 
@@ -28,7 +30,7 @@ public class SavedJobView implements Serializable {
      */
     private static final long serialVersionUID = 7286831685089743671L;
 
-    private static final Logger log = Logger.getLogger( SavedJobView.class );
+    private static final Logger log = LogManager.getLogger( SavedJobView.class );
 
     @Inject
     private JobManager jobManager;

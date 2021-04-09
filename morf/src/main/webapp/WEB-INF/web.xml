@@ -24,11 +24,6 @@
 		<welcome-file>index.xhtml</welcome-file>
 	</welcome-file-list>
 	
-	<!-- Install slf4j bridge handler -->
-	<listener>
-		<listener-class>ubc.pavlab.morf.listeners.Sl4jBridgeListener</listener-class>
-	</listener>
-	
 	<!-- Other listeners -->
 	
 	<listener>

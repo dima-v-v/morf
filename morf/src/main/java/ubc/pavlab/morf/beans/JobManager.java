@@ -37,7 +37,9 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.log4j.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.omnifaces.cdi.Eager;
 import org.primefaces.push.EventBus;
 import org.primefaces.push.EventBusFactory;
@@ -57,7 +59,7 @@ import ubc.pavlab.morf.service.SessionIdentifierGenerator;
 @ApplicationScoped
 public class JobManager {
 
-    private static final Logger log = Logger.getLogger( JobManager.class );
+    private static final Logger log = LogManager.getLogger( JobManager.class );
 
     @Inject
     private MailSender mailSender;

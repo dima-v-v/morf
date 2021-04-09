@@ -38,7 +38,9 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.log4j.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 
@@ -52,7 +54,7 @@ import ubc.pavlab.morf.beans.JobManager;
  */
 public class Job implements Callable<String> {
 
-    private static final Logger log = Logger.getLogger( Job.class );
+    private static final Logger log = LogManager.getLogger( Job.class );
 
     // Static path to resources
     private static String scriptNameA;

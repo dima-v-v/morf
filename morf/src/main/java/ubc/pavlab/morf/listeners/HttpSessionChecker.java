@@ -21,8 +21,9 @@ package ubc.pavlab.morf.listeners;
 
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import org.apache.log4j.Logger;
 
 /**
  * TODO Document Me
@@ -32,7 +33,7 @@ import org.apache.log4j.Logger;
  */
 public class HttpSessionChecker implements HttpSessionListener {
 
-    private static final Logger log = Logger.getLogger( HttpSessionChecker.class );
+    private static final Logger log = LogManager.getLogger( HttpSessionChecker.class );
 
     @Override
     public void sessionCreated( HttpSessionEvent event ) {

@@ -29,7 +29,9 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Named;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.omnifaces.cdi.Eager;
 
 import ubc.pavlab.morf.models.Job;
@@ -51,7 +53,7 @@ public class SettingsCache implements Serializable {
      */
     private static final long serialVersionUID = 3280770517562168465L;
 
-    private static final Logger log = Logger.getLogger( SettingsCache.class );
+    private static final Logger log = LogManager.getLogger( SettingsCache.class );
 
     private static final String PROPERTIES_PATH = "/home/nmalhis/MCW2/";
     private static final String PROPERTIES_BACKUP_PATH = System.getProperty( "user.dir" );

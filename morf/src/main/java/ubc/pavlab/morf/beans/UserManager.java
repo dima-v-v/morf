@@ -20,8 +20,10 @@ import javax.inject.Named;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ubc.pavlab.morf.models.Job;
 
 /**
@@ -35,7 +37,7 @@ public class UserManager implements Serializable {
      * 
      */
     private static final long serialVersionUID = -3568877185808646254L;
-    private static final Logger log = Logger.getLogger( UserManager.class );
+    private static final Logger log = LogManager.getLogger( UserManager.class );
     private int MAX_JOBS_IN_QUEUE = 2;
     private Object jobSubmitLock = new Object();
     private Boolean stopPolling = true;

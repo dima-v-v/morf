@@ -24,7 +24,9 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.log4j.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.mindrot.jbcrypt.BCrypt;
 
 /**
@@ -37,7 +39,7 @@ import org.mindrot.jbcrypt.BCrypt;
 @ApplicationScoped
 public class Security {
 
-    private static final Logger log = Logger.getLogger( Security.class );
+    private static final Logger log = LogManager.getLogger( Security.class );
     private String passwordHash;
 
     @Inject
