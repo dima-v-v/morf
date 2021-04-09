@@ -38,10 +38,9 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.log4j.Logger;
-import org.primefaces.model.DefaultStreamedContent;
-import org.primefaces.model.StreamedContent;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ubc.pavlab.morf.beans.JobManager;
 
 /**
@@ -52,7 +51,7 @@ import ubc.pavlab.morf.beans.JobManager;
  */
 public class Job implements Callable<String> {
 
-    private static final Logger log = Logger.getLogger( Job.class );
+    private static final Logger log = LogManager.getLogger( Job.class );
 
     // Static path to resources
     private static String scriptNameA;
@@ -84,7 +83,6 @@ public class Job implements Callable<String> {
 
     // Results
     private Future<String> future;
-    private StreamedContent resultFile;
     private long executionTime;
 
     // Saving Job information / results for later
@@ -185,28 +183,6 @@ public class Job implements Callable<String> {
     // }
     //
     // }
-
-    public StreamedContent getFile() {
-        if ( getComplete() ) {
-            try {
-                String res;
-                if ( !this.failed ) {
-                    res = this.future.get( 1, TimeUnit.SECONDS );
-                } else {
-                    res = this.status;
-                }
-
-                InputStream in = IOUtils.toInputStream( res, "UTF-8" );
-                this.resultFile = new DefaultStreamedContent( in, "text/plain", this.name + ".txt" );
-                return resultFile;
-            } catch ( InterruptedException | ExecutionException | TimeoutException | IOException e ) {
-                e.printStackTrace();
-                return null;
-            }
-        } else {
-            return null;
-        }
-    }
 
     public String getFileString() {
         if ( getComplete() ) {

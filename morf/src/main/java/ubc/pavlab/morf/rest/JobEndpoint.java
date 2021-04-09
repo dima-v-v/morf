@@ -19,6 +19,10 @@
 
 package ubc.pavlab.morf.rest;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
@@ -28,13 +32,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
-import org.primefaces.json.JSONException;
-import org.primefaces.json.JSONObject;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ubc.pavlab.morf.beans.JobManager;
 import ubc.pavlab.morf.beans.SettingsCache;
 import ubc.pavlab.morf.models.Chart;
@@ -49,7 +51,7 @@ import ubc.pavlab.morf.models.Job;
 @Path("/job")
 public class JobEndpoint {
 
-    private static final Logger log = Logger.getLogger( JobEndpoint.class );
+    private static final Logger log = LogManager.getLogger( JobEndpoint.class );
 
     @Inject
     private JobManager jobManager;
@@ -70,7 +72,7 @@ public class JobEndpoint {
             ipAddress = request.getRemoteAddr();
         }
 
-        JSONObject response = new JSONObject();
+        Map<String, Object> response = new LinkedHashMap<>();
         try {
             response.put( "httpstatus", 200 );
             response.put( "jobsInQueue", jobManager.getJobsInQueue() );
@@ -78,10 +80,10 @@ public class JobEndpoint {
             response.put( "jobsinClientQueue", jobManager.getJobsInClientQueue( ipAddress ) );
             response.put( "residuesInClientQueue", jobManager.getResiduesInClientQueue( ipAddress ) );
 
-        } catch ( JSONException e1 ) {
+        } catch ( Exception e1 ) {
             log.error( "Malformed JSON", e1 );
         }
-        return Response.ok( response.toString(), MediaType.APPLICATION_JSON ).build();
+        return Response.ok( new Gson().toJson(response), MediaType.APPLICATION_JSON ).build();
 
     }
 
@@ -92,13 +94,13 @@ public class JobEndpoint {
         Job job = jobManager.fetchSavedJob( msg, false );
 
         if ( job == null ) {
-            JSONObject deleted = fail( 404, "Job Not Found" );
+            Map<String, Object> deleted = fail( 404, "Job Not Found" );
             try {
                 deleted.put( "complete", true );
-            } catch ( JSONException e ) {
+            } catch ( Exception e ) {
                 log.error( e );
             }
-            return Response.status( 404 ).entity( deleted.toString() ).type( MediaType.APPLICATION_JSON ).build();
+            return Response.status( 404 ).entity( new Gson().toJson(deleted) ).type( MediaType.APPLICATION_JSON ).build();
         }
 
         String ipAddress = request.getHeader( "X-FORWARDED-FOR" );
@@ -106,7 +108,7 @@ public class JobEndpoint {
             ipAddress = request.getRemoteAddr();
         }
 
-        JSONObject response = new JSONObject();
+        Map<String, Object> response = new LinkedHashMap<>();
         try {
             response.put( "httpstatus", 200 );
             response.put( "name", job.getName() );
@@ -132,10 +134,10 @@ public class JobEndpoint {
             } else {
                 response.put( "eta", "Unknown" );
             }
-        } catch ( JSONException e1 ) {
+        } catch ( Exception e1 ) {
             log.error( "Malformed JSON", e1 );
         }
-        return Response.ok( response.toString(), MediaType.APPLICATION_JSON ).build();
+        return Response.ok( new Gson().toJson(response), MediaType.APPLICATION_JSON ).build();
 
     }
 
@@ -144,19 +146,19 @@ public class JobEndpoint {
     public Response deleteStrMsg( @Context HttpServletRequest request, @PathParam("param" ) String msg) {
         Job job = jobManager.fetchSavedJob( msg, false );
         if ( job == null ) {
-            return Response.status( 404 ).entity( fail( 404, "Job Not Found" ).toString() ).type( MediaType.APPLICATION_JSON ).build();
+            return Response.status( 404 ).entity( new Gson().toJson(fail( 404, "Job Not Found" )) ).type( MediaType.APPLICATION_JSON ).build();
         }
-        JSONObject response = new JSONObject();
+        Map<String, Object> response = new LinkedHashMap<>();
         try {
             boolean success = jobManager.requestStopJob( job );
             response.put( "httpstatus", 200 );
             response.put( "message", success ? "Job Deleted" : "Failed To Delete Job" );
             response.put( "success", success );
 
-        } catch ( JSONException e1 ) {
+        } catch ( Exception e1 ) {
             log.error( "Malformed JSON", e1 );
         }
-        return Response.ok( response.toString(), MediaType.APPLICATION_JSON ).build();
+        return Response.ok( new Gson().toJson(response), MediaType.APPLICATION_JSON ).build();
 
     }
 
@@ -166,16 +168,16 @@ public class JobEndpoint {
         log.info( msg );
         String content;
         try {
-            JSONObject json = new JSONObject( msg );
-            content = json.getString( "fasta" );
+            JsonObject json = new Gson().fromJson(msg, JsonObject.class);
+            content = json.get( "fasta" ).getAsString();
             log.info( content );
-        } catch ( JSONException e ) {
+        } catch ( Exception e ) {
             //log.warn( "Malformed JSON", e );
-            return Response.status( 400 ).entity( fail( 400, "Malformed JSON" ).toString() ).type( MediaType.APPLICATION_JSON ).build();
+            return Response.status( 400 ).entity( new Gson().toJson(fail( 400, "Malformed JSON" )) ).type( MediaType.APPLICATION_JSON ).build();
         }
 
         if ( StringUtils.isBlank( content ) ) {
-            return Response.status( 400 ).entity( fail( 400, "Blank FASTA" ).toString() ).type( MediaType.APPLICATION_JSON ).build();
+            return Response.status( 400 ).entity( new Gson().toJson(fail( 400, "Blank FASTA" )) ).type( MediaType.APPLICATION_JSON ).build();
         }
 
         String ipAddress = request.getHeader( "X-FORWARDED-FOR" );
@@ -189,11 +191,11 @@ public class JobEndpoint {
         Job job = jobManager.createJob( sessionId, ipAddress, content, true, null );
 
         if ( job == null ) {
-            return Response.status( 429 ).entity( fail( 400, "Too Many Jobs In Queue" ).toString() ).type( MediaType.APPLICATION_JSON ).build();
+            return Response.status( 429 ).entity( new Gson().toJson(fail( 400, "Too Many Jobs In Queue" )) ).type( MediaType.APPLICATION_JSON ).build();
         }
 
         if ( !job.getFailed() ) {
-            JSONObject response = new JSONObject();
+            Map<String, Object> response = new LinkedHashMap<>();
             try {
                 response.put( "httpstatus", 202 );
                 response.put( "success", true );
@@ -206,23 +208,23 @@ public class JobEndpoint {
                 response.put( "jobsInClientQueue", jobManager.getJobsInClientQueue( sessionId ) );
                 response.put( "residuesInClientQueue", jobManager.getResiduesInClientQueue( sessionId ) );
                 response.put( "location", settingsCache.getBaseUrl() + "rest/job/" + job.getSavedKey() );
-            } catch ( JSONException e1 ) {
+            } catch ( Exception e1 ) {
                 log.error( "Malformed JSON", e1 );
             }
-            return Response.status( 202 ).entity( response.toString() ).type( MediaType.APPLICATION_JSON ).build();
+            return Response.status( 202 ).entity( new Gson().toJson(response) ).type( MediaType.APPLICATION_JSON ).build();
         } else {
-            return Response.status( 400 ).entity( fail( 400, job.getStatus() ).toString() ).type( MediaType.APPLICATION_JSON ).build();
+            return Response.status( 400 ).entity( new Gson().toJson(fail( 400, job.getStatus() )) ).type( MediaType.APPLICATION_JSON ).build();
         }
 
     }
 
-    private static JSONObject fail( int httpStatus, String message ) {
-        JSONObject response = new JSONObject();
+    private static Map<String, Object> fail( int httpStatus, String message ) {
+        Map<String, Object> response = new LinkedHashMap<>();
         try {
             response.put( "httpstatus", httpStatus );
             response.put( "success", false );
             response.put( "message", message );
-        } catch ( JSONException e1 ) {
+        } catch ( Exception e1 ) {
             log.error( "Malformed JSON", e1 );
         }
         return response;

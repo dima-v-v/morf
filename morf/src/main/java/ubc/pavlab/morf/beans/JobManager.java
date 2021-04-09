@@ -43,9 +43,9 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.log4j.Logger;
-import org.omnifaces.cdi.Eager;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ubc.pavlab.morf.models.Job;
 import ubc.pavlab.morf.models.PurgeOldJobs;
 import ubc.pavlab.morf.models.ValidationResult;
@@ -58,11 +58,10 @@ import ubc.pavlab.morf.service.SessionIdentifierGenerator;
  * @version $Id$
  */
 @Named
-@Eager
 @ApplicationScoped
 public class JobManager {
 
-    private static final Logger log = Logger.getLogger( JobManager.class );
+    private static final Logger log = LogManager.getLogger( JobManager.class );
 
     @Inject
     private MailSender mailSender;

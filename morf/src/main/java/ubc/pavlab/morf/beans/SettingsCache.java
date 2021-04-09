@@ -29,9 +29,9 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Named;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
-import org.omnifaces.cdi.Eager;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ubc.pavlab.morf.models.Job;
 import ubc.pavlab.morf.utility.PropertiesFile;
 
@@ -42,7 +42,6 @@ import ubc.pavlab.morf.utility.PropertiesFile;
  * @version $Id$
  */
 @Named
-@Eager
 @ApplicationScoped
 public class SettingsCache implements Serializable {
 
@@ -51,7 +50,7 @@ public class SettingsCache implements Serializable {
      */
     private static final long serialVersionUID = 3280770517562168465L;
 
-    private static final Logger log = Logger.getLogger( SettingsCache.class );
+    private static final Logger log = LogManager.getLogger( SettingsCache.class );
 
     private static final String PROPERTIES_PATH = "/opt/morf/";
     private static final String PROPERTIES_BACKUP_PATH = System.getProperty( "user.dir" );
