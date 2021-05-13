@@ -185,7 +185,7 @@
 		<dependency>
 		    <groupId>org.jboss.weld.servlet</groupId>
 		    <artifactId>weld-servlet</artifactId>
-		    <version>2.2.9.Final</version>
+		    <version>2.4.8.Final</version>
 		</dependency>
 		
 		<!-- JAX-RS RESTful Web Services -->
