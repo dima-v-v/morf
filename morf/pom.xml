@@ -19,7 +19,7 @@
 		<jsf.version>2.2.2</jsf.version>
 		
 		<!-- logging -->
-		<slf4j.version>1.6.6</slf4j.version>
+		<slf4j.version>1.7.30</slf4j.version>
 
 
 	</properties>
