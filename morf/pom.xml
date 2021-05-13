@@ -16,7 +16,7 @@
 
 		<!-- Web -->
 		<servlet.version>3.0.1</servlet.version>
-		<jsf.version>2.2.2</jsf.version>
+		<jsf.version>2.2.20</jsf.version>
 		
 		<!-- logging -->
 		<slf4j.version>1.6.6</slf4j.version>
